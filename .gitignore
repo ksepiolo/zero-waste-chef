@@ -3,4 +3,36 @@
 .claude/skills/10x-shape/
 .claude/skills/10x-stack-assess/
 .claude/skills/10x-tech-stack-selector/
+.claude/skills/10x-bootstrapper
+.claude/skills/10x-health-check
 .claude/.10x-cli-manifest.json
+
+# from 10x-astro-starter
+# build output
+dist/
+
+# generated types
+.astro/
+
+# dependencies
+node_modules/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# environment variables
+.env
+.env.production
+
+# cloudflare
+.dev.vars
+.wrangler/
+
+# macOS-specific files
+.DS_Store
+
+# jetbrains setting folder
+.idea/
