@@ -1,7 +1,7 @@
 ---
 project: zero-waste-chef
 researched_at: 2026-05-24
-recommended_platform: Cloudflare Pages + Workers
+recommended_platform: Cloudflare Workers (Static Assets)
 runner_up: Netlify
 context_type: mvp
 tech_stack:
@@ -14,9 +14,9 @@ tech_stack:
 
 ## Recommendation
 
-**Deploy on Cloudflare Pages + Workers.**
+**Deploy on Cloudflare Workers (Static Assets).**
 
-The project is already bootstrapped for this platform — `@astrojs/cloudflare` v13.5.0 and `wrangler` v4.90.0 are installed in `package.json`, and the adapter is configured in `astro.config.mjs`. No adapter swap is needed, which eliminates the primary onboarding risk common to all other platforms. Cloudflare scores 5/5 across all five agent-friendly criteria, provides the most comprehensive MCP integration (15+ GA servers), and the free tier supports 100k requests/day — well above the expected MVP load for a small solo project. The cross-check surfaced three material risks (CPU time model, workerd vs. Node.js runtime gap, write-only secrets), all of which have documented mitigations and are absorbed into the risk register.
+The project is already bootstrapped for this platform — `@astrojs/cloudflare` v13.5.0 and `wrangler` v4.90.0 are installed in `package.json`, and the adapter is configured in `astro.config.mjs`. Note: `@astrojs/cloudflare` v13 removed Pages support entirely — the adapter now deploys to Cloudflare Workers via `wrangler deploy` (NOT `wrangler pages deploy`). No adapter swap is needed, which eliminates the primary onboarding risk common to all other platforms. Cloudflare scores 5/5 across all five agent-friendly criteria, provides the most comprehensive MCP integration (15+ GA servers), and the free tier supports 100k requests/day — well above the expected MVP load for a small solo project. The cross-check surfaced three material risks (CPU time model, workerd vs. Node.js runtime gap, write-only secrets), all of which have documented mitigations and are absorbed into the risk register.
 
 ## Platform Comparison
 
@@ -49,9 +49,9 @@ The project is already bootstrapped for this platform — `@astrojs/cloudflare` 
 
 ### Shortlisted Platforms
 
-#### 1. Cloudflare Pages + Workers (Recommended)
+#### 1. Cloudflare Workers / Static Assets (Recommended)
 
-The project is already wired for Cloudflare — zero adapter friction. Wrangler v4 covers the full operational loop: `wrangler pages deploy` (deploy), `wrangler rollback` (instant revert to prior version), `wrangler tail` (live log streaming with filtering). The free tier gives 100k requests/day with no credit card required and commercial use allowed. Cloudflare's MCP ecosystem is the most mature of any platform researched (15+ GA remote servers), and docs are available as `llms.txt`, per-product scoped files, and markdown for any page. The primary trade-off is the `workerd` runtime: it is not Node.js, and any dependency that relies on Node built-ins requires the `nodejs_compat` flag — a foot-gun if missed.
+The project is already wired for Cloudflare — zero adapter friction. `@astrojs/cloudflare` v13 deploys as a Worker (not Pages); the correct command is `wrangler deploy`. Wrangler v4 covers the full operational loop: `wrangler deploy` (deploy), `wrangler rollback` (instant revert to prior version), `wrangler tail` (live log streaming with filtering). The free tier gives 100k requests/day with no credit card required and commercial use allowed. Cloudflare's MCP ecosystem is the most mature of any platform researched (15+ GA remote servers), and docs are available as `llms.txt`, per-product scoped files, and markdown for any page. The primary trade-off is the `workerd` runtime: it is not Node.js, and any dependency that relies on Node built-ins requires the `nodejs_compat` flag — a foot-gun if missed.
 
 #### 2. Netlify
 
@@ -71,13 +71,13 @@ Solid platform with full Astro 6 SSR support via `@astrojs/vercel` (GA, maintain
 
 3. **`Astro.locals.runtime` was removed in `@astrojs/cloudflare` v13 — every pre-2025 tutorial shows the wrong pattern.** The new env access pattern (`import { env } from "cloudflare:workers"`) is correct, but the old pattern is the most-indexed result for "Cloudflare Astro environment variables." Mixing patterns produces a runtime error visible only in production, not in `astro dev`.
 
-4. **`wrangler pages deploy` and `wrangler deploy` are completely different commands for different products.** The bootstrapped project is Pages-based; `wrangler deploy` targets Workers scripts and will not deploy the Pages project. An agent or developer who finds `wrangler deploy` examples online and uses them will see confusing failures.
+4. **`wrangler deploy` is the correct command — `wrangler pages deploy` will not work.** `@astrojs/cloudflare` v13 removed Pages support; the project deploys as a Workers script via `wrangler deploy`. An agent or developer who finds `wrangler pages deploy` examples online and uses them will see confusing failures.
 
 5. **Daily request limit resets at midnight UTC with no burst allowance.** At a demo, cohort submission deadline, or unexpected traffic spike, exceeding 100k requests/day on the free tier serves Cloudflare's generic 1015 rate-limit page to all users until midnight UTC. There is no grace period and no way to temporarily unlock capacity without upgrading to the paid plan.
 
 ### Pre-Mortem — How This Could Fail
 
-The team ships Zero Waste Chef on Cloudflare Pages in week one. The first week feels smooth — `astro dev` runs locally, `wrangler pages deploy` works on the first try. Week two: recipe generation starts failing in production for some users. The Cloudflare dashboard shows 200 OK responses, which is confusing. After a day of investigation, `wrangler tail --format json` reveals CPU time exceeded errors — the OpenRouter response parsing and the inventory-diff logic together burn past the 10ms CPU budget. Upgrading to the $5/month paid plan fixes it, but the debugging time wasn't budgeted for a 3-week sprint.
+The team ships Zero Waste Chef on Cloudflare Workers in week one. The first week feels smooth — `astro dev` runs locally, `wrangler deploy` works on the first try. Week two: recipe generation starts failing in production for some users. The Cloudflare dashboard shows 200 OK responses, which is confusing. After a day of investigation, `wrangler tail --format json` reveals CPU time exceeded errors — the OpenRouter response parsing and the inventory-diff logic together burn past the 10ms CPU budget. Upgrading to the $5/month paid plan fixes it, but the debugging time wasn't budgeted for a 3-week sprint.
 
 Week four: Supabase auth stops working for a subset of users after an npm update. The new version of `@supabase/ssr` changed how it accesses `node:crypto`. The `nodejs_compat` flag isn't set in `wrangler.jsonc` — the bootstrapper scaffolded the file but the flag requires explicit opt-in. Works in dev. Fails in `workerd`. Another weekend of debugging.
 
@@ -93,11 +93,11 @@ By month two, the developer has accumulated a private mental model of workerd-vs
 
 ## Operational Story
 
-- **Preview deploys**: Cloudflare Pages creates a preview URL for every branch and PR automatically (format: `<branch-name>.<project>.pages.dev`). Preview deploys are publicly accessible by default — protect them with Cloudflare Access if the staging environment should be private. Fork PRs from public forks do NOT get preview deploys (Cloudflare Pages limitation for security reasons).
-- **Secrets**: Environment variables (including `SUPABASE_URL`, `SUPABASE_KEY`) are set via `wrangler secret put <NAME>` or in the Cloudflare Pages dashboard under Settings → Environment Variables. Secrets cannot be read back once set — only overwritten. Separate variable sets exist for production and preview environments. For local dev, use `.dev.vars` (already gitignored per project convention).
-- **Rollback**: `wrangler rollback [version-id]` reverts to a prior Worker version immediately. For Pages, open the Cloudflare Pages dashboard → project → Deployments → select a prior deployment → "Rollback to this deployment." Time-to-revert is typically under 30 seconds. Database migrations do NOT roll back automatically — a code rollback after a schema migration requires a separate migration rollback in Supabase.
-- **Approval**: Agent may perform unattended: `wrangler pages deploy`, `wrangler secret put`, `wrangler tail`, `wrangler rollback`. Human-only actions: deleting the Pages project, rotating the Supabase service role key, changing billing tier, modifying DNS / custom domain configuration, and Cloudflare Access policy changes.
-- **Logs**: `wrangler tail <worker-name> --format json` streams live invocation logs with request metadata. Filter by status: `--status error`. For Pages-specific build logs: Cloudflare dashboard → project → Deployments → build details (no CLI equivalent for build logs as of 2026-05-24). Cloudflare MCP observability server exposes structured log queries for agent use.
+- **Preview deploys**: Not available on Workers free tier — each `wrangler deploy` overwrites the live Worker. Use a separate Worker name (e.g. `zero-waste-chef-staging`) as a preview environment if needed.
+- **Secrets**: Set via `wrangler secret put <NAME>` (no `--env` flag — single environment). Secrets cannot be read back once set — only overwritten. Use `wrangler secret list` to verify names. For local dev, use `.dev.vars` (already gitignored per project convention).
+- **Rollback**: `wrangler rollback` (or `wrangler versions list` + `wrangler versions deploy`) reverts to a prior Worker version immediately. Time-to-revert is typically under 30 seconds. Database migrations do NOT roll back automatically — a code rollback after a schema migration requires a separate migration rollback in Supabase.
+- **Approval**: Agent may perform unattended: `wrangler deploy`, `wrangler secret put`, `wrangler tail`, `wrangler rollback`. Human-only actions: deleting the Worker, rotating the Supabase service role key, changing billing tier, modifying DNS / custom domain configuration, and Cloudflare Access policy changes.
+- **Logs**: `wrangler tail zero-waste-chef --format json` streams live invocation logs with request metadata. Filter by status: `--status error`. Cloudflare MCP observability server exposes structured log queries for agent use.
 
 ## Risk Register
 
@@ -106,17 +106,19 @@ By month two, the developer has accumulated a private mental model of workerd-vs
 | CPU time exceeded on free tier during AI recipe generation | Devil's advocate | High | High | Upgrade to Workers Paid ($5/month) before first production deploy. Verify with `wrangler tail --status error` after deploying recipe generation route. |
 | `nodejs_compat` flag missing causes Supabase/crypto failures in workerd | Devil's advocate | High | High | Confirm `compatibility_flags = ["nodejs_compat"]` is in `wrangler.jsonc` before first deploy. Test `wrangler dev` (not `astro dev`) against real Supabase calls. |
 | `Astro.locals.runtime` removed in v13 — old tutorial patterns break silently | Devil's advocate | Medium | Medium | Audit `src/middleware.ts` and any Cloudflare env access for `Astro.locals.runtime` usage. Replace with `import { env } from "cloudflare:workers"` per v13 docs. |
-| Wrong wrangler command used (`wrangler deploy` instead of `wrangler pages deploy`) | Devil's advocate | Medium | Low | Document the correct deploy command in README. CI/CD should use `wrangler pages deploy` explicitly. |
+| Wrong wrangler command used (`wrangler pages deploy` instead of `wrangler deploy`) | Devil's advocate | Medium | Low | Use `wrangler deploy` (Workers). `wrangler pages deploy` targets Pages and will fail — v13 adapter removed Pages support. CI uses `wrangler-action` with `command: deploy`. |
 | Daily 100k request free-tier limit causes 1015 errors during demo/spike | Devil's advocate | Low | High | Pre-emptively upgrade to Workers Paid ($5/month) before any public demo or submission deadline. |
 | `astro dev` vs `wrangler dev` env-access divergence causes test/seed failures | Unknown unknowns | Medium | Low | Use `wrangler dev` for any test involving Cloudflare-specific APIs. Document in CLAUDE.md. |
 | Write-only secrets make key rotation debugging opaque | Unknown unknowns | Low | Medium | Keep a private (not-in-repo) record of which secret values are set. Use `wrangler secret list` to audit names; re-set if values are suspected incorrect. |
-| Pages git-push CI and `wrangler pages deploy` both active — conflicting deploys | Unknown unknowns | Low | Medium | Choose one deploy path: either disable Cloudflare Pages auto-deploy in dashboard and use `wrangler pages deploy` exclusively, or disable direct uploads and use git-push only. |
+| Two deploy paths conflict (manual `wrangler deploy` + GitHub Actions both target the same Worker) | Unknown unknowns | Low | Low | Both paths call `wrangler deploy` against the same Worker — the last deploy wins. Keep `main` as the single source of truth; avoid manual deploys after CI is wired up. |
 | Astro 6 hybrid-site SSR+prerender middleware bug (#15237) | Research finding | Low | Medium | Project is full SSR (no prerendered routes) so this bug does not apply. If prerendered routes are added, test middleware behavior against that route before shipping. |
-| `wrangler deploy --x-versions` (gradual rollout) is in open beta | Research finding | Low | Low | Do not use `--x-versions` for production deploys until GA is announced. Use standard `wrangler pages deploy` + manual rollback instead. |
+| `wrangler deploy --x-versions` (gradual rollout) is in open beta | Research finding | Low | Low | Do not use `--x-versions` for production deploys until GA is announced. Use standard `wrangler deploy` + `wrangler rollback` instead. |
 
 ## Getting Started
 
-The project is already bootstrapped for Cloudflare — these steps connect it to a live Pages project.
+The project is already bootstrapped for Cloudflare Workers — these steps deploy it to production.
+
+> **v13 note:** `@astrojs/cloudflare` v13 removed Pages support. Deploy with `wrangler deploy`, NOT `wrangler pages deploy`.
 
 1. **Authenticate wrangler** (one-time):
    ```bash
@@ -124,35 +126,32 @@ The project is already bootstrapped for Cloudflare — these steps connect it to
    ```
    This opens a browser for OAuth with your Cloudflare account. Credentials are stored in `~/.config/.wrangler/`.
 
-2. **Create the Pages project** (one-time):
+2. **Set production secrets** (after first deploy creates the Worker):
    ```bash
-   npx wrangler pages project create zero-waste-chef
+   npm run build
+   npx wrangler deploy
+   npx wrangler secret put SUPABASE_URL
+   npx wrangler secret put SUPABASE_KEY
    ```
-   Pick a production branch name (typically `main`). This registers the project in your Cloudflare account.
+   Do not pass `--env production` — the project uses a single environment (named envs trigger a known adapter bug with `astro:env`).
 
-3. **Set production secrets**:
-   ```bash
-   npx wrangler secret put SUPABASE_URL --env production
-   npx wrangler secret put SUPABASE_KEY --env production
-   ```
-   Set preview secrets separately if you have a Supabase staging project:
-   ```bash
-   npx wrangler secret put SUPABASE_URL --env preview
-   npx wrangler secret put SUPABASE_KEY --env preview
-   ```
-
-4. **Verify `nodejs_compat` is in `wrangler.jsonc`** before first deploy:
+3. **Verify `nodejs_compat` is in `wrangler.jsonc`** before first deploy:
    ```json
    { "compatibility_flags": ["nodejs_compat"] }
    ```
    Without this, `@supabase/ssr` will fail in `workerd` at runtime.
 
-5. **Deploy to production**:
+4. **Confirm secrets are registered**:
    ```bash
-   npm run build
-   npx wrangler pages deploy dist/ --project-name zero-waste-chef --branch main
+   npx wrangler secret list
    ```
-   The command outputs the deployment URL. Verify recipe generation works against production secrets before announcing the URL.
+   Both `SUPABASE_URL` and `SUPABASE_KEY` should appear. Values are write-only — names only are shown.
+
+5. **Tail live logs to verify**:
+   ```bash
+   npx wrangler tail zero-waste-chef --format json
+   ```
+   Confirm no CPU errors and that the "Supabase is not configured" path never fires.
 
 ## Out of Scope
 
