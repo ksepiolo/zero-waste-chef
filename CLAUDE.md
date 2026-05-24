@@ -1,6 +1,9 @@
 # Rules for AI
 
-This file provides guidance to AI Agent when working with code in this repository.
+## Hard rules
+- `src/lib/supabase.ts` — `createClient()` returns `null` when `SUPABASE_URL`/`SUPABASE_KEY` are missing; all callers must null-check. Uses `@supabase/ssr` with cookie-based sessions; env vars come from `astro:env/server` (declared in `astro.config.mjs` `env.schema`).
+- API routes must export `const prerender = false`.
+- Always enable RLS on new tables. Add separate policies for SELECT, INSERT, UPDATE, DELETE — one per role (authenticated, anon). No catch-all USING (true).
 
 ## Commands
 
