@@ -18,7 +18,7 @@ This is the **Plan Mode deploy** step of the 10xDevs Module 1 / Lesson 5 infra c
 ## Deployment target
 
 - **Worker name:** `zero-waste-chef` (from `wrangler.jsonc`)
-- **URL:** `https://zero-waste-chef.<account-subdomain>.workers.dev` (custom domain out of scope for MVP)
+- **URL:** `https://zero-waste-chef.ksepiolo.workers.dev` (custom domain out of scope for MVP)
 - **Deploy command:** `npx wrangler deploy` — **NOT** `wrangler pages deploy`
 - **Runtime secrets:** `SUPABASE_URL`, `SUPABASE_KEY` set via `wrangler secret put` (persist across deploys; runtime-only, not needed at build because they're `optional` in `astro:env`)
 
@@ -63,10 +63,10 @@ Complete these before Phase 0. They are one-time-per-machine setup, not part of 
 
 ## Phase 0 — Pre-flight (read-only, local)
 
-- [ ] `npm run lint` — clean
-- [ ] `npm run build` — produces `dist/` with no errors
+- [x] `npm run lint` — clean (auto-fixed trailing newline in `src/user/user.handler.ts`)
+- [x] `npm run build` — clean, no errors
 - [ ] `npm run preview` (Astro 6 runs this on **workerd**, a true prod replica) — smoke-test the site loads locally
-- [ ] Re-confirm `wrangler.jsonc` still has `nodejs_compat` and the `main` entrypoint (guard against accidental edits)
+- [x] Re-confirm `wrangler.jsonc` still has `nodejs_compat` and the `main` entrypoint (guard against accidental edits)
 
 ## Phase 1 — Manual gates (human-only)
 
@@ -77,12 +77,12 @@ Complete these before Phase 0. They are one-time-per-machine setup, not part of 
 
 ## Phase 2 — First manual deploy + secrets
 
-- [ ] `npm run build`
-- [ ] `npx wrangler deploy` → creates the `zero-waste-chef` Worker, prints the `*.workers.dev` URL. **Record the URL** — Phase 3 needs it.
-- [ ] `npx wrangler secret put SUPABASE_URL` (paste value from local `.dev.vars`)
-- [ ] `npx wrangler secret put SUPABASE_KEY` (paste value from local `.dev.vars`)
-- [ ] `npx wrangler secret list` → confirm both names present (values are write-only / not readable back — per doc's "write-only secrets" note)
-- [ ] No redeploy required — secrets apply to the running Worker immediately.
+- [x] `npm run build`
+- [x] `npx wrangler deploy` → Worker `zero-waste-chef` created at `https://zero-waste-chef.ksepiolo.workers.dev`
+- [x] `npx wrangler secret put SUPABASE_URL`
+- [x] `npx wrangler secret put SUPABASE_KEY`
+- [x] `npx wrangler secret list` → both `SUPABASE_URL` and `SUPABASE_KEY` confirmed present
+- [x] No redeploy required — secrets apply to the running Worker immediately.
 
 **Edge-case support:**
 - If `wrangler secret put` is run *before* the first `deploy`, wrangler prompts to create the Worker — that's why we **deploy first**.
@@ -93,10 +93,10 @@ Complete these before Phase 0. They are one-time-per-machine setup, not part of 
 
 The deployed URL must be registered with Supabase or **email confirmation links will redirect to `localhost`** and break signup.
 
-- [ ] Supabase dashboard → **Authentication → URL Configuration → Site URL** = `https://zero-waste-chef.<account>.workers.dev`
-- [ ] Add the same URL (and `…/auth/signin`) to the **Redirect URLs** allow-list
-- [ ] If email confirmation is enabled, confirm the email link now redirects to production, not localhost
-- [ ] (Optional, recommended) Verify the key in use is the **anon/publishable** key (it's safe in `@supabase/ssr` cookie sessions), not the service-role key
+- [x] Supabase dashboard → **Authentication → URL Configuration → Site URL** = `https://zero-waste-chef.ksepiolo.workers.dev`
+- [x] Add the same URL (and `…/auth/signin`) to the **Redirect URLs** allow-list
+- [x] If email confirmation is enabled, confirm the email link now redirects to production, not localhost
+- [x] (Optional, recommended) Verify the key in use is the **anon/publishable** key (it's safe in `@supabase/ssr` cookie sessions), not the service-role key
 
 **Edge-case support:** the current `src/pages/auth/confirm-email.astro` is static and shows "check your email" in production (the `import.meta.env.DEV` auto-confirm branch is dev-only). There is **no** server `/auth/callback` route — that's fine for Supabase's default hosted-link verification flow, which only needs the Site URL configured above. If a PKCE/code-exchange flow is added later, a callback route becomes necessary.
 
@@ -117,9 +117,10 @@ Run `npx wrangler tail zero-waste-chef --format json` in one terminal while exer
 
 Edit `.github/workflows/ci.yml`:
 
-- [ ] Fix the trigger: `master` → `main` (push + PR)
-- [ ] Add a **deploy job** that runs **only on push to `main`** (not on PRs), depends on the existing build/lint job, using [`cloudflare/wrangler-action@v3`](https://github.com/cloudflare/wrangler-action) with `command: deploy`, authenticated by `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` from GitHub secrets.
-- [ ] Keep the existing build env (`SUPABASE_URL`/`SUPABASE_KEY` from GitHub secrets) for the build step; the **deploy** step needs only the Cloudflare token (runtime Supabase secrets already live on the Worker from Phase 2 and persist across deploys).
+- [x] Fix the trigger: `master` → `main` (push + PR) — already correct in the committed file
+- [x] Add a **deploy job** that runs **only on push to `main`** (not on PRs), depends on the existing build/lint job, using [`cloudflare/wrangler-action@v3`](https://github.com/cloudflare/wrangler-action) with `command: deploy`, authenticated by `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` from GitHub secrets.
+- [x] Keep the existing build env (`SUPABASE_URL`/`SUPABASE_KEY` from GitHub secrets) for the build step; the **deploy** step needs only the Cloudflare token (runtime Supabase secrets already live on the Worker from Phase 2 and persist across deploys).
+- [ ] **User gate:** add `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` to GitHub repo secrets (Settings → Secrets and variables → Actions) — CI will fail until these are set
 - [ ] Push a trivial change to `main` → confirm the Action deploys and the new version is live
 - [ ] Confirm secrets persisted (app still authenticates — no re-`secret put` needed)
 
@@ -127,10 +128,8 @@ Edit `.github/workflows/ci.yml`:
 
 ## Phase 6 — Doc & artifact updates
 
-- [ ] **`context/foundation/infrastructure.md`** — correct the Pages→Workers errors:
-  - "Getting Started": replace `wrangler pages project create` / `wrangler pages deploy dist/` with `wrangler deploy`; drop the `--env production` from `wrangler secret put` (single-env setup); note Pages removed in `@astrojs/cloudflare` v13.
-  - Risk register: update the `wrangler deploy` vs `wrangler pages deploy` row (the *correct* command here is `wrangler deploy`), and soften the "`astro dev` vs `wrangler dev` divergence" row — Astro 6 runs `astro dev`/`preview` on workerd via the Cloudflare Vite plugin, largely closing that gap.
-- [ ] (Optional) add `.dev.vars.example` documenting `SUPABASE_URL` / `SUPABASE_KEY` for onboarding (the doc references it but it doesn't exist)
+- [x] **`context/foundation/infrastructure.md`** — corrected: Pages→Workers throughout (Getting Started, Operational Story, risk register, recommended_platform frontmatter, pre-mortem narrative).
+- [x] `.dev.vars.example` created with `SUPABASE_URL` / `SUPABASE_KEY` placeholders.
 
 ---
 
