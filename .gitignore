@@ -1,14 +1,5 @@
-.claude/skills/10x-agents-md
-.claude/skills/10x-init/
-.claude/skills/10x-lesson
-.claude/skills/10x-prd/
-.claude/skills/10x-shape/
-.claude/skills/10x-rule-review
-.claude/skills/10x-stack-assess/
-.claude/skills/10x-tech-stack-selector/
-.claude/skills/10x-bootstrapper
-.claude/skills/10x-health-check
-.claude/skills/10x-infra-research
+.claude/skills/10x*
+.claude/prompts/skill-explainer.md
 .claude/.10x-cli-manifest.json
 
 # from 10x-astro-starter
