@@ -3,7 +3,7 @@ project: "Zero Waste Chef"
 version: 1
 status: draft
 created: 2026-05-27
-updated: 2026-05-27
+updated: 2026-05-31
 prd_version: 1
 main_goal: speed
 top_blocker: time
@@ -29,7 +29,7 @@ Użytkownik otwiera lodówkę i nie wie, co trzeba zużyć — ekspirujące prod
 
 | ID   | Change ID              | Outcome (user can …)                                           | Prerequisites | PRD refs              | Status   |
 |------|------------------------|----------------------------------------------------------------|---------------|-----------------------|----------|
-| F-01 | data-schema            | (foundation) tabele products + recipes z RLS w Supabase       | —             | FR-004, FR-007, FR-009 | ready    |
+| F-01 | data-schema            | (foundation) tabele products + recipes z RLS w Supabase       | —             | FR-004, FR-007, FR-009 | done     |
 | S-01 | inventory-management   | dodać produkt, zobaczyć listę z oznaczeniem "at-risk", usunąć | F-01          | FR-001–FR-006         | proposed |
 | S-02 | recipe-generation-loop | wygenerować przepis AI, zatwierdzić, usunąć produkty          | S-01, F-01    | FR-007–FR-009, US-01  | proposed |
 | S-03 | recipe-history         | zobaczyć listę wcześniej zatwierdzonych przepisów              | S-02          | FR-010                | proposed |
@@ -59,7 +59,7 @@ Foundations poniżej zakładają, że te warstwy są obecne i ich nie przebudowu
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** sekwencjonowane pierwsze — każdy slice zależy od schematu; błąd tu (brak RLS, zły model danych) propaguje się do wszystkich warstw powyżej
-- **Status:** ready
+- **Status:** done
 
 ## Slices
 
@@ -127,4 +127,4 @@ Foundations poniżej zakładają, że te warstwy są obecne i ich nie przebudowu
 
 ## Done
 
-(Puste przy pierwszym generowaniu. `/10x-archive` dopisuje tutaj wpis — i zmienia Status danej pozycji na `done` — gdy zmiana o pasującym Change ID zostanie zarchiwizowana.)
+- **F-01: (foundation) tabele products + recipes z RLS w Supabase** — Archived 2026-05-31 → `context/archive/2026-05-31-data-schema/`. Lesson: —.
