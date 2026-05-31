@@ -269,24 +269,24 @@ export type NewRecipe = Omit<Recipe, "id" | "user_id" | "created_at">;
 
 #### Automated
 
-- [x] 1.1 Supabase CLI linked: `npx supabase link --project-ref aojqrsssylptdmkkuhnl` exits 0
-- [x] 1.2 Migration applies cleanly: `npx supabase db push` exits 0
+- [x] 1.1 Supabase CLI linked: `npx supabase link --project-ref aojqrsssylptdmkkuhnl` exits 0 — e2a1666
+- [x] 1.2 Migration applies cleanly: `npx supabase db push` exits 0 — e2a1666
 
 #### Manual
 
-- [x] 1.3 Dashboard shows `products` table with correct columns
-- [x] 1.4 Dashboard shows `recipes` table with correct columns
-- [x] 1.5 RLS enabled on both tables, 8 policies each visible in dashboard
-- [x] 1.6 Isolation check: test row not visible across different `auth.uid()`
+- [x] 1.3 Dashboard shows `products` table with correct columns — e2a1666
+- [x] 1.4 Dashboard shows `recipes` table with correct columns — e2a1666
+- [x] 1.5 RLS enabled on both tables, 8 policies each visible in dashboard — e2a1666
+- [x] 1.6 Isolation check: test row not visible across different `auth.uid()` — e2a1666
 
 ### Phase 2: TypeScript Types
 
 #### Automated
 
-- [ ] 2.1 TypeScript compilation passes: `npm run build` exits 0
-- [ ] 2.2 Linting passes: `npm run lint` exits 0
+- [x] 2.1 TypeScript compilation passes: `npm run build` exits 0
+- [x] 2.2 Linting passes: `npm run lint` exits 0
 
 #### Manual
 
-- [ ] 2.3 `Product` import from `@/types` shows all five fields in IDE
-- [ ] 2.4 `NewProduct` import shows only `name` and `expiry_date`
+- [x] 2.3 `Product` import from `@/types` shows all five fields in IDE
+- [x] 2.4 `NewProduct` import shows only `name` and `expiry_date`
