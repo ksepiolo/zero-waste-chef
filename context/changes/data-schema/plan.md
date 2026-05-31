@@ -283,10 +283,10 @@ export type NewRecipe = Omit<Recipe, "id" | "user_id" | "created_at">;
 
 #### Automated
 
-- [x] 2.1 TypeScript compilation passes: `npm run build` exits 0
-- [x] 2.2 Linting passes: `npm run lint` exits 0
+- [x] 2.1 TypeScript compilation passes: `npm run build` exits 0 — 2861c34
+- [x] 2.2 Linting passes: `npm run lint` exits 0 — 2861c34
 
 #### Manual
 
-- [x] 2.3 `Product` import from `@/types` shows all five fields in IDE
-- [x] 2.4 `NewProduct` import shows only `name` and `expiry_date`
+- [x] 2.3 `Product` import from `@/types` shows all five fields in IDE — 2861c34
+- [x] 2.4 `NewProduct` import shows only `name` and `expiry_date` — 2861c34
