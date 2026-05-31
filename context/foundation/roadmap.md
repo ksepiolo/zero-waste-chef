@@ -30,7 +30,7 @@ Użytkownik otwiera lodówkę i nie wie, co trzeba zużyć — ekspirujące prod
 | ID   | Change ID              | Outcome (user can …)                                           | Prerequisites | PRD refs              | Status   |
 |------|------------------------|----------------------------------------------------------------|---------------|-----------------------|----------|
 | F-01 | data-schema            | (foundation) tabele products + recipes z RLS w Supabase       | —             | FR-004, FR-007, FR-009 | done     |
-| S-01 | inventory-management   | dodać produkt, zobaczyć listę z oznaczeniem "at-risk", usunąć | F-01          | FR-001–FR-006         | proposed |
+| S-01 | inventory-management   | dodać produkt, zobaczyć listę z oznaczeniem "at-risk", usunąć | F-01          | FR-001–FR-006         | ready    |
 | S-02 | recipe-generation-loop | wygenerować przepis AI, zatwierdzić, usunąć produkty          | S-01, F-01    | FR-007–FR-009, US-01  | proposed |
 | S-03 | recipe-history         | zobaczyć listę wcześniej zatwierdzonych przepisów              | S-02          | FR-010                | proposed |
 
@@ -105,8 +105,8 @@ Foundations poniżej zakładają, że te warstwy są obecne i ich nie przebudowu
 
 | Roadmap ID | Change ID              | Suggested issue title                                  | Ready for `/10x-plan` | Notes                              |
 |------------|------------------------|--------------------------------------------------------|-----------------------|------------------------------------|
-| F-01       | data-schema            | Supabase: schema products + recipes z RLS              | yes                   | Uruchom `/10x-plan data-schema`    |
-| S-01       | inventory-management   | Inventory: add / view (at-risk flag) / delete products | no                    | Czeka na F-01                      |
+| F-01       | data-schema            | Supabase: schema products + recipes z RLS              | done                  | Archived 2026-05-31                |
+| S-01       | inventory-management   | Inventory: add / view (at-risk flag) / delete products | yes                   | F-01 done                          |
 | S-02       | recipe-generation-loop | Recipe loop: generate → approve → remove (AI)          | no                    | Czeka na S-01 + Workers Paid plan  |
 | S-03       | recipe-history         | Recipe history: lista zatwierdzonych przepisów         | no                    | Czeka na S-02; pierwsze do odcięcia |
 
