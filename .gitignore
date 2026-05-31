@@ -1,5 +1,6 @@
 .claude/skills/10x*
 .claude/prompts/skill-explainer.md
+.claude/prompts/m1l*
 .claude/.10x-cli-manifest.json
 
 # from 10x-astro-starter
@@ -11,6 +12,8 @@ dist/
 
 # dependencies
 node_modules/
+
+supabase/.temp/*
 
 # logs
 npm-debug.log*
