@@ -3,7 +3,7 @@ project: "Zero Waste Chef"
 version: 1
 status: draft
 created: 2026-05-27
-updated: 2026-06-01
+updated: 2026-05-31
 prd_version: 1
 main_goal: speed
 top_blocker: time
@@ -30,7 +30,7 @@ Użytkownik otwiera lodówkę i nie wie, co trzeba zużyć — ekspirujące prod
 | ID   | Change ID              | Outcome (user can …)                                           | Prerequisites | PRD refs              | Status   |
 |------|------------------------|----------------------------------------------------------------|---------------|-----------------------|----------|
 | F-01 | data-schema            | (foundation) tabele products + recipes z RLS w Supabase       | —             | FR-004, FR-007, FR-009 | done     |
-| S-01 | inventory-management   | dodać produkt, zobaczyć listę z oznaczeniem "at-risk", usunąć | F-01          | FR-001–FR-006         | done     |
+| S-01 | inventory-management   | dodać produkt, zobaczyć listę z oznaczeniem "at-risk", usunąć | F-01          | FR-001–FR-006         | ready    |
 | S-02 | recipe-generation-loop | wygenerować przepis AI, zatwierdzić, usunąć produkty          | S-01, F-01    | FR-007–FR-009, US-01  | proposed |
 | S-03 | recipe-history         | zobaczyć listę wcześniej zatwierdzonych przepisów              | S-02          | FR-010                | proposed |
 
@@ -73,7 +73,7 @@ Foundations poniżej zakładają, że te warstwy są obecne i ich nie przebudowu
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** logika obliczania okna "at-risk" (3 dni od dzisiaj) musi żyć w jednym miejscu po stronie serwera — jeśli jest zduplikowana w endpoincie i w UI, może się rozjechać; to samo okno 3-day musi być użyte w S-02 przy generowaniu przepisu
-- **Status:** done
+- **Status:** proposed
 
 ### S-02: Recipe generation loop
 
@@ -106,7 +106,7 @@ Foundations poniżej zakładają, że te warstwy są obecne i ich nie przebudowu
 | Roadmap ID | Change ID              | Suggested issue title                                  | Ready for `/10x-plan` | Notes                              |
 |------------|------------------------|--------------------------------------------------------|-----------------------|------------------------------------|
 | F-01       | data-schema            | Supabase: schema products + recipes z RLS              | done                  | Archived 2026-05-31                |
-| S-01       | inventory-management   | Inventory: add / view (at-risk flag) / delete products | done                  | Archived 2026-06-01                |
+| S-01       | inventory-management   | Inventory: add / view (at-risk flag) / delete products | yes                   | F-01 done                          |
 | S-02       | recipe-generation-loop | Recipe loop: generate → approve → remove (AI)          | no                    | Czeka na S-01 + Workers Paid plan  |
 | S-03       | recipe-history         | Recipe history: lista zatwierdzonych przepisów         | no                    | Czeka na S-02; pierwsze do odcięcia |
 
@@ -128,4 +128,3 @@ Foundations poniżej zakładają, że te warstwy są obecne i ich nie przebudowu
 ## Done
 
 - **F-01: (foundation) tabele products + recipes z RLS w Supabase** — Archived 2026-05-31 → `context/archive/2026-05-31-data-schema/`. Lesson: —.
-- **S-01: użytkownik może dodać produkt (nazwa + data ważności) do inwentarza, zobaczyć pełną listę z wizualnym wyróżnieniem produktów "at-risk" — produktów wygasających w ciągu najbliższych 3 dni — i usunąć produkt manualnie.** — Archived 2026-06-01 → `context/archive/2026-05-31-inventory-management/`. Lesson: —.
