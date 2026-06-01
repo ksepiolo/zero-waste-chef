@@ -1,10 +1,10 @@
 ---
 change_id: inventory-management
 title: Inventory management — add product, view list with at-risk flag, delete product
-status: impl_reviewed
+status: archived
 created: 2026-05-31
 updated: 2026-06-01
-archived_at: null
+archived_at: 2026-06-01T21:30:42Z
 ---
 
 ## Notes
