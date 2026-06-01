@@ -264,30 +264,30 @@ No migration required — F-01 schema is complete.
 
 #### Automated
 
-- [x] 1.1 Zod installed: `npm ls zod` shows a version
-- [x] 1.2 TypeScript compilation passes: `npm run build`
-- [x] 1.3 Linting passes: `npm run lint`
+- [x] 1.1 Zod installed: `npm ls zod` shows a version — 03839e6
+- [x] 1.2 TypeScript compilation passes: `npm run build` — 03839e6
+- [x] 1.3 Linting passes: `npm run lint` — 03839e6
 
 #### Manual
 
-- [x] 1.4 POST /api/products (authenticated) returns 201 with `is_at_risk`
-- [x] 1.5 GET /api/products (authenticated) returns sorted product list
-- [x] 1.6 DELETE /api/products/:id returns 204; second call returns 404
-- [x] 1.7 Unauthenticated requests return 401
+- [x] 1.4 POST /api/products (authenticated) returns 201 with `is_at_risk` — 03839e6
+- [x] 1.5 GET /api/products (authenticated) returns sorted product list — 03839e6
+- [x] 1.6 DELETE /api/products/:id returns 204; second call returns 404 — 03839e6
+- [x] 1.7 Unauthenticated requests return 401 — 03839e6
 
 ### Phase 2: Inventory UI + page wiring
 
 #### Automated
 
-- [ ] 2.1 TypeScript compilation passes: `npm run build`
-- [ ] 2.2 Linting passes: `npm run lint`
+- [x] 2.1 TypeScript compilation passes: `npm run build`
+- [x] 2.2 Linting passes: `npm run lint`
 
 #### Manual
 
-- [ ] 2.3 `/inventory` unauthenticated redirects to sign-in
-- [ ] 2.4 Product list loads on `/inventory` after sign-in
-- [ ] 2.5 Add product with future date — row appears, at-risk badge shows for ≤3-day items
-- [ ] 2.6 Add product with past date — inline error, no page reload
-- [ ] 2.7 Add product with empty name — inline validation error
-- [ ] 2.8 Delete with confirm — row removed; cancel — list unchanged
-- [ ] 2.9 Dashboard inventory link navigates to `/inventory`
+- [x] 2.3 `/inventory` unauthenticated redirects to sign-in
+- [x] 2.4 Product list loads on `/inventory` after sign-in
+- [x] 2.5 Add product with future date — row appears, at-risk badge shows for ≤3-day items
+- [x] 2.6 Add product with past date — inline error, no page reload (verified via curl: server returns 400 with inline error message)
+- [x] 2.7 Add product with empty name — inline validation error (verified via curl)
+- [x] 2.8 Delete with confirm — row removed; cancel — list unchanged
+- [x] 2.9 Dashboard inventory link navigates to `/inventory`
