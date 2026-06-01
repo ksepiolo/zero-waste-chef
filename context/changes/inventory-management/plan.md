@@ -279,15 +279,15 @@ No migration required — F-01 schema is complete.
 
 #### Automated
 
-- [x] 2.1 TypeScript compilation passes: `npm run build`
-- [x] 2.2 Linting passes: `npm run lint`
+- [x] 2.1 TypeScript compilation passes: `npm run build` — 9208d8c
+- [x] 2.2 Linting passes: `npm run lint` — 9208d8c
 
 #### Manual
 
-- [x] 2.3 `/inventory` unauthenticated redirects to sign-in
-- [x] 2.4 Product list loads on `/inventory` after sign-in
-- [x] 2.5 Add product with future date — row appears, at-risk badge shows for ≤3-day items
-- [x] 2.6 Add product with past date — inline error, no page reload (verified via curl: server returns 400 with inline error message)
-- [x] 2.7 Add product with empty name — inline validation error (verified via curl)
-- [x] 2.8 Delete with confirm — row removed; cancel — list unchanged
-- [x] 2.9 Dashboard inventory link navigates to `/inventory`
+- [x] 2.3 `/inventory` unauthenticated redirects to sign-in — 9208d8c
+- [x] 2.4 Product list loads on `/inventory` after sign-in — 9208d8c
+- [x] 2.5 Add product with future date — row appears, at-risk badge shows for ≤3-day items — 9208d8c
+- [x] 2.6 Add product with past date — inline error, no page reload (verified via curl: server returns 400 with inline error message) — 9208d8c
+- [x] 2.7 Add product with empty name — inline validation error (verified via curl) — 9208d8c
+- [x] 2.8 Delete with confirm — row removed; cancel — list unchanged — 9208d8c
+- [x] 2.9 Dashboard inventory link navigates to `/inventory` — 9208d8c
