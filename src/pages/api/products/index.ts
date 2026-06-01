@@ -23,7 +23,7 @@ export const GET: APIRoute = async (context) => {
   }
 
   try {
-    const products = await listProducts(supabase);
+    const products = await listProducts(supabase, context.locals.user.id);
     return new Response(JSON.stringify({ products }), {
       status: 200,
       headers: { "Content-Type": "application/json" },

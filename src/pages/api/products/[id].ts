@@ -19,7 +19,7 @@ export const DELETE: APIRoute = async (context) => {
   }
 
   try {
-    await deleteProduct(supabase, id);
+    await deleteProduct(supabase, context.locals.user.id, id);
     return new Response(null, { status: 204 });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";

@@ -10,8 +10,12 @@ export function isAtRisk(expiryDate: string): boolean {
   return expiryDate <= threshold.toISOString().split("T")[0];
 }
 
-export async function listProducts(supabase: SupabaseClient): Promise<ProductWithRisk[]> {
-  const { data, error } = await supabase.from("products").select("*").order("expiry_date", { ascending: true });
+export async function listProducts(supabase: SupabaseClient, userId: string): Promise<ProductWithRisk[]> {
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("user_id", userId)
+    .order("expiry_date", { ascending: true });
 
   if (error) throw new Error(error.message);
 
@@ -26,20 +30,23 @@ export async function createProduct(
   userId: string,
   data: NewProduct,
 ): Promise<ProductWithRisk> {
-  const { data: inserted, error } = (await supabase
+  const { data: inserted, error } = await supabase
     .from("products")
     .insert({ user_id: userId, name: data.name, expiry_date: data.expiry_date })
     .select()
-    .single()) as unknown as { data: Product | null; error: { message: string } | null };
+    .single<Product>();
 
   if (error) throw new Error(error.message);
-  if (!inserted) throw new Error("Insert returned no data");
 
   return { ...inserted, is_at_risk: isAtRisk(inserted.expiry_date) };
 }
 
-export async function deleteProduct(supabase: SupabaseClient, productId: string): Promise<void> {
-  const { count, error } = await supabase.from("products").delete({ count: "exact" }).eq("id", productId);
+export async function deleteProduct(supabase: SupabaseClient, userId: string, productId: string): Promise<void> {
+  const { count, error } = await supabase
+    .from("products")
+    .delete({ count: "exact" })
+    .eq("user_id", userId)
+    .eq("id", productId);
 
   if (error) throw new Error(error.message);
   if (count === 0) throw new Error("not found");

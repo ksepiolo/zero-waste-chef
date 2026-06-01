@@ -49,9 +49,8 @@ export function InventoryPanel({ initialProducts }: Props) {
         return;
       }
 
-      const listRes = await fetch("/api/products");
-      const listJson = (await listRes.json()) as { products: ProductWithRisk[] };
-      setProducts(listJson.products);
+      const json = (await res.json()) as { product: ProductWithRisk };
+      setProducts((prev) => [...prev, json.product].sort((a, b) => a.expiry_date.localeCompare(b.expiry_date)));
       form.reset();
     } catch {
       setAddError("Network error. Please try again.");

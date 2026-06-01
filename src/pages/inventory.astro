@@ -8,9 +8,9 @@ import type { ProductWithRisk } from "@/types";
 let initialProducts: ProductWithRisk[] = [];
 
 const supabase = createClient(Astro.request.headers, Astro.cookies);
-if (supabase) {
+if (supabase && Astro.locals.user) {
   try {
-    initialProducts = await listProducts(supabase);
+    initialProducts = await listProducts(supabase, Astro.locals.user.id);
   } catch {
     initialProducts = [];
   }
