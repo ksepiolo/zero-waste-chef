@@ -8,6 +8,8 @@ export interface Product {
 
 export type NewProduct = Omit<Product, "id" | "user_id" | "created_at">;
 
+export type ProductWithRisk = Product & { is_at_risk: boolean };
+
 export interface ConsumedProduct {
   name: string;
   expiry_date: string; // ISO date — 'YYYY-MM-DD'

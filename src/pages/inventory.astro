@@ -1,0 +1,29 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import { createClient } from "@/lib/supabase";
+import { listProducts } from "@/lib/services/product.service";
+import { InventoryPanel } from "@/components/inventory/inventory-panel";
+import type { ProductWithRisk } from "@/types";
+
+let initialProducts: ProductWithRisk[] = [];
+
+const supabase = createClient(Astro.request.headers, Astro.cookies);
+if (supabase && Astro.locals.user) {
+  try {
+    initialProducts = await listProducts(supabase, Astro.locals.user.id);
+  } catch {
+    initialProducts = [];
+  }
+}
+---
+
+<Layout title="My Inventory">
+  <div class="bg-cosmic min-h-screen p-6 sm:p-10">
+    <div class="mx-auto max-w-2xl">
+      <h1 class="mb-6 bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-3xl font-bold text-transparent">
+        My Inventory
+      </h1>
+      <InventoryPanel initialProducts={initialProducts} client:load />
+    </div>
+  </div>
+</Layout>
