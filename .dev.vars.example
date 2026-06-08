@@ -1,2 +1,3 @@
 SUPABASE_URL=https://your-project-ref.supabase.co
 SUPABASE_KEY=your-anon-public-key
+OPENROUTER_API_KEY=sk-or-v1-...

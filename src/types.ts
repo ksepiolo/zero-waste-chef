@@ -19,9 +19,17 @@ export interface Recipe {
   id: string;
   user_id: string;
   title: string;
+  ingredients: string[];
   instructions: string;
   consumed_products: ConsumedProduct[];
   created_at: string;
 }
 
 export type NewRecipe = Omit<Recipe, "id" | "user_id" | "created_at">;
+
+export interface GeneratedRecipe {
+  title: string;
+  ingredients: string[];
+  instructions: string[]; // array from AI; joined with '\n' only in approve endpoint
+  used_product_ids: string[];
+}

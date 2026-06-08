@@ -1,7 +1,7 @@
 ---
 change_id: recipe-generation-loop
 title: Recipe generation loop
-status: plan_reviewed
+status: implementing
 created: 2026-06-05
 updated: 2026-06-08
 research_status: complete

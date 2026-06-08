@@ -508,15 +508,15 @@ Note: "Generate Different Recipe" uses `AlertDialogAction` (closes dialog on cli
 
 #### Automated
 
-- [ ] 1.1 `npm run typecheck` passes with no errors on modified files
-- [ ] 1.2 `npm run lint` passes on all modified files
+- [x] 1.1 `npm run typecheck` passes with no errors on modified files
+- [x] 1.2 `npm run lint` passes on all modified files
 - [ ] 1.3 Migration applies cleanly: `npx supabase db reset` exits 0
 
 #### Manual
 
 - [ ] 1.4 Supabase Studio shows `recipes.ingredients TEXT[]` column
 - [ ] 1.5 `approve_recipe` function visible in Supabase Studio under Database → Functions
-- [ ] 1.6 `src/components/ui/sonner.tsx` exists after shadcn install
+- [x] 1.6 `src/components/ui/sonner.tsx` exists after shadcn install
 - [ ] 1.7 Browser shows no console errors related to `Toaster` on any page
 
 ### Phase 2: Backend
