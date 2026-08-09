@@ -510,7 +510,7 @@ Note: "Generate Different Recipe" uses `AlertDialogAction` (closes dialog on cli
 
 - [x] 1.1 `npm run typecheck` passes with no errors on modified files
 - [x] 1.2 `npm run lint` passes on all modified files
-- [ ] 1.3 Migration applies cleanly: `npx supabase db reset` exits 0
+- [x] 1.3 Migration applies cleanly: `npx supabase db reset` exits 0
 
 #### Manual
 
