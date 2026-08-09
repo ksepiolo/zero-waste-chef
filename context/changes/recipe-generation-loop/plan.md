@@ -523,18 +523,18 @@ Note: "Generate Different Recipe" uses `AlertDialogAction` (closes dialog on cli
 
 #### Automated
 
-- [ ] 2.1 `npm run typecheck` passes
-- [ ] 2.2 `npm run lint` passes
-- [ ] 2.3 Both endpoint files exist at correct paths
+- [x] 2.1 `npm run typecheck` passes
+- [x] 2.2 `npm run lint` passes
+- [x] 2.3 Both endpoint files exist at correct paths
 
 #### Manual
 
-- [ ] 2.4 `POST /api/recipes/generate` returns 200 with recipe JSON when at-risk products exist
-- [ ] 2.5 `POST /api/recipes/generate` returns 400 when no at-risk products
-- [ ] 2.6 `POST /api/recipes/approve` returns 200 `{ id: uuid }` with valid auth + body
-- [ ] 2.7 Supabase Studio shows new recipe row with `ingredients` populated, `instructions` as a `\n`-joined string, and `consumed_products` as a non-empty JSON array of `{name, expiry_date}` for the used products
-- [ ] 2.8 Used products deleted from `products` table after approve call
-- [ ] 2.9 Both endpoints return 401 with no auth cookie
+- [x] 2.4 `POST /api/recipes/generate` returns 200 with recipe JSON when at-risk products exist
+- [x] 2.5 `POST /api/recipes/generate` returns 400 when no at-risk products
+- [x] 2.6 `POST /api/recipes/approve` returns 200 `{ id: uuid }` with valid auth + body
+- [x] 2.7 Supabase Studio shows new recipe row with `ingredients` populated, `instructions` as a `\n`-joined string, and `consumed_products` as a non-empty JSON array of `{name, expiry_date}` for the used products
+- [x] 2.8 Used products deleted from `products` table after approve call
+- [x] 2.9 Both endpoints return 401 with no auth cookie
 
 ### Phase 3: UI
 
