@@ -11,7 +11,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Trash2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { useRecipeGeneration } from "@/components/hooks/use-recipe-generation";
 
 interface Props {
   initialProducts: ProductWithRisk[];
@@ -24,7 +26,29 @@ export function InventoryPanel({ initialProducts }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
+  const { isGenerating, isApproving, recipe, generate, approve, reset } = useRecipeGeneration({
+    onApproveSuccess: (usedIds) => {
+      setProducts((prev) => prev.filter((p) => !usedIds.includes(p.id)));
+    },
+  });
+
   const today = new Date().toISOString().split("T")[0];
+
+  async function handleGenerate() {
+    try {
+      await generate();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to generate recipe");
+    }
+  }
+
+  async function handleApprove() {
+    try {
+      await approve();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to save recipe");
+    }
+  }
 
   async function handleAdd(e: { preventDefault(): void; currentTarget: HTMLFormElement }) {
     e.preventDefault();
@@ -166,6 +190,23 @@ export function InventoryPanel({ initialProducts }: Props) {
             ))}
           </ul>
         )}
+
+        {products.some((p) => p.is_at_risk) && (
+          <Button
+            onClick={() => void handleGenerate()}
+            disabled={isGenerating || isApproving}
+            className="mt-4 w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:opacity-90"
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="mr-2 size-4 animate-spin" />
+                Generating…
+              </>
+            ) : (
+              "Generate Recipe"
+            )}
+          </Button>
+        )}
       </div>
 
       <AlertDialog
@@ -185,6 +226,55 @@ export function InventoryPanel({ initialProducts }: Props) {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={() => void handleConfirmDelete()}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={recipe !== null}
+        onOpenChange={(open) => {
+          if (!open) reset();
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{recipe?.title}</AlertDialogTitle>
+          </AlertDialogHeader>
+
+          <div className="max-h-[50vh] space-y-3 overflow-y-auto">
+            <ul className="list-disc space-y-1 pl-5 text-sm">
+              {recipe?.ingredients.map((ingredient, i) => (
+                <li key={i}>{ingredient}</li>
+              ))}
+            </ul>
+            <ol className="list-decimal space-y-1 pl-5 text-sm">
+              {recipe?.instructions.map((step, i) => (
+                <li key={i}>{step}</li>
+              ))}
+            </ol>
+          </div>
+
+          <AlertDialogDescription>
+            Will remove from inventory:{" "}
+            {products
+              .filter((p) => recipe?.used_product_ids.includes(p.id))
+              .map((p) => p.name)
+              .join(", ")}
+          </AlertDialogDescription>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={reset}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => void handleGenerate()}>Generate Different Recipe</AlertDialogAction>
+            <Button onClick={() => void handleApprove()} disabled={isApproving}>
+              {isApproving ? (
+                <>
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                  Approving…
+                </>
+              ) : (
+                "Approve"
+              )}
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

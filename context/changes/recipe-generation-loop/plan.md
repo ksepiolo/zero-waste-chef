@@ -514,45 +514,45 @@ Note: "Generate Different Recipe" uses `AlertDialogAction` (closes dialog on cli
 
 #### Manual
 
-- [ ] 1.4 Supabase Studio shows `recipes.ingredients TEXT[]` column
-- [ ] 1.5 `approve_recipe` function visible in Supabase Studio under Database → Functions
+- [x] 1.4 Supabase Studio shows `recipes.ingredients TEXT[]` column
+- [x] 1.5 `approve_recipe` function visible in Supabase Studio under Database → Functions
 - [x] 1.6 `src/components/ui/sonner.tsx` exists after shadcn install
-- [ ] 1.7 Browser shows no console errors related to `Toaster` on any page
+- [x] 1.7 Browser shows no console errors related to `Toaster` on any page
 
 ### Phase 2: Backend
 
 #### Automated
 
-- [x] 2.1 `npm run typecheck` passes
-- [x] 2.2 `npm run lint` passes
-- [x] 2.3 Both endpoint files exist at correct paths
+- [x] 2.1 `npm run typecheck` passes — 66b9996
+- [x] 2.2 `npm run lint` passes — 66b9996
+- [x] 2.3 Both endpoint files exist at correct paths — 66b9996
 
 #### Manual
 
-- [x] 2.4 `POST /api/recipes/generate` returns 200 with recipe JSON when at-risk products exist
-- [x] 2.5 `POST /api/recipes/generate` returns 400 when no at-risk products
-- [x] 2.6 `POST /api/recipes/approve` returns 200 `{ id: uuid }` with valid auth + body
-- [x] 2.7 Supabase Studio shows new recipe row with `ingredients` populated, `instructions` as a `\n`-joined string, and `consumed_products` as a non-empty JSON array of `{name, expiry_date}` for the used products
-- [x] 2.8 Used products deleted from `products` table after approve call
-- [x] 2.9 Both endpoints return 401 with no auth cookie
+- [x] 2.4 `POST /api/recipes/generate` returns 200 with recipe JSON when at-risk products exist — 66b9996
+- [x] 2.5 `POST /api/recipes/generate` returns 400 when no at-risk products — 66b9996
+- [x] 2.6 `POST /api/recipes/approve` returns 200 `{ id: uuid }` with valid auth + body — 66b9996
+- [x] 2.7 Supabase Studio shows new recipe row with `ingredients` populated, `instructions` as a `\n`-joined string, and `consumed_products` as a non-empty JSON array of `{name, expiry_date}` for the used products — 66b9996
+- [x] 2.8 Used products deleted from `products` table after approve call — 66b9996
+- [x] 2.9 Both endpoints return 401 with no auth cookie — 66b9996
 
 ### Phase 3: UI
 
 #### Automated
 
-- [ ] 3.1 `npm run typecheck` passes
-- [ ] 3.2 `npm run lint` passes
-- [ ] 3.3 `src/components/hooks/use-recipe-generation.ts` exists
+- [x] 3.1 `npm run typecheck` passes
+- [x] 3.2 `npm run lint` passes
+- [x] 3.3 `src/components/hooks/use-recipe-generation.ts` exists
 
 #### Manual
 
-- [ ] 3.4 "Generate Recipe" button visible only when ≥1 at-risk product exists
-- [ ] 3.5 Button shows spinner + "Generating..." and is disabled during generation
-- [ ] 3.6 Approval modal shows title, ingredient list, numbered steps, products to remove
-- [ ] 3.7 Cancel closes modal; product list unchanged; Generate button re-enabled
-- [ ] 3.8 "Generate Different Recipe" closes modal and starts new generation
-- [ ] 3.9 Approve shows "Approving..." spinner; modal stays open during RPC; closes on success
-- [ ] 3.10 Used products removed from product list after successful Approve
-- [ ] 3.11 Toast appears on generate error
-- [ ] 3.12 Toast appears on approve error
-- [ ] 3.13 No console errors on the happy path
+- [x] 3.4 "Generate Recipe" button visible only when ≥1 at-risk product exists
+- [x] 3.5 Button shows spinner + "Generating..." and is disabled during generation
+- [x] 3.6 Approval modal shows title, ingredient list, numbered steps, products to remove
+- [x] 3.7 Cancel closes modal; product list unchanged; Generate button re-enabled
+- [x] 3.8 "Generate Different Recipe" closes modal and starts new generation
+- [x] 3.9 Approve shows "Approving..." spinner; modal stays open during RPC; closes on success
+- [x] 3.10 Used products removed from product list after successful Approve
+- [x] 3.11 Toast appears on generate error
+- [x] 3.12 Toast appears on approve error
+- [x] 3.13 No console errors on the happy path

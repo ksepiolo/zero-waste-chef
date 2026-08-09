@@ -13,19 +13,23 @@ const SYSTEM_PROMPT = `You are a practical home-cooking assistant. Rules:
 - Time: total recipe time (prep + cook) must not exceed 45 minutes.
 - Pantry staples are always available: salt, pepper, oil, water, basic dried spices.
 - Never ask follow-up questions. Always generate a recipe immediately.
-- used_product_ids must contain only UUID strings from the list provided. Never invent or omit IDs.`;
+- used_product_ids must contain only UUID strings from the list provided. Never invent or omit IDs.
+- Variety: if the user lists already-suggested recipes, your answer must be a clearly different dish — change the cooking method, the dish format (soup / stir-fry / bake / salad / omelette), and the flavour profile. Renaming or lightly reworking an already-suggested dish is not acceptable.`;
 
+// Deliberately uses ingredients unlikely to appear in a real fridge inventory. The
+// few-shot anchors output *format*, and an example built on common staples (spinach,
+// garlic) also anchors *content* — the model then returns the example dish back.
 const FEW_SHOT_USER =
-  "Create a recipe that prioritizes using these at-risk ingredients: spinach (id: aaa-bbb-111), garlic (id: ccc-ddd-222). Include the exact product IDs in used_product_ids.";
+  "Create a recipe that prioritizes using these at-risk ingredients: canned chickpeas (id: aaa-bbb-111), lemon (id: ccc-ddd-222). Include the exact product IDs in used_product_ids.";
 
 const FEW_SHOT_ASSISTANT = JSON.stringify({
-  title: "Garlic Sautéed Spinach",
-  ingredients: ["200g fresh spinach", "3 cloves garlic, minced", "2 tbsp olive oil", "salt to taste"],
+  title: "Lemon Chickpea Skillet",
+  ingredients: ["400g canned chickpeas, drained", "1 lemon, juiced and zested", "2 tbsp olive oil", "salt and pepper"],
   instructions: [
     "Heat oil in a pan over medium heat.",
-    "Add garlic and sauté for 1 minute until fragrant.",
-    "Add spinach and cook for 3 minutes, stirring, until wilted.",
-    "Season with salt and serve immediately.",
+    "Add drained chickpeas and fry for 6 minutes until they start to crisp.",
+    "Stir through the lemon juice and zest and cook for 1 more minute.",
+    "Season with salt and pepper and serve warm.",
   ],
   used_product_ids: ["aaa-bbb-111", "ccc-ddd-222"],
 });
@@ -71,8 +75,16 @@ const GeneratedRecipeSchema = z.object({
   used_product_ids: z.array(z.uuid()).min(1),
 });
 
-export async function generateRecipe(atRiskProducts: ProductWithRisk[]): Promise<GeneratedRecipe> {
+export async function generateRecipe(
+  atRiskProducts: ProductWithRisk[],
+  excludeTitles: string[] = [],
+): Promise<GeneratedRecipe> {
   const productList = atRiskProducts.map((p) => `${p.name} (id: ${p.id})`).join(", ");
+
+  let userTurn = `Create a recipe that prioritizes using these at-risk ingredients: ${productList}. Include the exact product IDs of ingredients you use in used_product_ids.`;
+  if (excludeTitles.length > 0) {
+    userTurn += `\nAlready suggested, do not repeat or reword: ${excludeTitles.map((t) => `"${t}"`).join(", ")}. Give a different dish.`;
+  }
 
   const response = await fetch(OPENROUTER_URL, {
     method: "POST",
@@ -83,15 +95,14 @@ export async function generateRecipe(atRiskProducts: ProductWithRisk[]): Promise
     },
     body: JSON.stringify({
       model: MODEL,
-      temperature: 0.4,
+      // Constraint adherence matters most on the first pass; on a regenerate the user
+      // has explicitly asked for something else, so trade some obedience for spread.
+      temperature: excludeTitles.length > 0 ? 0.9 : 0.4,
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: FEW_SHOT_USER },
         { role: "assistant", content: FEW_SHOT_ASSISTANT },
-        {
-          role: "user",
-          content: `Create a recipe that prioritizes using these at-risk ingredients: ${productList}. Include the exact product IDs of ingredients you use in used_product_ids.`,
-        },
+        { role: "user", content: userTurn },
       ],
       response_format: RESPONSE_FORMAT,
       plugins: [{ id: "response-healing" }],

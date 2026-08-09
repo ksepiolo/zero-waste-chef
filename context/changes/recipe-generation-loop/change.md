@@ -28,3 +28,21 @@ archived_at: null
   authenticate — `aud`/`instance_id` unset ("Invalid login credentials"), and NULL token
   columns ("Database error querying schema"). Fixed so `npx supabase db reset` yields a
   working `test@example.com` / `Test1234!` login.
+
+### Phase 3 deviations from plan
+
+- **Generate button styling**: plan specified `className="mt-4 w-full"`. Added a
+  blue→purple gradient so the CTA reads as primary against the dark cosmic panel
+  background, matching the dashboard's existing accent.
+- **Modal scroll**: wrapped ingredients + instructions in `max-h-[50vh] overflow-y-auto`
+  so a long recipe cannot push the footer buttons off-screen.
+- **Regeneration variety (user-requested, extends Phase 2 files)**: "Generate Different
+  Recipe" returned the same dish, because the request was byte-identical and the few-shot
+  anchored on spinach + garlic (common staples, so the model handed the example dish back).
+  Fixes: (1) few-shot rebuilt on canned chickpeas + lemon so it anchors format not content;
+  (2) system prompt gained a Variety rule requiring a different cooking method, dish format
+  and flavour profile; (3) hook tracks `seenTitles` and posts them as `excludeTitles`, which
+  `generate.ts` forwards to the service; (4) temperature 0.4 → 0.9 on regenerations only.
+  Verified: sauté pan → baked pasta → omelette across three sequential calls.
+  `seenTitles` is session-scoped — a page reload clears it. Persisting suggestion history
+  server-side would cross into "recipe history", listed under What We're NOT Doing.
