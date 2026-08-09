@@ -508,16 +508,16 @@ Note: "Generate Different Recipe" uses `AlertDialogAction` (closes dialog on cli
 
 #### Automated
 
-- [x] 1.1 `npm run typecheck` passes with no errors on modified files
-- [x] 1.2 `npm run lint` passes on all modified files
-- [x] 1.3 Migration applies cleanly: `npx supabase db reset` exits 0
+- [x] 1.1 `npm run typecheck` passes with no errors on modified files — ae2edeb
+- [x] 1.2 `npm run lint` passes on all modified files — ae2edeb
+- [x] 1.3 Migration applies cleanly: `npx supabase db reset` exits 0 — ae2edeb
 
 #### Manual
 
-- [x] 1.4 Supabase Studio shows `recipes.ingredients TEXT[]` column
-- [x] 1.5 `approve_recipe` function visible in Supabase Studio under Database → Functions
-- [x] 1.6 `src/components/ui/sonner.tsx` exists after shadcn install
-- [x] 1.7 Browser shows no console errors related to `Toaster` on any page
+- [x] 1.4 Supabase Studio shows `recipes.ingredients TEXT[]` column — 8a23b19
+- [x] 1.5 `approve_recipe` function visible in Supabase Studio under Database → Functions — 8a23b19
+- [x] 1.6 `src/components/ui/sonner.tsx` exists after shadcn install — ae2edeb
+- [x] 1.7 Browser shows no console errors related to `Toaster` on any page — 8a23b19
 
 ### Phase 2: Backend
 
@@ -540,19 +540,19 @@ Note: "Generate Different Recipe" uses `AlertDialogAction` (closes dialog on cli
 
 #### Automated
 
-- [x] 3.1 `npm run typecheck` passes
-- [x] 3.2 `npm run lint` passes
-- [x] 3.3 `src/components/hooks/use-recipe-generation.ts` exists
+- [x] 3.1 `npm run typecheck` passes — 8a23b19
+- [x] 3.2 `npm run lint` passes — 8a23b19
+- [x] 3.3 `src/components/hooks/use-recipe-generation.ts` exists — 8a23b19
 
 #### Manual
 
-- [x] 3.4 "Generate Recipe" button visible only when ≥1 at-risk product exists
-- [x] 3.5 Button shows spinner + "Generating..." and is disabled during generation
-- [x] 3.6 Approval modal shows title, ingredient list, numbered steps, products to remove
-- [x] 3.7 Cancel closes modal; product list unchanged; Generate button re-enabled
-- [x] 3.8 "Generate Different Recipe" closes modal and starts new generation
-- [x] 3.9 Approve shows "Approving..." spinner; modal stays open during RPC; closes on success
-- [x] 3.10 Used products removed from product list after successful Approve
-- [x] 3.11 Toast appears on generate error
-- [x] 3.12 Toast appears on approve error
-- [x] 3.13 No console errors on the happy path
+- [x] 3.4 "Generate Recipe" button visible only when ≥1 at-risk product exists — 8a23b19
+- [x] 3.5 Button shows spinner + "Generating..." and is disabled during generation — 8a23b19
+- [x] 3.6 Approval modal shows title, ingredient list, numbered steps, products to remove — 8a23b19
+- [x] 3.7 Cancel closes modal; product list unchanged; Generate button re-enabled — 8a23b19
+- [x] 3.8 "Generate Different Recipe" closes modal and starts new generation — 8a23b19
+- [x] 3.9 Approve shows "Approving..." spinner; modal stays open during RPC; closes on success — 8a23b19
+- [x] 3.10 Used products removed from product list after successful Approve — 8a23b19
+- [x] 3.11 Toast appears on generate error — 8a23b19
+- [x] 3.12 Toast appears on approve error — 8a23b19
+- [x] 3.13 No console errors on the happy path — 8a23b19
