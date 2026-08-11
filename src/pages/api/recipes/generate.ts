@@ -8,8 +8,9 @@ export const prerender = false;
 
 // Body is optional — a first generation posts nothing. `excludeTitles` carries the
 // recipes already shown this session so a regenerate returns something different.
+// Bounded on both axes: these strings go straight into the prompt on a shared API key.
 const generateSchema = z.object({
-  excludeTitles: z.array(z.string()).max(20).optional(),
+  excludeTitles: z.array(z.string().max(120)).max(10).optional(),
 });
 
 export const POST: APIRoute = async (context) => {
@@ -21,15 +22,21 @@ export const POST: APIRoute = async (context) => {
     return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
   }
 
-  let excludeTitles: string[] = [];
+  let body: unknown;
   try {
-    const parsed = generateSchema.safeParse(await context.request.json());
-    if (parsed.success) {
-      excludeTitles = parsed.data.excludeTitles ?? [];
-    }
+    body = await context.request.json();
   } catch {
-    // No body, or unparseable — treat as a first generation with nothing to exclude.
+    // No body at all — a first generation posts nothing. A body that is present but
+    // malformed still falls through to validation below.
+    body = {};
   }
+
+  const parsed = generateSchema.safeParse(body);
+  if (!parsed.success) {
+    const error = parsed.error.issues[0]?.message ?? "Validation error";
+    return new Response(JSON.stringify({ error }), { status: 400 });
+  }
+  const excludeTitles = parsed.data.excludeTitles ?? [];
 
   try {
     const products = await listProducts(supabase, context.locals.user.id);

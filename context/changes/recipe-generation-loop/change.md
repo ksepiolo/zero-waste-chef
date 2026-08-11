@@ -1,9 +1,9 @@
 ---
 change_id: recipe-generation-loop
 title: Recipe generation loop
-status: implemented
+status: impl_reviewed
 created: 2026-06-05
-updated: 2026-08-09
+updated: 2026-08-10
 research_status: complete
 archived_at: null
 ---

@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase";
+import { approveRecipe } from "@/lib/services/recipe.service";
 
 export const prerender = false;
 
@@ -33,22 +34,14 @@ export const POST: APIRoute = async (context) => {
     return new Response(JSON.stringify({ error }), { status: 400 });
   }
 
-  const { data, error } = await supabase
-    .rpc("approve_recipe", {
-      p_title: result.data.title,
-      p_ingredients: result.data.ingredients,
-      // Sole conversion point: AI returns string[], the column is TEXT.
-      p_instructions: result.data.instructions.join("\n"),
-      p_used_product_ids: result.data.usedProductIds,
-    })
-    .overrideTypes<string>();
-
-  if (error) {
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+  try {
+    const id = await approveRecipe(supabase, result.data);
+    return new Response(JSON.stringify({ id }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return new Response(JSON.stringify({ error: message }), { status: 500 });
   }
-
-  return new Response(JSON.stringify({ id: data }), {
-    status: 200,
-    headers: { "Content-Type": "application/json" },
-  });
 };

@@ -1,11 +1,14 @@
 import { z } from "zod";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { OPENROUTER_API_KEY } from "astro:env/server";
-import type { GeneratedRecipe, ProductWithRisk } from "@/types";
+import type { ApproveRecipeInput, GeneratedRecipe, ProductWithRisk } from "@/types";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 // Free tier. Supports json_schema strict mode; rate-limited per OpenRouter's
 // free-model quota. Swap to "google/gemini-2.0-flash-001" (paid) if the limit bites.
 const MODEL = "google/gemma-4-26b-a4b-it:free";
+const GENERATION_TIMEOUT_MS = 30_000;
+const MAX_PROMPT_PRODUCTS = 25;
 
 const SYSTEM_PROMPT = `You are a practical home-cooking assistant. Rules:
 - Techniques: use only sauté, boil, roast, bake, simmer, fry, stir-fry. Never: sous-vide, fermentation, dehydrating, smoking, pressure cooking.
@@ -75,43 +78,67 @@ const GeneratedRecipeSchema = z.object({
   used_product_ids: z.array(z.uuid()).min(1),
 });
 
+function openRouterErrorMessage(status: number): string {
+  if (status === 401 || status === 402) return "Recipe service unavailable — try again later";
+  if (status === 429) return "Rate limited — try again shortly";
+  return "Recipe generation failed";
+}
+
 export async function generateRecipe(
   atRiskProducts: ProductWithRisk[],
   excludeTitles: string[] = [],
 ): Promise<GeneratedRecipe> {
-  const productList = atRiskProducts.map((p) => `${p.name} (id: ${p.id})`).join(", ");
+  // Product names are user-supplied free text, so an unbounded inventory is unbounded
+  // token spend on a shared API key. One recipe cannot use more than a handful anyway.
+  const promptProducts = atRiskProducts.slice(0, MAX_PROMPT_PRODUCTS);
+  const productList = promptProducts.map((p) => `${p.name} (id: ${p.id})`).join(", ");
 
   let userTurn = `Create a recipe that prioritizes using these at-risk ingredients: ${productList}. Include the exact product IDs of ingredients you use in used_product_ids.`;
   if (excludeTitles.length > 0) {
     userTurn += `\nAlready suggested, do not repeat or reword: ${excludeTitles.map((t) => `"${t}"`).join(", ")}. Give a different dish.`;
   }
 
-  const response = await fetch(OPENROUTER_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${OPENROUTER_API_KEY}`,
-      "Content-Type": "application/json",
-      "HTTP-Referer": "https://zero-waste-chef.ksepiolo.workers.dev",
-    },
-    body: JSON.stringify({
-      model: MODEL,
-      // Constraint adherence matters most on the first pass; on a regenerate the user
-      // has explicitly asked for something else, so trade some obedience for spread.
-      temperature: excludeTitles.length > 0 ? 0.9 : 0.4,
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: FEW_SHOT_USER },
-        { role: "assistant", content: FEW_SHOT_ASSISTANT },
-        { role: "user", content: userTurn },
-      ],
-      response_format: RESPONSE_FORMAT,
-      plugins: [{ id: "response-healing" }],
-    }),
-  });
+  let response: Response;
+  try {
+    response = await fetch(OPENROUTER_URL, {
+      method: "POST",
+      // Free-tier queueing has been observed at 27s. Without a signal a hung upstream
+      // never settles, so the caller's spinner never clears.
+      signal: AbortSignal.timeout(GENERATION_TIMEOUT_MS),
+      headers: {
+        Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://zero-waste-chef.ksepiolo.workers.dev",
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        // Constraint adherence matters most on the first pass; on a regenerate the user
+        // has explicitly asked for something else, so trade some obedience for spread.
+        temperature: excludeTitles.length > 0 ? 0.9 : 0.4,
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          { role: "user", content: FEW_SHOT_USER },
+          { role: "assistant", content: FEW_SHOT_ASSISTANT },
+          { role: "user", content: userTurn },
+        ],
+        response_format: RESPONSE_FORMAT,
+        plugins: [{ id: "response-healing" }],
+      }),
+    });
+  } catch (err) {
+    if (err instanceof Error && (err.name === "TimeoutError" || err.name === "AbortError")) {
+      throw new Error("Recipe generation timed out — try again");
+    }
+    throw err;
+  }
 
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(`OpenRouter ${response.status}: ${text}`);
+    // The upstream body carries account and quota metadata for the shared API key.
+    // Log it for diagnosis; the thrown message is what reaches the user's toast.
+    // eslint-disable-next-line no-console -- server-side diagnostic for an external failure
+    console.error(`OpenRouter ${response.status}: ${text}`);
+    throw new Error(openRouterErrorMessage(response.status));
   }
 
   const data = (await response.json()) as { choices?: { message?: { content?: string } }[] };
@@ -124,10 +151,36 @@ export async function generateRecipe(
   const recipe = GeneratedRecipeSchema.parse(JSON.parse(content));
 
   // Schema validates syntax, not semantics — cross-check the IDs against the inventory.
-  const validIds = new Set(atRiskProducts.map((p) => p.id));
+  const validIds = new Set(promptProducts.map((p) => p.id));
   if (!recipe.used_product_ids.every((id) => validIds.has(id))) {
     throw new Error("Model returned unknown product IDs — inventory guardrail violated");
   }
 
   return recipe;
+}
+
+/**
+ * Atomically snapshots the used products, inserts the recipe and deletes the products.
+ * The RPC is the only transactional path — PostgREST cannot span the three statements.
+ */
+export async function approveRecipe(supabase: SupabaseClient, input: ApproveRecipeInput): Promise<string> {
+  const { data, error } = await supabase
+    .rpc("approve_recipe", {
+      p_title: input.title,
+      p_ingredients: input.ingredients,
+      // Sole conversion point: AI returns string[], the column is TEXT.
+      p_instructions: input.instructions.join("\n"),
+      p_used_product_ids: input.usedProductIds,
+    })
+    .overrideTypes<string>();
+
+  if (error) throw new Error(error.message);
+
+  // approve_recipe RETURNS UUID — a scalar. With no generated Database types supabase-js
+  // infers an array shape, so overrideTypes<string> resolves to a branded union rather
+  // than plain string. Narrow it here; the request itself is unchanged.
+  const id = data as unknown as string | null;
+  if (!id) throw new Error("Recipe was not saved");
+
+  return id;
 }

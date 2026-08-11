@@ -21,7 +21,8 @@ export function useRecipeGeneration({ onApproveSuccess }: Options = {}) {
       const res = await fetch("/api/recipes/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ excludeTitles: seenTitles }),
+        // Most recent only — the endpoint caps excludeTitles at 10.
+        body: JSON.stringify({ excludeTitles: seenTitles.slice(-10) }),
       });
 
       const json = (await res.json()) as { recipe?: GeneratedRecipe; error?: string };
@@ -29,11 +30,13 @@ export function useRecipeGeneration({ onApproveSuccess }: Options = {}) {
         throw new Error(json.error ?? "Failed to generate recipe");
       }
 
-      const generated = json.recipe ?? null;
-      setRecipe(generated);
-      if (generated) {
-        setSeenTitles((prev) => [...prev, generated.title]);
+      const generated = json.recipe;
+      if (!generated) {
+        throw new Error("Failed to generate recipe");
       }
+
+      setRecipe(generated);
+      setSeenTitles((prev) => [...prev, generated.title]);
     } finally {
       setIsGenerating(false);
     }

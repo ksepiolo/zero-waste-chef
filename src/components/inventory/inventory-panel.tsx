@@ -264,7 +264,9 @@ export function InventoryPanel({ initialProducts }: Props) {
 
           <AlertDialogFooter>
             <AlertDialogCancel onClick={reset}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => void handleGenerate()}>Generate Different Recipe</AlertDialogAction>
+            <AlertDialogAction onClick={() => void handleGenerate()} disabled={isGenerating || isApproving}>
+              Generate Different Recipe
+            </AlertDialogAction>
             <Button onClick={() => void handleApprove()} disabled={isApproving}>
               {isApproving ? (
                 <>

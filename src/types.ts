@@ -33,3 +33,12 @@ export interface GeneratedRecipe {
   instructions: string[]; // array from AI; joined with '\n' only in approve endpoint
   used_product_ids: string[];
 }
+
+// Approval payload as it crosses the API boundary — camelCase ids, instructions still
+// an array; the service performs the join before the RPC call.
+export interface ApproveRecipeInput {
+  title: string;
+  ingredients: string[];
+  instructions: string[];
+  usedProductIds: string[];
+}
