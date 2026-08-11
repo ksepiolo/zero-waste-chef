@@ -32,7 +32,8 @@ Użytkownik otwiera lodówkę i nie wie, co trzeba zużyć — ekspirujące prod
 | F-01 | data-schema            | (foundation) tabele products + recipes z RLS w Supabase       | —             | FR-004, FR-007, FR-009 | done     |
 | S-01 | inventory-management   | dodać produkt, zobaczyć listę z oznaczeniem "at-risk", usunąć | F-01          | FR-001–FR-006         | done     |
 | S-02 | recipe-generation-loop | wygenerować przepis AI, zatwierdzić, usunąć produkty          | S-01, F-01    | FR-007–FR-009, US-01  | done     |
-| S-03 | recipe-history         | zobaczyć listę wcześniej zatwierdzonych przepisów              | S-02          | FR-010                | proposed |
+| S-03 | recipe-history         | zobaczyć listę wcześniej zatwierdzonych przepisów              | S-02          | FR-010                | planning |
+| S-04 | recipe-generation-ux   | wybrać parametry przepisu (technika, metoda, czas) przed generowaniem | F-01     | FR-007, FR-008        | planned  |
 
 ## Baseline
 
@@ -97,9 +98,22 @@ Foundations poniżej zakładają, że te warstwy są obecne i ich nie przebudowu
 - **Parallel with:** —
 - **Blockers:** —
 - **Unknowns:**
-  - Co wyświetlać w liście: tylko tytuł, tytuł + składniki, czy pełne instrukcje? — Owner: user. Block: no (może być zdecydowane podczas implementacji per PRD Open Question 3).
+  - Co wyświetlać w liście: tylko tytuł, tytuł + składniki, czy pełne instrukcje? — Owner: user. Block: no (może być zdecydowane podczas implementacji per PRD Open Question 3). **Rozstrzygnięte 2026-08-11 w `/10x-plan`:** pełna treść, domyślnie zwinięta.
 - **Risk:** pierwsze do odcięcia pod presją deadline'u — PRD §Recipe Generation wprost to zaznacza: "if timeline pressure appears, this is the first candidate to cut"; jeśli brakuje czasu, FR-010 jedzie w v2
-- **Status:** proposed
+- **Status:** planning
+
+### S-04: Recipe generation UX improvements
+
+- **Outcome:** użytkownik może przed wygenerowaniem przepisu wybrać jego parametry — technikę kulinarną, metodę przygotowania i dostępny czas — i otrzymać przepis, który te wybory respektuje.
+- **Change ID:** recipe-generation-ux
+- **PRD refs:** FR-007, FR-008
+- **Prerequisites:** F-01
+- **Parallel with:** S-03
+- **Blockers:** —
+- **Unknowns:**
+  - Jakie dokładnie wartości oferować dla techniki / metody / czasu (lista zamknięta czy wolny tekst)? — Owner: user. Block: no.
+- **Risk:** parametry muszą trafić do promptu bez rozmycia priorytetu produktów "at-risk" — zbyt wąskie ograniczenia (np. bardzo krótki czas) mogą sprawić, że model pominie produkty wygasające, łamiąc główną obietnicę S-02
+- **Status:** planned
 
 ## Backlog Handoff
 
@@ -109,6 +123,7 @@ Foundations poniżej zakładają, że te warstwy są obecne i ich nie przebudowu
 | S-01       | inventory-management   | Inventory: add / view (at-risk flag) / delete products | done                  | Archived 2026-06-01                |
 | S-02       | recipe-generation-loop | Recipe loop: generate → approve → remove (AI)          | done                  | Archived 2026-08-11                |
 | S-03       | recipe-history         | Recipe history: lista zatwierdzonych przepisów         | no                    | Czeka na S-02; pierwsze do odcięcia |
+| S-04       | recipe-generation-ux   | Generowanie: wybór techniki, metody i czasu przepisu   | no                    | Zgłoszone podczas S-01/S-02 (UX gap) |
 
 ## Open Roadmap Questions
 
