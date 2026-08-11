@@ -3,7 +3,7 @@ project: "Zero Waste Chef"
 version: 1
 status: draft
 created: 2026-05-27
-updated: 2026-06-01
+updated: 2026-08-11
 prd_version: 1
 main_goal: speed
 top_blocker: time
@@ -31,7 +31,7 @@ Użytkownik otwiera lodówkę i nie wie, co trzeba zużyć — ekspirujące prod
 |------|------------------------|----------------------------------------------------------------|---------------|-----------------------|----------|
 | F-01 | data-schema            | (foundation) tabele products + recipes z RLS w Supabase       | —             | FR-004, FR-007, FR-009 | done     |
 | S-01 | inventory-management   | dodać produkt, zobaczyć listę z oznaczeniem "at-risk", usunąć | F-01          | FR-001–FR-006         | done     |
-| S-02 | recipe-generation-loop | wygenerować przepis AI, zatwierdzić, usunąć produkty          | S-01, F-01    | FR-007–FR-009, US-01  | proposed |
+| S-02 | recipe-generation-loop | wygenerować przepis AI, zatwierdzić, usunąć produkty          | S-01, F-01    | FR-007–FR-009, US-01  | done     |
 | S-03 | recipe-history         | zobaczyć listę wcześniej zatwierdzonych przepisów              | S-02          | FR-010                | proposed |
 
 ## Baseline
@@ -86,7 +86,7 @@ Foundations poniżej zakładają, że te warstwy są obecne i ich nie przebudowu
 - **Unknowns:**
   - Jaki model OpenRouter i jak sformułować prompt, żeby przepis był praktycznie użyteczny (NFR: common home-cooking techniques)? — Owner: user. Block: no.
 - **Risk:** atomowość zatwierdzenia (guardrail FR-009: usunięcie produktów i zapis przepisu muszą się udać lub nie udać razem — ciche niespójności inwentarza są niedopuszczalne); ekran zatwierdzenia jest kontraktem — co pokazuje, to dokładnie to usuwa
-- **Status:** proposed
+- **Status:** done
 
 ### S-03: Recipe history
 
@@ -107,7 +107,7 @@ Foundations poniżej zakładają, że te warstwy są obecne i ich nie przebudowu
 |------------|------------------------|--------------------------------------------------------|-----------------------|------------------------------------|
 | F-01       | data-schema            | Supabase: schema products + recipes z RLS              | done                  | Archived 2026-05-31                |
 | S-01       | inventory-management   | Inventory: add / view (at-risk flag) / delete products | done                  | Archived 2026-06-01                |
-| S-02       | recipe-generation-loop | Recipe loop: generate → approve → remove (AI)          | no                    | Czeka na S-01 + Workers Paid plan  |
+| S-02       | recipe-generation-loop | Recipe loop: generate → approve → remove (AI)          | done                  | Archived 2026-08-11                |
 | S-03       | recipe-history         | Recipe history: lista zatwierdzonych przepisów         | no                    | Czeka na S-02; pierwsze do odcięcia |
 
 ## Open Roadmap Questions
@@ -129,3 +129,4 @@ Foundations poniżej zakładają, że te warstwy są obecne i ich nie przebudowu
 
 - **F-01: (foundation) tabele products + recipes z RLS w Supabase** — Archived 2026-05-31 → `context/archive/2026-05-31-data-schema/`. Lesson: —.
 - **S-01: użytkownik może dodać produkt (nazwa + data ważności) do inwentarza, zobaczyć pełną listę z wizualnym wyróżnieniem produktów "at-risk" — produktów wygasających w ciągu najbliższych 3 dni — i usunąć produkt manualnie.** — Archived 2026-06-01 → `context/archive/2026-05-31-inventory-management/`. Lesson: —.
+- **S-02: użytkownik może zażądać przepisu AI priorytetyzującego produkty "at-risk" z inwentarza, zobaczyć ekran zatwierdzenia z przepisem i dokładną listą produktów do usunięcia, zatwierdzić — przepis zostaje zapisany, a wymienione produkty usunięte z inwentarza jako jedna atomowa operacja.** — Archived 2026-08-11 → `context/archive/2026-06-05-recipe-generation-loop/`. Lesson: —.
