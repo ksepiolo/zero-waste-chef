@@ -23,7 +23,16 @@ archived_at: null
 - **Latency**: first real end-to-end generate took **27s**, above the plan's 5–15s estimate.
   Free-tier queueing. Phase 3's spinner UX matters more than assumed.
 - **RPC typing**: used `.overrideTypes<string>()` instead of the plan's `.returns<string>()`
-  — the latter is deprecated in the installed `supabase-js`. Same resulting type.
+  — the latter is deprecated in the installed `supabase-js`. **Corrected 2026-08-11** (impl
+  review F8): the note originally claimed "same resulting type", which was wrong. Neither
+  form yields `string`. With no generated `Database` types, supabase-js infers an array
+  shape for the RPC, so `.overrideTypes<string>()` resolves to
+  `string | { Error: "Cannot cast array result to a single object…" }`. This went unnoticed
+  because the endpoint passed the value straight to `JSON.stringify`, so nothing
+  type-checked it; extracting `approveRecipe()` with a declared `Promise<string>` return
+  surfaced it. `{ merge: false }` does not help — the brand is emitted by the cast check
+  that runs before merging — and `.single()` would change the runtime request. The value is
+  now narrowed explicitly in `recipe.service.ts`, with the request left unchanged.
 - **Seed fix (out of plan scope)**: `supabase/seed.sql` produced a test user that could not
   authenticate — `aud`/`instance_id` unset ("Invalid login credentials"), and NULL token
   columns ("Database error querying schema"). Fixed so `npx supabase db reset` yields a
