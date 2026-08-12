@@ -277,10 +277,10 @@ None. No schema change, no data backfill. Existing recipes written by S-02 are i
 
 #### Automated
 
-- [x] 2.1 Type checking passes: `npm run typecheck`
-- [x] 2.2 Linting passes: `npm run lint`
-- [x] 2.3 Build succeeds: `npm run build`
-- [x] 2.4 Signed out, `GET /recipes` redirects to `/auth/signin`
+- [x] 2.1 Type checking passes: `npm run typecheck` — 93535bc
+- [x] 2.2 Linting passes: `npm run lint` — 93535bc
+- [x] 2.3 Build succeeds: `npm run build` — 93535bc
+- [x] 2.4 Signed out, `GET /recipes` redirects to `/auth/signin` — 93535bc
 
 #### Manual
 
