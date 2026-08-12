@@ -269,9 +269,9 @@ None. No schema change, no data backfill. Existing recipes written by S-02 are i
 
 #### Manual
 
-- [ ] 1.6 Signed in, `GET /api/recipes` returns recipes newest-first with a correct `total`
-- [ ] 1.7 With more than 20 recipes, `?page=2` returns the next 20 and the same `total`
-- [ ] 1.8 A second user's session sees only their own recipes at the same URL
+- [x] 1.6 Signed in, `GET /api/recipes` returns recipes newest-first with a correct `total` — 964cc5e
+- [x] 1.7 With more than 20 recipes, `?page=2` returns the next 20 and the same `total` — 964cc5e
+- [x] 1.8 A second user's session sees only their own recipes at the same URL — 964cc5e
 
 ### Phase 2: UI and navigation — history page, island, entry points
 
@@ -284,12 +284,29 @@ None. No schema change, no data backfill. Existing recipes written by S-02 are i
 
 #### Manual
 
-- [ ] 2.5 `/recipes` lists approved recipes newest-first with correct dates
-- [ ] 2.6 Expanding an entry shows ingredients, numbered steps and consumed product names matching approval
+- [x] 2.5 `/recipes` lists approved recipes newest-first with correct dates — 93535bc
+- [x] 2.6 Expanding an entry shows ingredients, numbered steps and consumed product names matching approval — 93535bc
 - [ ] 2.7 Expanding a second entry collapses the first
-- [ ] 2.8 A recipe with empty `consumed_products` renders without a stray or broken section
+- [x] 2.8 A recipe with empty `consumed_products` renders without a stray or broken section — 93535bc
 - [ ] 2.9 Pagination pages forward and back correctly with correct disabled states at both ends
-- [ ] 2.10 With 20 or fewer recipes, no pagination controls appear
-- [ ] 2.11 A user with no approved recipes sees the empty state
-- [ ] 2.12 "Recipe history" is reachable from both the dashboard and the inventory page
-- [ ] 2.13 With Supabase env vars unset, `/recipes` shows the load-error line, not the empty state
+- [x] 2.10 With 20 or fewer recipes, no pagination controls appear — 93535bc
+- [x] 2.11 A user with no approved recipes sees the empty state — 93535bc
+- [x] 2.12 "Recipe history" is reachable from both the dashboard and the inventory page — 93535bc
+- [x] 2.13 With Supabase env vars unset, `/recipes` shows the load-error line, not the empty state — 93535bc
+
+#### Verification notes
+
+- Manual rows were verified against local Supabase (`127.0.0.1:54321`) with three throwaway
+  users: 25 seeded recipes (one with empty `consumed_products`), 1 recipe, and 0 recipes.
+  Checks ran through the real app — signed in via `POST /api/auth/signin`, then the live
+  `GET /api/recipes` and the SSR output of `/recipes`.
+- **2.7 and 2.9 remain unverified.** Both are click-driven; no browser automation was
+  available. Their render halves were confirmed at pinned states (exactly 1 of 20 entries
+  expanded; page 1 has Previous disabled, page 2 of 2 has Next disabled with the correct
+  5 rows), but the hydration + click → fetch → state-swap path was never exercised.
+- **2.13's stated repro is wrong.** With the env vars unset, `createClient` returns null in
+  `src/middleware.ts:7`, so `locals.user` is null and `/recipes` **redirects to
+  `/auth/signin`** — the load-error line is never reached that way. The line was instead
+  verified by injecting a throw into `listRecipes` for an authenticated user, which is the
+  case the divergence in §2 actually exists to protect. Worth correcting if this plan is
+  ever used as a reference.
