@@ -1,0 +1,34 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import { createClient } from "@/lib/supabase";
+import { listRecipes } from "@/lib/services/recipe.service";
+import { RecipeHistoryPanel } from "@/components/recipes/recipe-history-panel";
+import type { RecipePage } from "@/types";
+
+let initialPage: RecipePage = { recipes: [], total: 0 };
+// Deliberately diverges from inventory.astro's silent degrade-to-empty: consumed_products
+// is a one-way snapshot the user cannot reconstruct, so a transient read failure must not
+// render as "your history is empty".
+let loadError = true;
+
+const supabase = createClient(Astro.request.headers, Astro.cookies);
+if (supabase && Astro.locals.user) {
+  try {
+    initialPage = await listRecipes(supabase, Astro.locals.user.id, 1);
+    loadError = false;
+  } catch {
+    loadError = true;
+  }
+}
+---
+
+<Layout title="Recipe history">
+  <div class="bg-cosmic min-h-screen p-6 sm:p-10">
+    <div class="mx-auto max-w-2xl">
+      <h1 class="mb-6 bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-3xl font-bold text-transparent">
+        Recipe history
+      </h1>
+      <RecipeHistoryPanel initialPage={initialPage} loadError={loadError} client:load />
+    </div>
+  </div>
+</Layout>
