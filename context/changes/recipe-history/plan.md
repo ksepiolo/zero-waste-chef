@@ -261,11 +261,11 @@ None. No schema change, no data backfill. Existing recipes written by S-02 are i
 
 #### Automated
 
-- [ ] 1.1 Type checking passes: `npm run typecheck`
-- [ ] 1.2 Linting passes: `npm run lint`
-- [ ] 1.3 Build succeeds: `npm run build`
-- [ ] 1.4 `GET /api/recipes` returns 401 without a session cookie
-- [ ] 1.5 `GET /api/recipes?page=0` and `?page=abc` return 400
+- [x] 1.1 Type checking passes: `npm run typecheck`
+- [x] 1.2 Linting passes: `npm run lint`
+- [x] 1.3 Build succeeds: `npm run build`
+- [x] 1.4 `GET /api/recipes` returns 401 without a session cookie
+- [x] 1.5 `GET /api/recipes?page=0` and `?page=abc` return 400
 
 #### Manual
 

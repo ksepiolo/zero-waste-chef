@@ -32,7 +32,7 @@ Użytkownik otwiera lodówkę i nie wie, co trzeba zużyć — ekspirujące prod
 | F-01 | data-schema            | (foundation) tabele products + recipes z RLS w Supabase       | —             | FR-004, FR-007, FR-009 | done     |
 | S-01 | inventory-management   | dodać produkt, zobaczyć listę z oznaczeniem "at-risk", usunąć | F-01          | FR-001–FR-006         | done     |
 | S-02 | recipe-generation-loop | wygenerować przepis AI, zatwierdzić, usunąć produkty          | S-01, F-01    | FR-007–FR-009, US-01  | done     |
-| S-03 | recipe-history         | zobaczyć listę wcześniej zatwierdzonych przepisów              | S-02          | FR-010                | planning |
+| S-03 | recipe-history         | zobaczyć listę wcześniej zatwierdzonych przepisów              | S-02          | FR-010                | in-progress |
 | S-04 | recipe-generation-ux   | wybrać parametry przepisu (technika, metoda, czas) przed generowaniem | F-01     | FR-007, FR-008        | planning |
 
 ## Baseline
@@ -100,7 +100,7 @@ Foundations poniżej zakładają, że te warstwy są obecne i ich nie przebudowu
 - **Unknowns:**
   - Co wyświetlać w liście: tylko tytuł, tytuł + składniki, czy pełne instrukcje? — Owner: user. Block: no (może być zdecydowane podczas implementacji per PRD Open Question 3). **Rozstrzygnięte 2026-08-11 w `/10x-plan`:** pełna treść, domyślnie zwinięta.
 - **Risk:** pierwsze do odcięcia pod presją deadline'u — PRD §Recipe Generation wprost to zaznacza: "if timeline pressure appears, this is the first candidate to cut"; jeśli brakuje czasu, FR-010 jedzie w v2
-- **Status:** planning
+- **Status:** in-progress
 
 ### S-04: Recipe generation UX improvements
 

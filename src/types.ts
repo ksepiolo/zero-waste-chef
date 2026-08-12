@@ -27,6 +27,18 @@ export interface Recipe {
 
 export type NewRecipe = Omit<Recipe, "id" | "user_id" | "created_at">;
 
+// One page of recipe history plus the total row count, so the UI can render its
+// position without a second request.
+export interface RecipePage {
+  recipes: Recipe[];
+  total: number;
+}
+
+// Lives here, not in recipe.service.ts: that module imports astro:env/server, which
+// throws ServerOnlyModule if pulled into the client bundle. The history island needs
+// this constant, and src/types.ts has no runtime imports at all.
+export const RECIPES_PAGE_SIZE = 20;
+
 export interface GeneratedRecipe {
   title: string;
   ingredients: string[];

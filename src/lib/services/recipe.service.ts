@@ -1,7 +1,8 @@
 import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { OPENROUTER_API_KEY } from "astro:env/server";
-import type { ApproveRecipeInput, GeneratedRecipe, ProductWithRisk } from "@/types";
+import type { ApproveRecipeInput, GeneratedRecipe, ProductWithRisk, Recipe, RecipePage } from "@/types";
+import { RECIPES_PAGE_SIZE } from "@/types";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 // Free tier. Supports json_schema strict mode; rate-limited per OpenRouter's
@@ -157,6 +158,26 @@ export async function generateRecipe(
   }
 
   return recipe;
+}
+
+/**
+ * Reads one page of the user's approved recipes, newest first. `page` is 1-based.
+ * A page beyond the end returns an empty array with the true total — PostgREST does
+ * not error on an out-of-range .range(), and the UI treats that as the last page.
+ */
+export async function listRecipes(supabase: SupabaseClient, userId: string, page: number): Promise<RecipePage> {
+  const from = (page - 1) * RECIPES_PAGE_SIZE;
+
+  const { data, count, error } = await supabase
+    .from("recipes")
+    .select("*", { count: "exact" })
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .range(from, from + RECIPES_PAGE_SIZE - 1);
+
+  if (error) throw new Error(error.message);
+
+  return { recipes: data as Recipe[], total: count ?? 0 };
 }
 
 /**
