@@ -1,5 +1,14 @@
 import { useState } from "react";
-import type { ProductWithRisk } from "@/types";
+import type { ProductWithRisk, RecipeMethod, RecipeParams, RecipeTechnique, RecipeTime } from "@/types";
+import {
+  DEFAULT_RECIPE_PARAMS,
+  RECIPE_METHODS,
+  RECIPE_METHOD_LABELS,
+  RECIPE_TECHNIQUES,
+  RECIPE_TECHNIQUE_LABELS,
+  RECIPE_TIMES,
+  RECIPE_TIME_LABELS,
+} from "@/types";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -19,12 +28,19 @@ interface Props {
   initialProducts: ProductWithRisk[];
 }
 
+// Matches the add-product inputs above — src/components/ui/ has no Select component,
+// and this form is native inputs with inline Tailwind throughout.
+const selectClasses =
+  "rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white focus:border-white/40 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50";
+
 export function InventoryPanel({ initialProducts }: Props) {
   const [products, setProducts] = useState<ProductWithRisk[]>(initialProducts);
   const [addError, setAddError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  // Session-only by decision: no localStorage, no preferences table. A reload resets to Any.
+  const [params, setParams] = useState<RecipeParams>(DEFAULT_RECIPE_PARAMS);
 
   const { isGenerating, isApproving, recipe, generate, approve, reset } = useRecipeGeneration({
     onApproveSuccess: (usedIds) => {
@@ -36,7 +52,7 @@ export function InventoryPanel({ initialProducts }: Props) {
 
   async function handleGenerate() {
     try {
-      await generate();
+      await generate(params);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to generate recipe");
     }
@@ -192,20 +208,85 @@ export function InventoryPanel({ initialProducts }: Props) {
         )}
 
         {products.length > 0 && (
-          <Button
-            onClick={() => void handleGenerate()}
-            disabled={isGenerating || isApproving}
-            className="mt-4 w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:opacity-90"
-          >
-            {isGenerating ? (
-              <>
-                <Loader2 className="mr-2 size-4 animate-spin" />
-                Generating…
-              </>
-            ) : (
-              "Generate Recipe"
-            )}
-          </Button>
+          <div className="mt-4 space-y-3">
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <div className="flex flex-1 flex-col gap-1">
+                <label htmlFor="recipe-technique" className="text-xs text-white/70">
+                  Technique
+                </label>
+                <select
+                  id="recipe-technique"
+                  value={params.technique}
+                  disabled={isGenerating || isApproving}
+                  onChange={(e) => {
+                    setParams((prev) => ({ ...prev, technique: e.target.value as RecipeTechnique }));
+                  }}
+                  className={selectClasses}
+                >
+                  {RECIPE_TECHNIQUES.map((value) => (
+                    <option key={value} value={value} className="bg-slate-900 text-white">
+                      {RECIPE_TECHNIQUE_LABELS[value]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex flex-1 flex-col gap-1">
+                <label htmlFor="recipe-method" className="text-xs text-white/70">
+                  Method
+                </label>
+                <select
+                  id="recipe-method"
+                  value={params.method}
+                  disabled={isGenerating || isApproving}
+                  onChange={(e) => {
+                    setParams((prev) => ({ ...prev, method: e.target.value as RecipeMethod }));
+                  }}
+                  className={selectClasses}
+                >
+                  {RECIPE_METHODS.map((value) => (
+                    <option key={value} value={value} className="bg-slate-900 text-white">
+                      {RECIPE_METHOD_LABELS[value]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex flex-1 flex-col gap-1">
+                <label htmlFor="recipe-time" className="text-xs text-white/70">
+                  Available time
+                </label>
+                <select
+                  id="recipe-time"
+                  value={params.time}
+                  disabled={isGenerating || isApproving}
+                  onChange={(e) => {
+                    setParams((prev) => ({ ...prev, time: e.target.value as RecipeTime }));
+                  }}
+                  className={selectClasses}
+                >
+                  {RECIPE_TIMES.map((value) => (
+                    <option key={value} value={value} className="bg-slate-900 text-white">
+                      {RECIPE_TIME_LABELS[value]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <Button
+              onClick={() => void handleGenerate()}
+              disabled={isGenerating || isApproving}
+              className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:opacity-90"
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                  Generating…
+                </>
+              ) : (
+                "Generate Recipe"
+              )}
+            </Button>
+          </div>
         )}
       </div>
 
