@@ -1,7 +1,9 @@
 import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { OPENROUTER_API_KEY } from "astro:env/server";
-import type { ApproveRecipeInput, GeneratedRecipe, ProductWithRisk } from "@/types";
+import type { ApproveRecipeInput, GeneratedRecipe, ProductWithRisk, RecipeParams } from "@/types";
+import { DEFAULT_RECIPE_PARAMS } from "@/types";
+import { buildSystemPrompt, FEW_SHOT_USER, FEW_SHOT_ASSISTANT } from "./recipe-prompt";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 // Free tier. Supports json_schema strict mode; rate-limited per OpenRouter's
@@ -9,37 +11,6 @@ const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const MODEL = "google/gemma-4-26b-a4b-it:free";
 const GENERATION_TIMEOUT_MS = 30_000;
 const MAX_PROMPT_PRODUCTS = 25;
-
-const SYSTEM_PROMPT = `You are a practical home-cooking assistant. Rules:
-- Techniques: use only sauté, boil, roast, bake, simmer, fry, stir-fry. Never: sous-vide, fermentation, dehydrating, smoking, pressure cooking.
-- Equipment: assume stovetop, oven, one pot, one pan, knife, cutting board. No specialty appliances.
-- Time: total recipe time (prep + cook) must not exceed 45 minutes.
-- Pantry staples are always available: salt, pepper, oil, water, basic dried spices.
-- Never ask follow-up questions. Always generate a recipe immediately.
-- used_product_ids must contain only UUID strings from the list provided. Never invent or omit IDs.
-- Variety: if the user lists already-suggested recipes, your answer must be a clearly different dish — change the cooking method, the dish format (soup / stir-fry / bake / salad / omelette), and the flavour profile. Renaming or lightly reworking an already-suggested dish is not acceptable.`;
-
-// Deliberately uses ingredients unlikely to appear in a real fridge inventory. The
-// few-shot anchors output *format*, and an example built on common staples (spinach,
-// garlic) also anchors *content* — the model then returns the example dish back.
-// For the same reason it names no cooking technique and no vessel: the user turn now
-// carries per-request technique/time rules, and a worked example that fries in a pan
-// contradicts them. It also drops the "at-risk" framing, since the real user turn omits
-// that requirement when nothing in the inventory is at risk.
-const FEW_SHOT_USER =
-  "Create a recipe using these ingredients: canned chickpeas (id: aaa-bbb-111), lemon (id: ccc-ddd-222). Include the exact product IDs in used_product_ids.";
-
-const FEW_SHOT_ASSISTANT = JSON.stringify({
-  title: "Lemon Chickpeas",
-  ingredients: ["400g canned chickpeas, drained", "1 lemon, juiced and zested", "2 tbsp olive oil", "salt and pepper"],
-  instructions: [
-    "Drain and rinse the chickpeas.",
-    "Zest and juice the lemon.",
-    "Combine the chickpeas with the lemon juice, zest and olive oil.",
-    "Season with salt and pepper and serve.",
-  ],
-  used_product_ids: ["aaa-bbb-111", "ccc-ddd-222"],
-});
 
 const RESPONSE_FORMAT = {
   type: "json_schema",
@@ -94,6 +65,7 @@ function openRouterErrorMessage(status: number): string {
 export async function generateRecipe(
   products: ProductWithRisk[],
   excludeTitles: string[] = [],
+  params: RecipeParams = DEFAULT_RECIPE_PARAMS,
 ): Promise<GeneratedRecipe> {
   // At-risk first, then slice: the cap below would otherwise be able to drop every
   // at-risk product out of the prompt, silently breaking the whole point of the feature.
@@ -143,7 +115,7 @@ export async function generateRecipe(
         // has explicitly asked for something else, so trade some obedience for spread.
         temperature: excludeTitles.length > 0 ? 0.9 : 0.4,
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
+          { role: "system", content: buildSystemPrompt(params) },
           { role: "user", content: FEW_SHOT_USER },
           { role: "assistant", content: FEW_SHOT_ASSISTANT },
           { role: "user", content: userTurn },
