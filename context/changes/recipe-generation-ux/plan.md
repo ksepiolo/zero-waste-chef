@@ -373,12 +373,12 @@ The additions are disjoint — different functions in `recipe.service.ts`, and t
 
 #### Automated
 
-- [ ] 1.1 `npm run typecheck` passes
-- [ ] 1.2 `npm run lint` passes
-- [ ] 1.3 `npm run build` passes
+- [x] 1.1 `npm run typecheck` passes
+- [x] 1.2 `npm run lint` passes
+- [x] 1.3 `npm run build` passes
 - [ ] 1.4 `POST /api/recipes/generate` returns 200 with an inventory containing no at-risk products
 - [ ] 1.5 `POST /api/recipes/generate` returns 400 with an empty inventory
-- [ ] 1.6 `POST /api/recipes/generate` returns 401 without an auth cookie
+- [x] 1.6 `POST /api/recipes/generate` returns 401 without an auth cookie
 
 #### Manual
 
@@ -387,7 +387,7 @@ The additions are disjoint — different functions in `recipe.service.ts`, and t
 - [ ] 1.9 Generate button visible with only non-at-risk products present
 - [ ] 1.10 Generate button absent when inventory is empty
 - [ ] 1.11 Recipe quality unchanged from before the phase
-- [ ] 1.12 Step A gate — quality holds after the few-shot edit alone, no skew toward pan-fried skillet dishes
+- [x] 1.12 Step A gate — quality holds after the few-shot edit alone, no skew toward pan-fried skillet dishes
 
 ### Phase 2: Parameter Plumbing (Server)
 

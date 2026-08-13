@@ -191,7 +191,7 @@ export function InventoryPanel({ initialProducts }: Props) {
           </ul>
         )}
 
-        {products.some((p) => p.is_at_risk) && (
+        {products.length > 0 && (
           <Button
             onClick={() => void handleGenerate()}
             disabled={isGenerating || isApproving}

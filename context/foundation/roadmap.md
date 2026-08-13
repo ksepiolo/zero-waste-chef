@@ -3,7 +3,7 @@ project: "Zero Waste Chef"
 version: 1
 status: draft
 created: 2026-05-27
-updated: 2026-08-12
+updated: 2026-08-13
 prd_version: 1
 main_goal: speed
 top_blocker: time
@@ -33,7 +33,7 @@ Użytkownik otwiera lodówkę i nie wie, co trzeba zużyć — ekspirujące prod
 | S-01 | inventory-management   | dodać produkt, zobaczyć listę z oznaczeniem "at-risk", usunąć | F-01          | FR-001–FR-006         | done     |
 | S-02 | recipe-generation-loop | wygenerować przepis AI, zatwierdzić, usunąć produkty          | S-01, F-01    | FR-007–FR-009, US-01  | done     |
 | S-03 | recipe-history         | zobaczyć listę wcześniej zatwierdzonych przepisów              | S-02          | FR-010                | planning |
-| S-04 | recipe-generation-ux   | wybrać parametry przepisu (technika, metoda, czas) przed generowaniem | F-01     | FR-007, FR-008        | planning |
+| S-04 | recipe-generation-ux   | wybrać parametry przepisu (technika, metoda, czas) przed generowaniem | F-01     | FR-007, FR-008        | in-progress |
 
 ## Baseline
 
@@ -113,7 +113,7 @@ Foundations poniżej zakładają, że te warstwy są obecne i ich nie przebudowu
 - **Unknowns:**
   - Jakie dokładnie wartości oferować dla techniki / metody / czasu (lista zamknięta czy wolny tekst)? — Owner: user. Block: no. **Rozstrzygnięte 2026-08-12 w `/10x-plan`:** listy zamknięte (enum) dla wszystkich trzech wymiarów — 8 × 6 × 5 wartości, z „Any" jako domyślną.
 - **Risk:** parametry muszą trafić do promptu bez rozmycia priorytetu produktów "at-risk" — zbyt wąskie ograniczenia (np. bardzo krótki czas) mogą sprawić, że model pominie produkty wygasające, łamiąc główną obietnicę S-02
-- **Status:** planning
+- **Status:** in-progress
 
 ## Backlog Handoff
 

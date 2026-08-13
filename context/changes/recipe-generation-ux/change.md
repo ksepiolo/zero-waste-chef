@@ -1,9 +1,9 @@
 ---
 change_id: recipe-generation-ux
 title: Recipe generation UX improvements
-status: plan_reviewed
+status: implementing
 created: 2026-08-12
-updated: 2026-08-12
+updated: 2026-08-13
 archived_at: null
 ---
 

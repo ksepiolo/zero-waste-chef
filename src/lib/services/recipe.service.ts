@@ -22,17 +22,21 @@ const SYSTEM_PROMPT = `You are a practical home-cooking assistant. Rules:
 // Deliberately uses ingredients unlikely to appear in a real fridge inventory. The
 // few-shot anchors output *format*, and an example built on common staples (spinach,
 // garlic) also anchors *content* — the model then returns the example dish back.
+// For the same reason it names no cooking technique and no vessel: the user turn now
+// carries per-request technique/time rules, and a worked example that fries in a pan
+// contradicts them. It also drops the "at-risk" framing, since the real user turn omits
+// that requirement when nothing in the inventory is at risk.
 const FEW_SHOT_USER =
-  "Create a recipe that prioritizes using these at-risk ingredients: canned chickpeas (id: aaa-bbb-111), lemon (id: ccc-ddd-222). Include the exact product IDs in used_product_ids.";
+  "Create a recipe using these ingredients: canned chickpeas (id: aaa-bbb-111), lemon (id: ccc-ddd-222). Include the exact product IDs in used_product_ids.";
 
 const FEW_SHOT_ASSISTANT = JSON.stringify({
-  title: "Lemon Chickpea Skillet",
+  title: "Lemon Chickpeas",
   ingredients: ["400g canned chickpeas, drained", "1 lemon, juiced and zested", "2 tbsp olive oil", "salt and pepper"],
   instructions: [
-    "Heat oil in a pan over medium heat.",
-    "Add drained chickpeas and fry for 6 minutes until they start to crisp.",
-    "Stir through the lemon juice and zest and cook for 1 more minute.",
-    "Season with salt and pepper and serve warm.",
+    "Drain and rinse the chickpeas.",
+    "Zest and juice the lemon.",
+    "Combine the chickpeas with the lemon juice, zest and olive oil.",
+    "Season with salt and pepper and serve.",
   ],
   used_product_ids: ["aaa-bbb-111", "ccc-ddd-222"],
 });
@@ -59,7 +63,10 @@ const RESPONSE_FORMAT = {
         used_product_ids: {
           type: "array",
           items: { type: "string" },
-          description: "IDs of the at-risk products used in this recipe",
+          // Wording must not say "at-risk": the prompt list is the whole inventory, so a
+          // recipe may legitimately use products that are not at risk — and approve_recipe
+          // deletes exactly the IDs reported here.
+          description: "IDs of the products from the provided list that this recipe uses",
         },
       },
       required: ["title", "ingredients", "instructions", "used_product_ids"],
@@ -85,15 +92,35 @@ function openRouterErrorMessage(status: number): string {
 }
 
 export async function generateRecipe(
-  atRiskProducts: ProductWithRisk[],
+  products: ProductWithRisk[],
   excludeTitles: string[] = [],
 ): Promise<GeneratedRecipe> {
+  // At-risk first, then slice: the cap below would otherwise be able to drop every
+  // at-risk product out of the prompt, silently breaking the whole point of the feature.
+  // sort() is stable, so the expiry_date ordering from listProducts survives within
+  // each group.
+  const orderedProducts = [...products].sort((a, b) => Number(b.is_at_risk) - Number(a.is_at_risk));
   // Product names are user-supplied free text, so an unbounded inventory is unbounded
   // token spend on a shared API key. One recipe cannot use more than a handful anyway.
-  const promptProducts = atRiskProducts.slice(0, MAX_PROMPT_PRODUCTS);
-  const productList = promptProducts.map((p) => `${p.name} (id: ${p.id})`).join(", ");
+  const promptProducts = orderedProducts.slice(0, MAX_PROMPT_PRODUCTS);
 
-  let userTurn = `Create a recipe that prioritizes using these at-risk ingredients: ${productList}. Include the exact product IDs of ingredients you use in used_product_ids.`;
+  const atRiskProducts = promptProducts.filter((p) => p.is_at_risk);
+  const otherProducts = promptProducts.filter((p) => !p.is_at_risk);
+  const render = (list: ProductWithRisk[]) => list.map((p) => `${p.name} (id: ${p.id})`).join(", ");
+
+  // With no at-risk products the prioritization requirement is omitted entirely rather
+  // than stated over an empty list — FR-007: "generated freely from the full inventory".
+  let userTurn: string;
+  if (atRiskProducts.length > 0) {
+    userTurn = `Create a recipe from this inventory.\nAt-risk ingredients (expiring soon) — the recipe must use at least one of these: ${render(atRiskProducts)}.`;
+    if (otherProducts.length > 0) {
+      userTurn += `\nOther available ingredients: ${render(otherProducts)}.`;
+    }
+    userTurn += `\nInclude the exact product IDs of ingredients you use in used_product_ids.`;
+  } else {
+    userTurn = `Create a recipe from this inventory: ${render(otherProducts)}. Include the exact product IDs of ingredients you use in used_product_ids.`;
+  }
+
   if (excludeTitles.length > 0) {
     userTurn += `\nAlready suggested, do not repeat or reword: ${excludeTitles.map((t) => `"${t}"`).join(", ")}. Give a different dish.`;
   }
@@ -154,6 +181,16 @@ export async function generateRecipe(
   const validIds = new Set(promptProducts.map((p) => p.id));
   if (!recipe.used_product_ids.every((id) => validIds.has(id))) {
     throw new Error("Model returned unknown product IDs — inventory guardrail violated");
+  }
+
+  // Sibling invariant. While the prompt list *was* the at-risk list, the cross-check above
+  // structurally guaranteed FR-007's at-risk floor. Now that the whole inventory is sent,
+  // a recipe using zero at-risk products would pass it — so assert the floor explicitly.
+  if (atRiskProducts.length > 0) {
+    const atRiskIds = new Set(atRiskProducts.map((p) => p.id));
+    if (!recipe.used_product_ids.some((id) => atRiskIds.has(id))) {
+      throw new Error("Model ignored all at-risk products — inventory guardrail violated");
+    }
   }
 
   return recipe;
