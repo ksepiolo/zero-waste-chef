@@ -414,9 +414,9 @@ The additions are disjoint — different functions in `recipe.service.ts`, and t
 
 #### Automated
 
-- [x] 3.1 `npm run typecheck` passes
-- [x] 3.2 `npm run lint` passes
-- [x] 3.3 `npm run build` passes
+- [x] 3.1 `npm run typecheck` passes — 2c5c344
+- [x] 3.2 `npm run lint` passes — 2c5c344
+- [x] 3.3 `npm run build` passes — 2c5c344
 
 #### Manual
 
