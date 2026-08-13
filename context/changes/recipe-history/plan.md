@@ -286,9 +286,9 @@ None. No schema change, no data backfill. Existing recipes written by S-02 are i
 
 - [x] 2.5 `/recipes` lists approved recipes newest-first with correct dates — 93535bc
 - [x] 2.6 Expanding an entry shows ingredients, numbered steps and consumed product names matching approval — 93535bc
-- [ ] 2.7 Expanding a second entry collapses the first
+- [x] 2.7 Expanding a second entry collapses the first — 93535bc
 - [x] 2.8 A recipe with empty `consumed_products` renders without a stray or broken section — 93535bc
-- [ ] 2.9 Pagination pages forward and back correctly with correct disabled states at both ends
+- [x] 2.9 Pagination pages forward and back correctly with correct disabled states at both ends — 93535bc
 - [x] 2.10 With 20 or fewer recipes, no pagination controls appear — 93535bc
 - [x] 2.11 A user with no approved recipes sees the empty state — 93535bc
 - [x] 2.12 "Recipe history" is reachable from both the dashboard and the inventory page — 93535bc
@@ -300,10 +300,16 @@ None. No schema change, no data backfill. Existing recipes written by S-02 are i
   users: 25 seeded recipes (one with empty `consumed_products`), 1 recipe, and 0 recipes.
   Checks ran through the real app — signed in via `POST /api/auth/signin`, then the live
   `GET /api/recipes` and the SSR output of `/recipes`.
-- **2.7 and 2.9 remain unverified.** Both are click-driven; no browser automation was
-  available. Their render halves were confirmed at pinned states (exactly 1 of 20 entries
-  expanded; page 1 has Previous disabled, page 2 of 2 has Next disabled with the correct
-  5 rows), but the hydration + click → fetch → state-swap path was never exercised.
+- **2.7 and 2.9 were verified with real clicks** in headless Chrome driven over the DevTools
+  protocol (no new dependencies — Node's global `WebSocket` against
+  `--remote-debugging-port`). Hydration was confirmed first (`aria-expanded` false → click →
+  true with the panel in the DOM → click → false), so the clicks below exercise the live
+  island, not server markup:
+  - 2.7 — expanding entry 0 gives exactly 1 open panel; expanding entry 3 then leaves
+    entry 0 `false`, entry 3 `true`, still exactly 1 panel.
+  - 2.9 — Next → "Page 2 of 2", 5 rows Recipe 05…01, Next disabled / Previous enabled;
+    Previous → "Page 1 of 2", 20 rows, Recipe 25 first, Previous disabled / Next enabled.
+    An open entry collapses on page turn (0 panels after the turn).
 - **2.13's stated repro is wrong.** With the env vars unset, `createClient` returns null in
   `src/middleware.ts:7`, so `locals.user` is null and `/recipes` **redirects to
   `/auth/signin`** — the load-error line is never reached that way. The line was instead
