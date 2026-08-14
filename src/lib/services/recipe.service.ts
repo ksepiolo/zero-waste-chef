@@ -78,7 +78,11 @@ export async function generateRecipe(
 
   const atRiskProducts = promptProducts.filter((p) => p.is_at_risk);
   const otherProducts = promptProducts.filter((p) => !p.is_at_risk);
-  const render = (list: ProductWithRisk[]) => list.map((p) => `${p.name} (id: ${p.id})`).join(", ");
+  // Names are user free text (validated only as a ≤255-char string) and the user turn is
+  // now newline-delimited and multi-section — an embedded newline could otherwise forge an
+  // "Other available ingredients:" header and demote the at-risk framing.
+  const sanitizeName = (name: string) => name.replace(/[\r\n]+/g, " ").slice(0, 60);
+  const render = (list: ProductWithRisk[]) => list.map((p) => `${sanitizeName(p.name)} (id: ${p.id})`).join(", ");
 
   // With no at-risk products the prioritization requirement is omitted entirely rather
   // than stated over an empty list — FR-007: "generated freely from the full inventory".

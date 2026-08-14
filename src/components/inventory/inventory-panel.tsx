@@ -1,14 +1,6 @@
 import { useState } from "react";
 import type { ProductWithRisk, RecipeMethod, RecipeParams, RecipeTechnique, RecipeTime } from "@/types";
-import {
-  DEFAULT_RECIPE_PARAMS,
-  RECIPE_METHODS,
-  RECIPE_METHOD_LABELS,
-  RECIPE_TECHNIQUES,
-  RECIPE_TECHNIQUE_LABELS,
-  RECIPE_TIMES,
-  RECIPE_TIME_LABELS,
-} from "@/types";
+import { DEFAULT_RECIPE_PARAMS, RECIPE_METHODS, RECIPE_TECHNIQUES, RECIPE_TIMES } from "@/types";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -32,6 +24,35 @@ interface Props {
 // and this form is native inputs with inline Tailwind throughout.
 const selectClasses =
   "rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white focus:border-white/40 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50";
+
+// Display copy for the three selects — a view-layer concern, so it lives with the view;
+// src/types.ts stays entities and DTOs. Keyed by the enum, so adding a token there fails to
+// compile until it has a label here.
+const RECIPE_TECHNIQUE_LABELS: Record<RecipeTechnique, string> = {
+  any: "Any",
+  saute: "Sauté",
+  roast: "Roast",
+  bake: "Bake",
+  "boil-simmer": "Boil / simmer",
+  "stir-fry": "Stir-fry",
+  fry: "Fry",
+  "no-cook": "No-cook",
+};
+
+const RECIPE_METHOD_LABELS: Record<RecipeMethod, string> = {
+  any: "Any",
+  "one-pot": "One-pot",
+  "sheet-pan": "Sheet-pan",
+  "salad-assembly": "Salad / assembly",
+  soup: "Soup",
+};
+
+const RECIPE_TIME_LABELS: Record<RecipeTime, string> = {
+  any: "Any",
+  "15": "≤15 min",
+  "30": "≤30 min",
+  "45": "≤45 min",
+};
 
 export function InventoryPanel({ initialProducts }: Props) {
   const [products, setProducts] = useState<ProductWithRisk[]>(initialProducts);

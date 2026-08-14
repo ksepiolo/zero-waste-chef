@@ -36,14 +36,15 @@ const timeLine = (minutes: string) => `- Time: total recipe time (prep + cook) m
 // The Variety rule fires on a regenerate, and it names the axes the model should change.
 // A pinned technique or method must be struck from that list: telling the model to "change
 // the cooking method" while another rule requires sautéing is the same contradiction the
-// technique line is rewritten to avoid. With both dimensions pinned, the remaining room is
-// flavour and ingredients. All-"any" reproduces the original wording exactly.
+// technique line is rewritten to avoid. With both dimensions pinned the only room left is
+// flavour and preparation — not the ingredients themselves, which the user turn pins to the
+// at-risk floor. All-"any" reproduces the original wording exactly.
 function varietyLine(params: RecipeParams): string {
   const axes: string[] = [];
   if (params.technique === "any") axes.push("the cooking method");
   if (params.method === "any") axes.push("the dish format (soup / stir-fry / bake / salad / omelette)");
   axes.push("the flavour profile");
-  if (axes.length === 1) axes.push("the main ingredients");
+  if (axes.length === 1) axes.push("how the same ingredients are prepared");
 
   const joined = axes.length > 2 ? `${axes.slice(0, -1).join(", ")}, and ${axes[axes.length - 1]}` : axes.join(" and ");
 

@@ -64,33 +64,6 @@ export interface RecipeParams {
 
 export const DEFAULT_RECIPE_PARAMS: RecipeParams = { technique: "any", method: "any", time: "any" };
 
-// UI labels live beside the enums so the select options are never re-derived from tokens.
-export const RECIPE_TECHNIQUE_LABELS: Record<RecipeTechnique, string> = {
-  any: "Any",
-  saute: "Sauté",
-  roast: "Roast",
-  bake: "Bake",
-  "boil-simmer": "Boil / simmer",
-  "stir-fry": "Stir-fry",
-  fry: "Fry",
-  "no-cook": "No-cook",
-};
-
-export const RECIPE_METHOD_LABELS: Record<RecipeMethod, string> = {
-  any: "Any",
-  "one-pot": "One-pot",
-  "sheet-pan": "Sheet-pan",
-  "salad-assembly": "Salad / assembly",
-  soup: "Soup",
-};
-
-export const RECIPE_TIME_LABELS: Record<RecipeTime, string> = {
-  any: "Any",
-  "15": "≤15 min",
-  "30": "≤30 min",
-  "45": "≤45 min",
-};
-
 // Approval payload as it crosses the API boundary — camelCase ids, instructions still
 // an array; the service performs the join before the RPC call.
 export interface ApproveRecipeInput {
