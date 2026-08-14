@@ -373,12 +373,12 @@ The additions are disjoint — different functions in `recipe.service.ts`, and t
 
 #### Automated
 
-- [ ] 1.1 `npm run typecheck` passes
-- [ ] 1.2 `npm run lint` passes
-- [ ] 1.3 `npm run build` passes
+- [x] 1.1 `npm run typecheck` passes — 5427eb6
+- [x] 1.2 `npm run lint` passes — 5427eb6
+- [x] 1.3 `npm run build` passes — 5427eb6
 - [ ] 1.4 `POST /api/recipes/generate` returns 200 with an inventory containing no at-risk products
 - [ ] 1.5 `POST /api/recipes/generate` returns 400 with an empty inventory
-- [ ] 1.6 `POST /api/recipes/generate` returns 401 without an auth cookie
+- [x] 1.6 `POST /api/recipes/generate` returns 401 without an auth cookie — 5427eb6
 
 #### Manual
 
@@ -387,16 +387,16 @@ The additions are disjoint — different functions in `recipe.service.ts`, and t
 - [ ] 1.9 Generate button visible with only non-at-risk products present
 - [ ] 1.10 Generate button absent when inventory is empty
 - [ ] 1.11 Recipe quality unchanged from before the phase
-- [ ] 1.12 Step A gate — quality holds after the few-shot edit alone, no skew toward pan-fried skillet dishes
+- [x] 1.12 Step A gate — quality holds after the few-shot edit alone, no skew toward pan-fried skillet dishes — 5427eb6
 
 ### Phase 2: Parameter Plumbing (Server)
 
 #### Automated
 
-- [ ] 2.1 `npm run typecheck` passes
-- [ ] 2.2 `npm run lint` passes
-- [ ] 2.3 `npm run build` passes
-- [ ] 2.4 With all three `"any"`, the assembled `messages` array is identical to the end-of-Phase-1 baseline
+- [x] 2.1 `npm run typecheck` passes — df72f4f
+- [x] 2.2 `npm run lint` passes — df72f4f
+- [x] 2.3 `npm run build` passes — df72f4f
+- [x] 2.4 With all three `"any"`, the assembled `messages` array is identical to the end-of-Phase-1 baseline — df72f4f
 - [ ] 2.5 `POST /api/recipes/generate` with no parameters returns 200 (defaults applied)
 - [ ] 2.6 `POST /api/recipes/generate` with valid technique/method/time returns 200
 - [ ] 2.7 `POST /api/recipes/generate` with an out-of-enum technique returns 400
@@ -414,9 +414,9 @@ The additions are disjoint — different functions in `recipe.service.ts`, and t
 
 #### Automated
 
-- [ ] 3.1 `npm run typecheck` passes
-- [ ] 3.2 `npm run lint` passes
-- [ ] 3.3 `npm run build` passes
+- [x] 3.1 `npm run typecheck` passes — 2c5c344
+- [x] 3.2 `npm run lint` passes — 2c5c344
+- [x] 3.3 `npm run build` passes — 2c5c344
 
 #### Manual
 

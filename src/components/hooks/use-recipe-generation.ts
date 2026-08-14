@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import type { GeneratedRecipe } from "@/types";
+import type { GeneratedRecipe, RecipeParams } from "@/types";
 
 interface Options {
   onApproveSuccess?: (usedProductIds: string[]) => void;
@@ -13,34 +13,40 @@ export function useRecipeGeneration({ onApproveSuccess }: Options = {}) {
   // actually gets a different dish instead of repeating the same request.
   const [seenTitles, setSeenTitles] = useState<string[]>([]);
 
-  const generate = useCallback(async () => {
-    setIsGenerating(true);
-    setRecipe(null);
+  // `params` arrives as an argument rather than hook state — the component owns the
+  // selection, so a regenerate must pass the same values the original request used.
+  // That is also why it is absent from the dependency list below.
+  const generate = useCallback(
+    async (params: RecipeParams) => {
+      setIsGenerating(true);
+      setRecipe(null);
 
-    try {
-      const res = await fetch("/api/recipes/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        // Most recent only — the endpoint caps excludeTitles at 10.
-        body: JSON.stringify({ excludeTitles: seenTitles.slice(-10) }),
-      });
+      try {
+        const res = await fetch("/api/recipes/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          // Most recent only — the endpoint caps excludeTitles at 10.
+          body: JSON.stringify({ excludeTitles: seenTitles.slice(-10), ...params }),
+        });
 
-      const json = (await res.json()) as { recipe?: GeneratedRecipe; error?: string };
-      if (!res.ok) {
-        throw new Error(json.error ?? "Failed to generate recipe");
+        const json = (await res.json()) as { recipe?: GeneratedRecipe; error?: string };
+        if (!res.ok) {
+          throw new Error(json.error ?? "Failed to generate recipe");
+        }
+
+        const generated = json.recipe;
+        if (!generated) {
+          throw new Error("Failed to generate recipe");
+        }
+
+        setRecipe(generated);
+        setSeenTitles((prev) => [...prev, generated.title]);
+      } finally {
+        setIsGenerating(false);
       }
-
-      const generated = json.recipe;
-      if (!generated) {
-        throw new Error("Failed to generate recipe");
-      }
-
-      setRecipe(generated);
-      setSeenTitles((prev) => [...prev, generated.title]);
-    } finally {
-      setIsGenerating(false);
-    }
-  }, [seenTitles]);
+    },
+    [seenTitles],
+  );
 
   const approve = useCallback(async () => {
     // Captured so the callback still has it after the await boundary.
