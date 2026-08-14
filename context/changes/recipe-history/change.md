@@ -1,9 +1,9 @@
 ---
 change_id: recipe-history
 title: Recipe history
-status: implemented
+status: impl_reviewed
 created: 2026-08-11
-updated: 2026-08-12
+updated: 2026-08-13
 archived_at: null
 ---
 
