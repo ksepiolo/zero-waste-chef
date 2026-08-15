@@ -35,3 +35,16 @@ changes worth knowing before implementing:
   Details warns about. `varietyLine()` now strikes a pinned dimension from that list, and
   falls back to flavour + main ingredients when both are pinned. All-`"any"` renders the
   original sentence verbatim, so criterion 2.4 still passes byte-identically.
+
+- **Phase 3 — the time control is a preference, not a cap** (decided 2026-08-15). Manual
+  verification of 2.9 found the model overruns `time: "15"` in 2 of 4 samples (see plan.md
+  § Verification notes). The prompt rule is unchanged; the UI copy is: `≤15 min` → `~15 min`,
+  `Available time` → `Time preference`, plus a hint line under all three selects. No
+  server-side verification was added — §What We're NOT Doing still holds.
+
+- **Fixed a pre-existing red typecheck on `main`.** `d137c98` dropped `Recipe`, `RecipePage`
+  and `RecipeParams` from the type import in `recipe.service.ts:4` — likely lost when S-03's
+  `listRecipes` and S-04's `params` argument merged. `npm run typecheck` was failing with 3
+  errors at HEAD and `npm run lint` with 3 downstream `no-unsafe-*` errors in
+  `api/recipes/index.ts` and `recipes.astro`. Restoring the imports clears all six. Note this
+  means criteria 3.1/3.2 were checked green at `2c5c344` and then regressed at `d137c98`.

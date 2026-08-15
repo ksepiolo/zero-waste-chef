@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { OPENROUTER_API_KEY } from "astro:env/server";
-import type { ApproveRecipeInput, GeneratedRecipe, ProductWithRisk } from "@/types";
+import type { ApproveRecipeInput, GeneratedRecipe, ProductWithRisk, Recipe, RecipePage, RecipeParams } from "@/types";
 import { DEFAULT_RECIPE_PARAMS, RECIPES_PAGE_SIZE } from "@/types";
 import { buildSystemPrompt, FEW_SHOT_USER, FEW_SHOT_ASSISTANT } from "./recipe-prompt";
 

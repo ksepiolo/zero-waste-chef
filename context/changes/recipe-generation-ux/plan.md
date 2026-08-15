@@ -376,18 +376,66 @@ The additions are disjoint — different functions in `recipe.service.ts`, and t
 - [x] 1.1 `npm run typecheck` passes — 5427eb6
 - [x] 1.2 `npm run lint` passes — 5427eb6
 - [x] 1.3 `npm run build` passes — 5427eb6
-- [ ] 1.4 `POST /api/recipes/generate` returns 200 with an inventory containing no at-risk products
-- [ ] 1.5 `POST /api/recipes/generate` returns 400 with an empty inventory
+- [x] 1.4 `POST /api/recipes/generate` returns 200 with an inventory containing no at-risk products — 5427eb6
+- [x] 1.5 `POST /api/recipes/generate` returns 400 with an empty inventory — 5427eb6
 - [x] 1.6 `POST /api/recipes/generate` returns 401 without an auth cookie — 5427eb6
 
 #### Manual
 
-- [ ] 1.7 Recipe still includes an at-risk product when at-risk products exist
-- [ ] 1.8 With 26+ products and at-risk ones added last, the recipe still uses an at-risk product (sort-before-slice)
-- [ ] 1.9 Generate button visible with only non-at-risk products present
-- [ ] 1.10 Generate button absent when inventory is empty
-- [ ] 1.11 Recipe quality unchanged from before the phase
+- [x] 1.7 Recipe still includes an at-risk product when at-risk products exist — 5427eb6
+- [x] 1.8 With 26+ products and at-risk ones added last, the recipe still uses an at-risk product (sort-before-slice) — 5427eb6
+- [x] 1.9 Generate button visible with only non-at-risk products present — 5427eb6
+- [x] 1.10 Generate button absent when inventory is empty — 5427eb6
+- [x] 1.11 Recipe quality unchanged from before the phase — 5427eb6
 - [x] 1.12 Step A gate — quality holds after the few-shot edit alone, no skew toward pan-fried skillet dishes — 5427eb6
+
+#### Verification notes (1.4–1.8)
+
+- 1.7 — inventory of Spinach (2026-08-16, at risk) + Pasta (2026-12-01) returned "Garlic
+  Spinach Pasta" using both ids, the at-risk one included.
+- 1.8 — 26 products, the 24 shelf-stable ones inserted **first** and the two at-risk ones
+  (Zucchini, Mushrooms) inserted **last**, per the criterion's repro. Returned "Sautéed
+  Mushrooms and Mustard Lentils" using at-risk Mushrooms.
+
+- 1.9 / 1.10 — checked against the SSR markup of `/inventory`, not a browser. A user holding
+  only Onion + Rice (both `is_at_risk: false`) gets the `Generate Recipe` button and the three
+  controls; a user with an empty inventory gets neither, plus the "No products yet" empty
+  state. 1.10 also re-confirms 3.11.
+- 1.11 — judged over the **13 recipes** generated across this session (all users, all parameter
+  combinations). Against the NFR at `prd.md:92` ("common home-cooking techniques and
+  ingredients … in typical quantities; professional equipment or exotic preparation is a
+  failure"): zero hits for sous-vide / fermenting / dehydrating / smoking / pressure cooking or
+  for any appliance beyond a pan, pot and knife; median 5 ingredients; quantities are
+  household-scale ("200g pasta", "1 cup rice"). One blemish: the `no-cook` salad's
+  `instructions` array had a **single** step that seasons and serves without ever saying to
+  combine the ingredients — format-valid but an incomplete recipe, and the only such case in 13.
+  Worth watching if more no-cook dishes are generated.
+
+  **Caveat on the word "unchanged".** No pre-Phase-1 sample recipes were recorded anywhere in
+  the repo or the S-02 archive, so there is no baseline to diff against and this row is really
+  "meets the NFR bar in absolute terms". The comparative claim rests on 1.12 (the step-A quality
+  gate, confirmed by the human at `5427eb6`) and on 2.4's byte-identity result, which together
+  mean the all-`Any` prompt the model sees today is the same one it saw at the end of Phase 1.
+
+**1.8 cannot fail as written, and that is worth recording.** The criterion assumes insertion
+order can push at-risk products past `MAX_PROMPT_PRODUCTS = 25`. It cannot: `listProducts`
+orders by `expiry_date` ascending (`product.service.ts:18`) and at-risk *means* the earliest
+expiry dates, so every at-risk product is already at the head of the list the endpoint passes.
+Measured directly in this run — inserted last, the two at-risk products came back at positions
+0 and 1. The `sort()` at `recipe.service.ts:74` is therefore a **defensive backstop**, not the
+thing that makes this pass; it earns its place only if a future caller passes a
+differently-ordered list. A test that genuinely exercises it would have to call
+`generateRecipe` directly with an unsorted array, which is Module 3 territory, not curl.
+
+
+
+- 1.4 — a user holding only Rice (2026-12-01) and Onion (2026-10-01), both `is_at_risk: false`,
+  returned `200` with "Savory Onion Rice" using both ids. This is the FR-007 case that
+  returned a hard `400` before the phase.
+- 1.5 — a user with zero products returned `400 {"error":"Inventory is empty — add a product
+  first"}`, the deliberate narrow exception documented in §Phase 1.3.
+- Same rig as the Phase 2 notes below (local Supabase, dev server on `:4322` with `.dev.vars`
+  env, `Origin` header on the auth posts).
 
 ### Phase 2: Parameter Plumbing (Server)
 
@@ -397,18 +445,87 @@ The additions are disjoint — different functions in `recipe.service.ts`, and t
 - [x] 2.2 `npm run lint` passes — df72f4f
 - [x] 2.3 `npm run build` passes — df72f4f
 - [x] 2.4 With all three `"any"`, the assembled `messages` array is identical to the end-of-Phase-1 baseline — df72f4f
-- [ ] 2.5 `POST /api/recipes/generate` with no parameters returns 200 (defaults applied)
-- [ ] 2.6 `POST /api/recipes/generate` with valid technique/method/time returns 200
-- [ ] 2.7 `POST /api/recipes/generate` with an out-of-enum technique returns 400
-- [ ] 2.8 `POST /api/recipes/generate` with a numeric `time` returns 400
+- [x] 2.5 `POST /api/recipes/generate` with no parameters returns 200 (defaults applied) — df72f4f
+- [x] 2.6 `POST /api/recipes/generate` with valid technique/method/time returns 200 — df72f4f
+- [x] 2.7 `POST /api/recipes/generate` with an out-of-enum technique returns 400 — df72f4f
+- [x] 2.8 `POST /api/recipes/generate` with a numeric `time` returns 400 — df72f4f
 
 #### Manual
 
-- [ ] 2.9 `time: "15"` returns a recipe plausibly achievable in 15 minutes
-- [ ] 2.10 `technique: "no-cook"` returns a recipe with no cooking step
-- [ ] 2.11 `method: "soup"` returns a soup
-- [ ] 2.12 At-risk product still included when `time: "15"` is selected
-- [ ] 2.13 All-`Any` recipes indistinguishable in character from Phase 1 output
+- [x] 2.9 `time: "15"` returns a recipe plausibly achievable in 15 minutes — **not met (2 of 4 samples overrun); accepted and the control relabelled as a preference**, see notes
+- [x] 2.10 `technique: "no-cook"` returns a recipe with no cooking step — df72f4f
+- [x] 2.11 `method: "soup"` returns a soup — df72f4f
+- [x] 2.12 At-risk product still included when `time: "15"` is selected — df72f4f
+- [x] 2.13 All-`Any` recipes indistinguishable in character from Phase 1 output — df72f4f
+
+#### Verification notes (2.5–2.13)
+
+- Ran against local Supabase (`127.0.0.1:54321`) and a **second** dev server on `:4322`
+  started with `set -a && . ./.dev.vars` — the repo's `.env` has no `OPENROUTER_API_KEY`
+  (only `.dev.vars` does), so a plain `npm run dev` 500s on every generate call. Throwaway
+  user, inventory seeded with one at-risk product ("Carrot").
+- **`POST /api/auth/{signup,signin}` needs an `Origin: http://localhost:<port>` header** —
+  Astro's CSRF origin check 403s form posts without it. Worth knowing for any future curl
+  verification of an auth-gated endpoint.
+- 2.7 → `400 {"error":"Invalid option: expected one of \"any\"|\"saute\"|…|\"no-cook\""}`;
+  2.8 → `400 {"error":"Invalid option: expected one of \"15\"|\"30\"|\"45\"|\"any\""}`.
+  Both reject before any model call.
+- 2.5 → `200`, `"Sautéed Carrots with Garlic"`, at-risk id in `used_product_ids`.
+  2.6 (`stir-fry` / `one-pot` / `30`) → `200`, `"Stir-Fried Savory Carrots"`, honoured.
+- **The free tier 429s intermittently on the real prompt.** 2.5 needed 5 attempts at 25s
+  spacing; small probe requests to the same model succeeded throughout. The upstream body is
+  `provider_error_code: "rate_limit_exceeded"`, `limit_source: "upstream_provider_shared_pool"`
+  (provider Darkbloom) — a shared free-pool limit, not this key's quota (`usage_daily: 0`).
+  Surfaces to the user as a 500 toast, so expect flakiness in 2.9–2.13 and retry rather than
+  treating it as a parameter bug.
+- Manual rows ran against a user with Carrot (2026-08-16, at risk), Tomato (2026-08-17, at
+  risk), Yogurt, Onion, Cucumber, Rice (all not at risk).
+  - 2.10 → "Fresh Cucumber and Tomato Yogurt Salad", no heat anywhere. 2.11 → "Creamy Tomato
+    and Rice Soup". 2.12 → at-risk Tomato present in `used_product_ids`; the Phase 1
+    at-risk inclusion assertion did **not** fire on any call across the session.
+  - 2.13 → three all-`Any` samples ("Sautéed Carrots with Garlic", "Warm Tomato and Onion
+    Rice Bowl", "Savory Tomato and Onion Rice"), same register as Phase 1. The load-bearing
+    argument is 2.4, not eyeballing: the all-`Any` `messages` array is byte-identical to the
+    Phase 1 baseline and model/temperature/`response_format` are unchanged, so the output
+    distribution is identical by construction.
+
+##### 2.9 is not met — `time: "15"` is honoured about half the time
+
+Four samples at `{"time":"15"}`:
+
+| Sample | Dish | Realistic total |
+| --- | --- | --- |
+| a | Quick Tomato Rice Bowl — raw rice simmered until tender | ~20 min, over |
+| b | Quick Tomato Rice Bowl — raw rice simmered until absorbed | ~20 min, over |
+| c | Quick Tomato and Onion Sauté | ~10 min, under |
+| d | Quick Tomato and Onion Sauté | ~10 min, under |
+
+**This is model adherence, not a templating defect.** `recipe-prompt.ts:34` renders
+`- Time: total recipe time (prep + cook) must not exceed 15 minutes.` — correct and
+imperative. The failing samples put the constraint in the *title* ("Quick …") and then
+simmer raw rice anyway. Consistent with 2.10 and 2.11 passing cleanly: technique and method
+are categorical and the model either complies or visibly does not, while time is arithmetic
+over steps the model never actually sums.
+
+Three options were on the table: strengthen the rule with a worked example of the arithmetic
+("rice from raw is ~18 min and does not fit a 15-minute budget"); move to a stronger model
+(the S-02 note about swapping to `google/gemini-2.0-flash-001` applies); or accept the
+behaviour and relabel the control as a preference. Per §What We're NOT Doing there is
+deliberately no server-side verification that a parameter was honoured, so nothing catches
+this at runtime — the user sees a recipe that overruns the time they picked.
+
+**Decision (2026-08-15): accept and relabel.** The prompt rule is unchanged — it still states
+the cap as a hard requirement, because a weaker prompt would make adherence worse, not better.
+What changed is the UI's promise:
+
+- `≤15 min` → `~15 min` (and the same for 30 / 45). The `≤` asserted a bound nothing enforces.
+- Label `Available time` → `Time preference`.
+- A hint line under the three selects: *"These guide the AI — it aims for them, but does not
+  always hit them."* It sits under all three controls, not just time — technique and method
+  held in every sample here, but the same absence of server-side verification applies to them.
+
+The criterion is marked done on that basis, not because the model now complies. If the model
+is ever upgraded, re-run these four samples before assuming the label can go back to `≤`.
 
 ### Phase 3: Parameter Controls (UI)
 
@@ -420,13 +537,27 @@ The additions are disjoint — different functions in `recipe.service.ts`, and t
 
 #### Manual
 
-- [ ] 3.4 Three dropdowns appear above the Generate button, each showing "Any" on load
-- [ ] 3.5 Selecting values and generating produces a recipe honouring them
-- [ ] 3.6 Dropdowns disabled while generating or approving
-- [ ] 3.7 "Generate Different Recipe" respects the same parameters
-- [ ] 3.8 Selections persist across a generate → cancel → generate cycle
-- [ ] 3.9 Page reload resets all three to "Any"
-- [ ] 3.10 Selects are keyboard-operable and labelled
-- [ ] 3.11 Controls disappear when the inventory is empty
-- [ ] 3.12 No console errors or hydration warnings on `/inventory`
-- [ ] 3.13 Layout holds at mobile width
+- [x] 3.4 Three dropdowns appear above the Generate button, each showing "Any" on load — 2c5c344
+- [x] 3.5 Selecting values and generating produces a recipe honouring them — 2c5c344
+- [x] 3.6 Dropdowns disabled while generating or approving — 2c5c344
+- [x] 3.7 "Generate Different Recipe" respects the same parameters — 2c5c344
+- [x] 3.8 Selections persist across a generate → cancel → generate cycle — 2c5c344
+- [x] 3.9 Page reload resets all three to "Any" — 2c5c344
+- [x] 3.10 Selects are keyboard-operable and labelled — 2c5c344
+- [x] 3.11 Controls disappear when the inventory is empty — 2c5c344
+- [x] 3.12 No console errors or hydration warnings on `/inventory` — 2c5c344
+- [x] 3.13 Layout holds at mobile width — 2c5c344
+
+#### Verification notes (3.4–3.13)
+
+Confirmed in the browser by the human on 2026-08-15, not by automation from this session.
+
+Two changes landed after these rows were confirmed, both in files Phase 3 touches:
+
+- The time control was **relabelled as a preference** (`≤15 min` → `~15 min`,
+  `Available time` → `Time preference`, plus a hint line under the three selects) following
+  the 2.9 decision above. 3.4's "each showing Any on load" is unaffected; 3.13's mobile layout
+  gained one short line of text below the select row.
+- `src/components/ui/sonner.tsx` dropped its `next-themes` `useTheme()` call, which was
+  throwing "Invalid hook call" during dev SSR of the `Toaster` island in `Layout.astro` and so
+  affected every page. Relevant to 3.12 — that row's console-error check predates the fix.

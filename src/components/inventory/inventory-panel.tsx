@@ -47,11 +47,15 @@ const RECIPE_METHOD_LABELS: Record<RecipeMethod, string> = {
   soup: "Soup",
 };
 
+// "~" not "≤": the prompt states the cap as a hard rule, but manual verification (plan.md
+// § 2.9) found the model overruns it in roughly half of `15` generations — it puts "Quick" in
+// the title and then simmers raw rice. There is deliberately no server-side check that a
+// parameter was honoured, so the label must not promise a bound nothing enforces.
 const RECIPE_TIME_LABELS: Record<RecipeTime, string> = {
   any: "Any",
-  "15": "≤15 min",
-  "30": "≤30 min",
-  "45": "≤45 min",
+  "15": "~15 min",
+  "30": "~30 min",
+  "45": "~45 min",
 };
 
 export function InventoryPanel({ initialProducts }: Props) {
@@ -273,7 +277,7 @@ export function InventoryPanel({ initialProducts }: Props) {
               </div>
               <div className="flex flex-1 flex-col gap-1">
                 <label htmlFor="recipe-time" className="text-xs text-white/70">
-                  Available time
+                  Time preference
                 </label>
                 <select
                   id="recipe-time"
@@ -292,6 +296,10 @@ export function InventoryPanel({ initialProducts }: Props) {
                 </select>
               </div>
             </div>
+
+            <p className="text-xs text-white/50">
+              These guide the AI — it aims for them, but does not always hit them.
+            </p>
 
             <Button
               onClick={() => void handleGenerate()}

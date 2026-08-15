@@ -1,13 +1,16 @@
 import { CircleCheckIcon, InfoIcon, Loader2Icon, OctagonXIcon, TriangleAlertIcon } from "lucide-react";
-import { useTheme } from "next-themes";
 import { Toaster as Sonner, type ToasterProps } from "sonner";
 
+// shadcn's template reads the theme from next-themes, which assumes a Next.js app wrapping
+// everything in a ThemeProvider. This app has none — `useTheme()` could only ever return the
+// context default, so the hook was dead weight that still crashed dev SSR: the optimized
+// next-themes chunk binds its own React copy, and when Vite re-optimizes deps mid-session that
+// copy's hook dispatcher goes null ("Invalid hook call" at sonner.tsx). Passing "system"
+// directly is what the destructuring default already produced, minus the failure mode.
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme();
-
   return (
     <Sonner
-      theme={theme as ToasterProps["theme"]}
+      theme="system"
       className="toaster group"
       icons={{
         success: <CircleCheckIcon className="size-4" />,
