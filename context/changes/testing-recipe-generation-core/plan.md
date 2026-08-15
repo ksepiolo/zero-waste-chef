@@ -607,15 +607,15 @@ check covers this).
 
 #### Automated
 
-- [x] 1.1 `npm test` runs and the smoke test passes
-- [x] 1.2 `npm run lint` passes with the new files present
-- [x] 1.3 `npm run typecheck` passes
-- [x] 1.4 `npm run build` still succeeds
+- [x] 1.1 `npm test` runs and the smoke test passes — a041703
+- [x] 1.2 `npm run lint` passes with the new files present — a041703
+- [x] 1.3 `npm run typecheck` passes — a041703
+- [x] 1.4 `npm run build` still succeeds — a041703
 
 #### Manual
 
-- [x] 1.5 `npm run test:watch` starts and re-runs on a saved edit
-- [x] 1.6 Test output shows no `astro:env` or unresolved-alias warnings
+- [x] 1.5 `npm run test:watch` starts and re-runs on a saved edit — a041703
+- [x] 1.6 Test output shows no `astro:env` or unresolved-alias warnings — a041703
 
 ### Phase 2: Risk #1 — Classification and Prompt Rules
 

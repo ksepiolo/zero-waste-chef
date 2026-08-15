@@ -79,10 +79,20 @@ orchestrator updates Status as artifacts appear on disk.
 
 | # | Phase name | Goal (one line) | Risks covered | Test types | Status | Change folder |
 |---|---|---|---|---|---|---|
-| 1 | Runner bootstrap + recipe-generation core | Prove expiry and at-risk state is computed correctly, reaches the model request, and that failures fail loudly | #1, #2, #6 | unit + integration (model boundary stubbed) | change opened | `context/changes/ttesting-recipe-generation-core/` |
+| 1 | Runner bootstrap + recipe-generation core | Prove at-risk state is computed correctly, reaches the model request, and that failures fail loudly | #1, #6 | unit + integration (model boundary stubbed) | research complete | `context/changes/testing-recipe-generation-core/` |
+| 1b | Expired-product handling | Prove past-dated stock never reaches the model and that the user is told | #2 | unit + integration (model boundary stubbed) | change opened | `context/changes/expired-product-handling/` |
 | 2 | Approval contract integrity | Prove approval is all-or-nothing and removes exactly the set it displayed | #3, #5 | integration | not started | — |
 | 3 | Data isolation and input trust | Prove a second user cannot reach the first user's rows, and that crafted input is rejected at the boundary | #4, #7 | integration + unit | not started | — |
 | 4 | Quality-gates wiring | Lock the floor in the existing CI job | cross-cutting | gates | not started | — |
+
+Phase 1b was split out of Phase 1 on 2026-08-15. Phase 1 research found Risk #2 to
+be a live defect rather than a coverage gap — `isAtRisk()` is one-sided, so expired
+stock is marked at-risk and the at-risk floor guard then *forces* it into the recipe.
+Closing it requires new product behaviour (an `expired` state, exclusion from the
+prompt, and telling the user), which does not belong in a test-rollout phase. The
+oracle for 1b is settled and recorded in
+`context/changes/testing-recipe-generation-core/research.md` §"Resolved Oracle".
+1b depends on 1 for the runner.
 
 Phase 1 must land first: there is no test runner in this project today, so
 no other phase can produce a signal until it exists. Phases 2 and 3 depend
