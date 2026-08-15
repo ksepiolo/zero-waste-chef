@@ -621,28 +621,28 @@ check covers this).
 
 #### Automated
 
-- [x] 2.1 `npm test` passes, including the boundary table and byte-identity assertions
-- [x] 2.2 The boundary table produces four named cases in the reporter
-- [x] 2.3 `npm run lint` and `npm run typecheck` pass
+- [x] 2.1 `npm test` passes, including the boundary table and byte-identity assertions — 65891e7
+- [x] 2.2 The boundary table produces four named cases in the reporter — 65891e7
+- [x] 2.3 `npm run lint` and `npm run typecheck` pass — 65891e7
 
 #### Manual
 
-- [x] 2.4 `AT_RISK_DAYS = 4` turns the `+4` case red, then reverted
-- [x] 2.5 Appending a word to `ANY_TECHNIQUE_LINE` turns byte identity red, then reverted
+- [x] 2.4 `AT_RISK_DAYS = 4` turns the `+4` case red, then reverted — 65891e7
+- [x] 2.5 Appending a word to `ANY_TECHNIQUE_LINE` turns byte identity red, then reverted — 65891e7
 
 ### Phase 3: Risk #1 — Outbound Payload and Guardrails
 
 #### Automated
 
-- [ ] 3.1 `npm test` passes all four groups
-- [ ] 3.2 Guardrail cases assert rejection without asserting message text
-- [ ] 3.3 No fixture in this file carries a past-dated `expiry_date`
-- [ ] 3.4 `npm run lint` and `npm run typecheck` pass
+- [x] 3.1 `npm test` passes all four groups
+- [x] 3.2 Guardrail cases assert rejection without asserting message text
+- [x] 3.3 No fixture in this file carries a past-dated `expiry_date`
+- [x] 3.4 `npm run lint` and `npm run typecheck` pass
 
 #### Manual
 
-- [ ] 3.5 Slicing before sorting turns the survival test red, then reverted
-- [ ] 3.6 Deleting the at-risk floor guard turns case (b) red, then reverted
+- [x] 3.5 Slicing before sorting turns the survival test red, then reverted
+- [x] 3.6 Deleting the at-risk floor guard turns case (b) red, then reverted
 
 ### Phase 4: Risk #6 — Failure Never Fakes Success
 
