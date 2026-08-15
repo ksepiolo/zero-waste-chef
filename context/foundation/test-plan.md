@@ -79,7 +79,7 @@ orchestrator updates Status as artifacts appear on disk.
 
 | # | Phase name | Goal (one line) | Risks covered | Test types | Status | Change folder |
 |---|---|---|---|---|---|---|
-| 1 | Runner bootstrap + recipe-generation core | Prove expiry and at-risk state is computed correctly, reaches the model request, and that failures fail loudly | #1, #2, #6 | unit + integration (model boundary stubbed) | change opened | `context/changes/testing-recipe-generation-core/` |
+| 1 | Runner bootstrap + recipe-generation core | Prove expiry and at-risk state is computed correctly, reaches the model request, and that failures fail loudly | #1, #2, #6 | unit + integration (model boundary stubbed) | change opened | `context/changes/ttesting-recipe-generation-core/` |
 | 2 | Approval contract integrity | Prove approval is all-or-nothing and removes exactly the set it displayed | #3, #5 | integration | not started | — |
 | 3 | Data isolation and input trust | Prove a second user cannot reach the first user's rows, and that crafted input is rejected at the boundary | #4, #7 | integration + unit | not started | — |
 | 4 | Quality-gates wiring | Lock the floor in the existing CI job | cross-cutting | gates | not started | — |
