@@ -648,15 +648,15 @@ check covers this).
 
 #### Automated
 
-- [x] 4.1 `npm test` passes all Risk #6 cases
-- [x] 4.2 No assertion compares a status to `500`
-- [x] 4.3 No assertion depends on `ZodError` or `SyntaxError` message content
-- [x] 4.4 `npm run lint` and `npm run typecheck` pass
+- [x] 4.1 `npm test` passes all Risk #6 cases — c30b0e3
+- [x] 4.2 No assertion compares a status to `500` — c30b0e3
+- [x] 4.3 No assertion depends on `ZodError` or `SyntaxError` message content — c30b0e3
+- [x] 4.4 `npm run lint` and `npm run typecheck` pass — c30b0e3
 
 #### Manual
 
-- [x] 4.5 Returning 200 with `{ recipe: null }` from the catch-all turns the endpoint test red, then reverted
-- [x] 4.6 Suite output is not polluted by `console.error`
+- [x] 4.5 Returning 200 with `{ recipe: null }` from the catch-all turns the endpoint test red, then reverted — c30b0e3
+- [x] 4.6 Suite output is not polluted by `console.error` — c30b0e3
 
 ### Phase 5: Mutation Gate, Cookbook, and Handoff
 
