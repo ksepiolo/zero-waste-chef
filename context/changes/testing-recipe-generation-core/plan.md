@@ -669,6 +669,6 @@ check covers this).
 
 #### Manual
 
-- [ ] 5.5 Every survived mutant reviewed and killed or consciously accepted, reasoning in §6.5
-- [ ] 5.6 The sort-before-slice mutant is killed, not accepted
-- [ ] 5.7 Phase 1b's `change.md` reads as a complete brief on its own
+- [x] 5.5 Every survived mutant reviewed and killed or consciously accepted, reasoning in §6.5
+- [x] 5.6 The sort-before-slice mutant is killed, not accepted
+- [x] 5.7 Phase 1b's `change.md` reads as a complete brief on its own
