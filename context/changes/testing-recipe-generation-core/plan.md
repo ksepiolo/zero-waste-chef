@@ -621,14 +621,14 @@ check covers this).
 
 #### Automated
 
-- [ ] 2.1 `npm test` passes, including the boundary table and byte-identity assertions
-- [ ] 2.2 The boundary table produces four named cases in the reporter
-- [ ] 2.3 `npm run lint` and `npm run typecheck` pass
+- [x] 2.1 `npm test` passes, including the boundary table and byte-identity assertions
+- [x] 2.2 The boundary table produces four named cases in the reporter
+- [x] 2.3 `npm run lint` and `npm run typecheck` pass
 
 #### Manual
 
-- [ ] 2.4 `AT_RISK_DAYS = 4` turns the `+4` case red, then reverted
-- [ ] 2.5 Appending a word to `ANY_TECHNIQUE_LINE` turns byte identity red, then reverted
+- [x] 2.4 `AT_RISK_DAYS = 4` turns the `+4` case red, then reverted
+- [x] 2.5 Appending a word to `ANY_TECHNIQUE_LINE` turns byte identity red, then reverted
 
 ### Phase 3: Risk #1 — Outbound Payload and Guardrails
 
