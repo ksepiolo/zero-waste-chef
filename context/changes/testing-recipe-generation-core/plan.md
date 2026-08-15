@@ -634,15 +634,15 @@ check covers this).
 
 #### Automated
 
-- [x] 3.1 `npm test` passes all four groups
-- [x] 3.2 Guardrail cases assert rejection without asserting message text
-- [x] 3.3 No fixture in this file carries a past-dated `expiry_date`
-- [x] 3.4 `npm run lint` and `npm run typecheck` pass
+- [x] 3.1 `npm test` passes all four groups — b295b2a
+- [x] 3.2 Guardrail cases assert rejection without asserting message text — b295b2a
+- [x] 3.3 No fixture in this file carries a past-dated `expiry_date` — b295b2a
+- [x] 3.4 `npm run lint` and `npm run typecheck` pass — b295b2a
 
 #### Manual
 
-- [x] 3.5 Slicing before sorting turns the survival test red, then reverted
-- [x] 3.6 Deleting the at-risk floor guard turns case (b) red, then reverted
+- [x] 3.5 Slicing before sorting turns the survival test red, then reverted — b295b2a
+- [x] 3.6 Deleting the at-risk floor guard turns case (b) red, then reverted — b295b2a
 
 ### Phase 4: Risk #6 — Failure Never Fakes Success
 
