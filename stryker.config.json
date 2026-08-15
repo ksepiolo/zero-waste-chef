@@ -1,0 +1,9 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "_comment": "Selective quality gate, run ad hoc — never in CI and never a commit gate (CLAUDE.md). Scope stays one file per run: npx stryker run --mutate \"src/lib/services/recipe.service.ts\".",
+  "packageManager": "npm",
+  "testRunner": "vitest",
+  "mutate": ["src/lib/services/recipe.service.ts"],
+  "reporters": ["html", "clear-text", "progress"],
+  "coverageAnalysis": "perTest"
+}

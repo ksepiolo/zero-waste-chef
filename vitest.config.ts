@@ -2,6 +2,13 @@
 import { getViteConfig } from "astro/config";
 import type { Plugin, UserConfig } from "vite";
 
+// Node caches the timezone when a thread starts, and `test.env` below is applied *inside*
+// the worker — too late to move it. That is invisible under Vitest's default forks pool but
+// fatal under @stryker-mutator/vitest-runner, which forces `pool: "threads"`: the boundary
+// tables would silently run in the developer's local timezone. Setting it here, in the main
+// process at config load, is what every worker then inherits at startup.
+process.env.TZ = "UTC";
+
 // The `test` block belongs in getViteConfig's FIRST argument — its signature is
 // getViteConfig(userViteConfig, inlineAstroConfig?), so anything passed second is read as
 // Astro inline config and the Vitest options are silently dropped.

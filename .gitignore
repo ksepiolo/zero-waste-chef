@@ -38,5 +38,6 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
-# stryker temp files
+# stryker temp files and generated mutation reports
 .stryker-tmp
+reports/

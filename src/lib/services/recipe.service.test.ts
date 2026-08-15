@@ -44,10 +44,13 @@ function product(n: number, isAtRisk: boolean, name = `Product ${n}`): ProductWi
   };
 }
 
+// Multi-entry on purpose. A real recipe has several ingredients and several steps, and a
+// single-entry fixture cannot tell a `min(1)` list bound apart from a `max(1)` one — the
+// second of which would reject every recipe a user could actually cook.
 const VALID_RECIPE = {
   title: "Test dish",
-  ingredients: ["1 unit of something"],
-  instructions: ["Cook it."],
+  ingredients: ["200 g of something", "1 tbsp of something else"],
+  instructions: ["Chop everything.", "Cook it."],
 };
 
 /** A well-formed OpenRouter success envelope; content is a JSON string, as in json_schema mode. */
@@ -145,6 +148,11 @@ function firstOfferedId(userTurn: string): string {
   return /\(id: ([^)]+)\)/.exec(userTurn)?.[1] ?? "no-id-in-turn";
 }
 
+/** Every product id offered in a user turn, in the order the service listed them. */
+function offeredIds(userTurn: string): string[] {
+  return [...userTurn.matchAll(/\(id: ([^)]+)\)/g)].map((match) => match[1]);
+}
+
 /** Index of the line carrying FR-007's prioritisation clause, or -1 when it is absent. */
 function prioritisationLine(userTurn: string): number {
   return userTurn.split("\n").findIndex((line) => line.includes("must use at least one"));
@@ -208,6 +216,46 @@ describe("generateRecipe — outbound payload", () => {
     expect(userTurn.split("\n")[floorLine]).toContain(atRisk.id);
     expect(userTurn.split("\n")[floorLine]).not.toContain(safe.id);
     expect(userTurn.split("\n")[optionalLine]).toContain(safe.id);
+    // The separation has to hold in both directions. An at-risk product repeated among the
+    // optional ingredients is offered to the model as skippable, which is the priority
+    // dissolving quietly — Risk #1 without a single guardrail firing.
+    expect(userTurn.split("\n")[optionalLine]).not.toContain(atRisk.id);
+  });
+
+  // The mirror of the "no empty at-risk section" rule below: an optional section announced
+  // over nothing tells the model there are further ingredients and then names none, which is
+  // an invitation to fill the gap with something the user does not have.
+  it("omits the optional section entirely when every product is at risk", async () => {
+    const provider = stubProvider((turn) => providerReply([firstOfferedId(turn)]));
+
+    await generateRecipe([product(1, true), product(2, true)]);
+
+    expect(otherSectionLines(provider.userTurn())).toStrictEqual([]);
+  });
+
+  // Product names are user free text on a shared API key, so an inventory of any size must
+  // not become a request of any size (recipe.service.ts:75-76). The assertion is that the
+  // payload is bounded at all — the cap's *value* is a tunable and pinning it would fail on
+  // a legitimate change, while the at-risk survival test above is what keeps the bound from
+  // being satisfied by dropping the products that matter.
+  it("bounds the outbound inventory instead of forwarding it whole", async () => {
+    const inventory = Array.from({ length: 200 }, (_, index) => product(index + 1, false));
+    const provider = stubProvider((turn) => providerReply([firstOfferedId(turn)]));
+
+    await generateRecipe(inventory);
+
+    expect(offeredIds(provider.userTurn()).length).toBeLessThan(inventory.length);
+  });
+
+  // A first generation has nothing to avoid — generate.ts calls this with no exclusions.
+  // Telling the model to avoid an empty list of titles is a contradiction it has to resolve
+  // on its own, and it is the shape a mis-defaulted parameter would take.
+  it("carries no exclusion clause when nothing has been suggested yet", async () => {
+    const provider = stubProvider((turn) => providerReply([firstOfferedId(turn)]));
+
+    await generateRecipe([product(1, true)]);
+
+    expect(provider.userTurn()).not.toContain("Already suggested");
   });
 
   // Oracle: PRD §Business Logic — "If no at-risk products exist, the recipe is generated
@@ -285,6 +333,17 @@ describe("generateRecipe — post-response guardrails", () => {
     await expect(generateRecipe(inventory)).rejects.toThrow();
   });
 
+  // A response that mixes real ids with an invented one is the case a "does it use any
+  // known product?" check would wave through, and it is the more likely failure: the model
+  // has the inventory in front of it, so a hallucinated id arrives alongside real ones
+  // rather than alone. Every id must be one we offered, because approve_recipe deletes the
+  // whole list.
+  it("rejects a recipe that mixes offered products with an invented one", async () => {
+    stubProvider(() => providerReply([atRisk.id, uuid(999)]));
+
+    await expect(generateRecipe(inventory)).rejects.toThrow();
+  });
+
   // The floor from PRD §Success Criteria/Primary #1. Every id here is real and in the
   // inventory, so only the at-risk floor separates this from a valid recipe — without the
   // guard the product degrades into a generic recipe app exactly as Risk #1 describes.
@@ -344,11 +403,30 @@ describe("generateRecipe — provider failures never fake success", () => {
   // A request the caller can no longer wait on must settle. `AbortSignal.timeout` rejects
   // with a DOMException named TimeoutError; asserting the *translation* rather than the
   // elapsed wall clock keeps the test off fake timers, which interact badly with the
-  // signal. The 30 s bound itself is a tunable and is not pinned here.
-  it("turns an aborted request into a bounded timeout message instead of hanging", async () => {
-    stubProviderOutcome(() => Promise.reject(abortTimeout()));
+  // signal. The 30 s bound itself is a tunable and is not pinned here. An AbortError — the
+  // shape a caller-side cancellation takes — settles the same way, because from the user's
+  // side both mean "the request was cut off before an answer arrived".
+  it.each([
+    { label: "the timeout firing", rejection: abortTimeout },
+    { label: "a cancelled request", rejection: () => new DOMException("The operation was aborted", "AbortError") },
+  ])("turns $label into a bounded timeout message instead of hanging", async ({ rejection }) => {
+    stubProviderOutcome(() => Promise.reject(rejection()));
 
     await expect(generateRecipe(inventory)).rejects.toThrow("Recipe generation timed out — try again");
+  });
+
+  // The guard translating an abort into "timed out" must key on the abort, not swallow every
+  // transport failure. A DNS or TLS failure reported as a timeout tells the user to wait and
+  // retry, which is the one thing that will not help — Risk #6's "each class of failure is
+  // distinguishable" read from the other end. What such a failure *should* say is Risk #6
+  // presentation work owned by expired-product-handling, so only the misattribution is
+  // asserted here.
+  it("does not report a connection failure as a timeout", async () => {
+    stubProviderOutcome(() => Promise.reject(new TypeError("fetch failed")));
+
+    const error = await rejectionOf(inventory);
+
+    expect(error.message).not.toContain("timed out");
   });
 
   // Distinctness is the property the test plan actually asks for, and it is what the four
@@ -374,12 +452,25 @@ describe("generateRecipe — provider failures never fake success", () => {
   // form of a failure faking success, so the only acceptable outcome is a rejection. The
   // message is not asserted: it names the provider, which is Risk #6 presentation work
   // owned by expired-product-handling.
-  it("rejects an empty provider response rather than inventing a recipe", async () => {
-    stubProviderOutcome(() =>
-      Promise.resolve(new Response(JSON.stringify({ choices: [{ message: {} }] }), { status: 200 })),
-    );
+  //
+  // What *is* asserted is that the rejection is deliberate. A TypeError means the envelope
+  // was walked without checking it and the caller gets "Cannot read properties of
+  // undefined"; a SyntaxError means the missing content reached JSON.parse. Both are raw
+  // internal detail rendered into the user's toast — the leak half of Risk #6 — and both are
+  // what an envelope guard exists to prevent. "Malformed model response" is a named Risk #6
+  // failure class, so a truncated envelope is not a hypothetical shape.
+  it.each([
+    { label: "no choices at all", envelope: {} },
+    { label: "an empty choices list", envelope: { choices: [] } },
+    { label: "a choice with no message", envelope: { choices: [{}] } },
+    { label: "a message with no content", envelope: { choices: [{ message: {} }] } },
+  ])("rejects $label deliberately rather than inventing a recipe", async ({ envelope }) => {
+    stubProviderOutcome(() => Promise.resolve(new Response(JSON.stringify(envelope), { status: 200 })));
 
-    await expect(generateRecipe(inventory)).rejects.toThrow();
+    const error = await rejectionOf(inventory);
+
+    expect(error).not.toBeInstanceOf(TypeError);
+    expect(error).not.toBeInstanceOf(SyntaxError);
   });
 });
 

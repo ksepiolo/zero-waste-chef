@@ -662,10 +662,10 @@ check covers this).
 
 #### Automated
 
-- [ ] 5.1 Stryker run over `recipe.service.ts` completes and produces an HTML report
-- [ ] 5.2 `npm test` still passes after mutant-killing assertions
-- [ ] 5.3 `npm run lint` passes
-- [ ] 5.4 No TBD placeholder remains in test-plan §6.1, §6.2 or §6.3
+- [x] 5.1 Stryker run over `recipe.service.ts` completes and produces an HTML report
+- [x] 5.2 `npm test` still passes after mutant-killing assertions
+- [x] 5.3 `npm run lint` passes
+- [x] 5.4 No TBD placeholder remains in test-plan §6.1, §6.2 or §6.3
 
 #### Manual
 
