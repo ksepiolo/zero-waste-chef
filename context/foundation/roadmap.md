@@ -3,7 +3,7 @@ project: "Zero Waste Chef"
 version: 1
 status: draft
 created: 2026-05-27
-updated: 2026-08-13
+updated: 2026-08-15
 prd_version: 1
 main_goal: speed
 top_blocker: time
@@ -32,7 +32,7 @@ Użytkownik otwiera lodówkę i nie wie, co trzeba zużyć — ekspirujące prod
 | F-01 | data-schema            | (foundation) tabele products + recipes z RLS w Supabase       | —             | FR-004, FR-007, FR-009 | done     |
 | S-01 | inventory-management   | dodać produkt, zobaczyć listę z oznaczeniem "at-risk", usunąć | F-01          | FR-001–FR-006         | done     |
 | S-02 | recipe-generation-loop | wygenerować przepis AI, zatwierdzić, usunąć produkty          | S-01, F-01    | FR-007–FR-009, US-01  | done     |
-| S-03 | recipe-history         | zobaczyć listę wcześniej zatwierdzonych przepisów              | S-02          | FR-010                | in-progress |
+| S-03 | recipe-history         | zobaczyć listę wcześniej zatwierdzonych przepisów              | S-02          | FR-010                | done     |
 | S-04 | recipe-generation-ux   | wybrać parametry przepisu (technika, metoda, czas) przed generowaniem | F-01     | FR-007, FR-008        | in-progress |
 
 ## Baseline
@@ -100,7 +100,7 @@ Foundations poniżej zakładają, że te warstwy są obecne i ich nie przebudowu
 - **Unknowns:**
   - Co wyświetlać w liście: tylko tytuł, tytuł + składniki, czy pełne instrukcje? — Owner: user. Block: no (może być zdecydowane podczas implementacji per PRD Open Question 3). **Rozstrzygnięte 2026-08-11 w `/10x-plan`:** pełna treść, domyślnie zwinięta.
 - **Risk:** pierwsze do odcięcia pod presją deadline'u — PRD §Recipe Generation wprost to zaznacza: "if timeline pressure appears, this is the first candidate to cut"; jeśli brakuje czasu, FR-010 jedzie w v2
-- **Status:** in-progress
+- **Status:** done
 
 ### S-04: Recipe generation UX improvements
 
@@ -122,7 +122,7 @@ Foundations poniżej zakładają, że te warstwy są obecne i ich nie przebudowu
 | F-01       | data-schema            | Supabase: schema products + recipes z RLS              | done                  | Archived 2026-05-31                |
 | S-01       | inventory-management   | Inventory: add / view (at-risk flag) / delete products | done                  | Archived 2026-06-01                |
 | S-02       | recipe-generation-loop | Recipe loop: generate → approve → remove (AI)          | done                  | Archived 2026-08-11                |
-| S-03       | recipe-history         | Recipe history: lista zatwierdzonych przepisów         | no                    | Czeka na S-02; pierwsze do odcięcia |
+| S-03       | recipe-history         | Recipe history: lista zatwierdzonych przepisów         | done                  | Archived 2026-08-15                |
 | S-04       | recipe-generation-ux   | Generowanie: wybór techniki, metody i czasu przepisu   | no                    | Zgłoszone podczas S-01/S-02 (UX gap) |
 
 ## Open Roadmap Questions
@@ -145,3 +145,4 @@ Foundations poniżej zakładają, że te warstwy są obecne i ich nie przebudowu
 - **F-01: (foundation) tabele products + recipes z RLS w Supabase** — Archived 2026-05-31 → `context/archive/2026-05-31-data-schema/`. Lesson: —.
 - **S-01: użytkownik może dodać produkt (nazwa + data ważności) do inwentarza, zobaczyć pełną listę z wizualnym wyróżnieniem produktów "at-risk" — produktów wygasających w ciągu najbliższych 3 dni — i usunąć produkt manualnie.** — Archived 2026-06-01 → `context/archive/2026-05-31-inventory-management/`. Lesson: —.
 - **S-02: użytkownik może zażądać przepisu AI priorytetyzującego produkty "at-risk" z inwentarza, zobaczyć ekran zatwierdzenia z przepisem i dokładną listą produktów do usunięcia, zatwierdzić — przepis zostaje zapisany, a wymienione produkty usunięte z inwentarza jako jedna atomowa operacja.** — Archived 2026-08-11 → `context/archive/2026-06-05-recipe-generation-loop/`. Lesson: —.
+- **S-03: użytkownik może zobaczyć listę wcześniej zatwierdzonych przepisów posortowaną od najnowszej do najstarszej.** — Archived 2026-08-15 → `context/archive/2026-08-11-recipe-history/`. Lesson: —.
