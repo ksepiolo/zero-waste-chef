@@ -662,13 +662,13 @@ check covers this).
 
 #### Automated
 
-- [x] 5.1 Stryker run over `recipe.service.ts` completes and produces an HTML report
-- [x] 5.2 `npm test` still passes after mutant-killing assertions
-- [x] 5.3 `npm run lint` passes
-- [x] 5.4 No TBD placeholder remains in test-plan §6.1, §6.2 or §6.3
+- [x] 5.1 Stryker run over `recipe.service.ts` completes and produces an HTML report — 4b45b4b
+- [x] 5.2 `npm test` still passes after mutant-killing assertions — 4b45b4b
+- [x] 5.3 `npm run lint` passes — 4b45b4b
+- [x] 5.4 No TBD placeholder remains in test-plan §6.1, §6.2 or §6.3 — 4b45b4b
 
 #### Manual
 
-- [x] 5.5 Every survived mutant reviewed and killed or consciously accepted, reasoning in §6.5
-- [x] 5.6 The sort-before-slice mutant is killed, not accepted
-- [x] 5.7 Phase 1b's `change.md` reads as a complete brief on its own
+- [x] 5.5 Every survived mutant reviewed and killed or consciously accepted, reasoning in §6.5 — 4b45b4b
+- [x] 5.6 The sort-before-slice mutant is killed, not accepted — 4b45b4b
+- [x] 5.7 Phase 1b's `change.md` reads as a complete brief on its own — 4b45b4b

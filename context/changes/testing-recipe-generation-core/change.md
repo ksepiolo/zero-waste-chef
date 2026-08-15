@@ -1,7 +1,7 @@
 ---
 change_id: testing-recipe-generation-core
 title: Testing recipe generation core
-status: implementing
+status: implemented
 created: 2026-08-15
 updated: 2026-08-15
 research_status: complete
