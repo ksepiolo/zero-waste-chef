@@ -77,13 +77,13 @@ Each row is a discrete rollout phase that will open its own change folder
 via `/10x-new`. Status moves left-to-right through the values below; the
 orchestrator updates Status as artifacts appear on disk.
 
-| #   | Phase name                                | Goal (one line)                                                                                                                                           | Risks covered    | Test types                                  | Status        | Change folder                                          |
-| --- | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- | ------------------------------------------- | ------------- | ------------------------------------------------------ |
-| 1   | Runner bootstrap + recipe-generation core | Prove at-risk state is computed correctly, reaches the model request, and that failures fail loudly                                                       | #1, #6 (partial) | unit + integration (model boundary stubbed) | complete      | `context/changes/testing-recipe-generation-core/`      |
-| 1b  | Expired-product handling                  | Prove past-dated stock never reaches the model and that the user is told, and that each generation failure carries its own status and a user-safe message | #2, #6           | unit + integration (model boundary stubbed) | complete      | `context/changes/expired-product-handling/`            |
-| 2   | Approval contract integrity               | Prove approval is all-or-nothing and removes exactly the set it displayed                                                                                 | #3, #5           | integration                                 | change opened | `context/changes/testing-approval-contract-integrity/` |
-| 3   | Data isolation and input trust            | Prove a second user cannot reach the first user's rows, and that crafted input is rejected at the boundary                                                | #4, #7           | integration + unit                          | not started   | —                                                      |
-| 4   | Quality-gates wiring                      | Lock the floor in the existing CI job                                                                                                                     | cross-cutting    | gates                                       | not started   | —                                                      |
+| #   | Phase name                                | Goal (one line)                                                                                                                                           | Risks covered    | Test types                                  | Status      | Change folder                                          |
+| --- | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- | ------------------------------------------- | ----------- | ------------------------------------------------------ |
+| 1   | Runner bootstrap + recipe-generation core | Prove at-risk state is computed correctly, reaches the model request, and that failures fail loudly                                                       | #1, #6 (partial) | unit + integration (model boundary stubbed) | complete    | `context/changes/testing-recipe-generation-core/`      |
+| 1b  | Expired-product handling                  | Prove past-dated stock never reaches the model and that the user is told, and that each generation failure carries its own status and a user-safe message | #2, #6           | unit + integration (model boundary stubbed) | complete    | `context/changes/expired-product-handling/`            |
+| 2   | Approval contract integrity               | Prove approval is all-or-nothing and removes exactly the set it displayed                                                                                 | #3, #5           | integration                                 | complete    | `context/changes/testing-approval-contract-integrity/` |
+| 3   | Data isolation and input trust            | Prove a second user cannot reach the first user's rows, and that crafted input is rejected at the boundary                                                | #4, #7           | integration + unit                          | not started | —                                                      |
+| 4   | Quality-gates wiring                      | Lock the floor in the existing CI job                                                                                                                     | cross-cutting    | gates                                       | not started | —                                                      |
 
 Phase 1b was split out of Phase 1 on 2026-08-15. Phase 1 research found Risk #2 to
 be a live defect rather than a coverage gap — `isAtRisk()` is one-sided, so expired
@@ -352,6 +352,33 @@ three-line note here capturing anything surprising the phase taught.)
   (killing those means snapshotting internal copy, which §6 forbids), and the
   empty-envelope guard — which now survives only because the parse wrapper catches
   the fallthrough and produces an identical class, status and message.
+
+**Phase 2 — approval contract integrity (2026-08-16)**
+
+- The RPC's own all-or-nothing and set-identity guarantees are Postgres
+  properties, not JS ones — no mock can establish them. A `SECURITY INVOKER`
+  `BEFORE DELETE` trigger keyed on an exact sentinel product name forces the
+  atomicity test's failure without any global side effect (a `REVOKE`/`GRANT`
+  approach was considered and rejected — it would have to touch every
+  session, not just the test's own DELETE).
+- Risk #5 was a live defect, not a coverage gap: `approve_recipe` silently
+  excluded stale or foreign product ids from the delete instead of reporting
+  them, and the PRD's own "never more, never fewer" guardrail wording claimed
+  a guarantee the system did not honor. Closing the gap meant changing the
+  RPC's return shape (`UUID` → `JSONB`), which needed a `DROP FUNCTION` first
+  — `CREATE OR REPLACE` cannot change a return type in place.
+- Mutation gate (`npx stryker run --mutate "src/lib/services/recipe.service.ts:257-281"`,
+  scoped to `approveRecipe`): **0.00% → 71.43%** total (0.00% → 76.92%
+  covered). The integration suite calls the RPC directly rather than through
+  this wrapper, so `approveRecipe` started this phase with zero coverage
+  from any test in the suite — two new unit tests (mocking the Supabase
+  client, no DB needed) killed ten mutants, including a dropped
+  `deleted_ids` from the response and a swallowed PostgREST error that would
+  have let a datastore failure resolve as a fake success. Survivors accepted:
+  the diagnostic `cause` option (same class Phase 1 accepted), and three
+  mutants on the `if (!result?.recipe_id)` defensive branch — out of scope
+  per this phase's plan (unreachable by construction, same category as the
+  `ServiceError` `CONTRACT` fallback).
 
 ## 7. What We Deliberately Don't Test
 

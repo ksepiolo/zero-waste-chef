@@ -554,25 +554,25 @@ consumer is the app code this same change updates in lockstep (Phase 2).
 
 #### Automated
 
-- [x] 4.1 `npx supabase start && npx supabase db reset` succeeds
-- [x] 4.2 `npm run test` passes with Supabase running
-- [x] 4.3 `npm run test` passes with Supabase stopped (new tests skip cleanly)
-- [x] 4.4 `npm run typecheck` and `npm run lint` pass
+- [x] 4.1 `npx supabase start && npx supabase db reset` succeeds — 2b95df7
+- [x] 4.2 `npm run test` passes with Supabase running — 2b95df7
+- [x] 4.3 `npm run test` passes with Supabase stopped (new tests skip cleanly) — 2b95df7
+- [x] 4.4 `npm run typecheck` and `npm run lint` pass — 2b95df7
 
 #### Manual
 
-- [x] 4.5 Manually inspect tables after a failed atomicity run for orphan rows
+- [x] 4.5 Manually inspect tables after a failed atomicity run for orphan rows — 2b95df7
 
 ### Phase 5: Close-out
 
 #### Automated
 
-- [ ] 5.1 `npm run test` passes (full suite)
-- [ ] 5.2 `npm run typecheck` passes
-- [ ] 5.3 `npm run lint` passes
-- [ ] 5.4 Stryker mutation run completes, survivors triaged
+- [x] 5.1 `npm run test` passes (full suite)
+- [x] 5.2 `npm run typecheck` passes
+- [x] 5.3 `npm run lint` passes
+- [x] 5.4 Stryker mutation run completes, survivors triaged
 
 #### Manual
 
-- [ ] 5.5 PRD guardrail wording reviewed for accuracy
-- [ ] 5.6 `change.md` and `test-plan.md` rollout status updated
+- [x] 5.5 PRD guardrail wording reviewed for accuracy
+- [x] 5.6 `change.md` and `test-plan.md` rollout status updated

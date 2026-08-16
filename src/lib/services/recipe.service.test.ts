@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
-import type { GeneratedRecipe, ProductWithRisk } from "@/types";
+import type { ApproveRecipeInput, GeneratedRecipe, ProductWithRisk } from "@/types";
 
-import { generateRecipe } from "./recipe.service";
+import { approveRecipe, generateRecipe } from "./recipe.service";
 import { ServiceError } from "./service-error";
 
 // The real key is absent under the runner (all three env fields are optional in
@@ -649,5 +650,79 @@ describe("generateRecipe — a failure leaks neither the shared key nor the upst
     await rejectionOf(inventory);
 
     expect(logged.mock.calls.flat().join(" ")).toContain(UPSTREAM_MARKER);
+  });
+});
+
+// approve_recipe's own all-or-nothing and set-identity guarantees are Postgres properties,
+// proved against the real database in recipe.service.approve.integration.test.ts — that
+// suite calls the RPC directly, so it never exercises this wrapper. What belongs here is
+// call-site correctness: the exact request this function sends, and what it does with the
+// two shapes the RPC can hand back.
+describe("approveRecipe", () => {
+  const INPUT: ApproveRecipeInput = {
+    title: "Test dish",
+    ingredients: ["200 g of something"],
+    instructions: ["Chop everything.", "Cook it."],
+    usedProductIds: [uuid(1), uuid(2)],
+  };
+
+  /** Records the single `.rpc()` call and resolves with whatever `result` the caller wants. */
+  function stubApproveRpc(result: { data: unknown; error: { message: string } | null }) {
+    let call: { name: string; args: unknown } | undefined;
+    const supabase = {
+      rpc: (name: string, args: unknown) => {
+        call = { name, args };
+        return { overrideTypes: () => Promise.resolve(result) };
+      },
+    } as unknown as SupabaseClient;
+
+    return { supabase, call: () => call };
+  }
+
+  // Oracle: the RPC name and every argument are load-bearing — a typo'd name or a dropped
+  // argument reaches Postgres as a different call entirely, and no other test in the suite
+  // would catch it (the integration suite calls the RPC directly, not through this function).
+  it("sends the exact request the RPC expects and returns the recipe id and deleted ids", async () => {
+    const { supabase, call } = stubApproveRpc({
+      data: { recipe_id: uuid(99), deleted_ids: [uuid(1)] },
+      error: null,
+    });
+
+    const result = await approveRecipe(supabase, INPUT);
+
+    expect(call()).toStrictEqual({
+      name: "approve_recipe",
+      args: {
+        p_title: INPUT.title,
+        p_ingredients: INPUT.ingredients,
+        // Sole conversion point: AI returns string[], the column is TEXT.
+        p_instructions: "Chop everything.\nCook it.",
+        p_used_product_ids: INPUT.usedProductIds,
+      },
+    });
+    expect(result).toStrictEqual({ id: uuid(99), deletedIds: [uuid(1)] });
+  });
+
+  // Oracle: prd.md §Guardrails — a PostgREST failure on approve must reach the user as the
+  // same safe, generic copy the rest of the app uses, not raw internal text. That only holds
+  // if the error branch actually throws (rather than silently resolving) and is classified
+  // as `data_access` (rather than falling through to a different ServiceError message/status).
+  it("throws a data_access ServiceError when the RPC call fails", async () => {
+    // `data` carries a well-formed shape alongside the error — a real PostgREST failure
+    // would leave it null, but that would let this test pass on either guard. Giving it a
+    // valid recipe_id isolates the `if (error)` guard: only that branch can produce a
+    // rejection here, so a mutant that skips it falls through to a successful return instead.
+    const { supabase } = stubApproveRpc({
+      data: { recipe_id: uuid(1), deleted_ids: [] },
+      error: { message: "constraint violation" },
+    });
+
+    const outcome: unknown = await approveRecipe(supabase, INPUT).then(
+      (result) => result,
+      (err: unknown) => err,
+    );
+
+    expect(outcome).toBeInstanceOf(ServiceError);
+    expect((outcome as ServiceError).kind).toBe("data_access");
   });
 });
