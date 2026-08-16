@@ -21,7 +21,7 @@ const astroViteConfig = getViteConfig({
     // Astro 6 removed Astro-component rendering in client environments; server code is all
     // this suite touches anyway.
     environment: "node",
-    include: ["src/**/*.test.ts"],
+ple    include: ["src/**/*.test.ts"],
     // isAtRisk() compares local-date strings. Cloudflare's workerd runs UTC
     // (context/foundation/infrastructure.md), so pin the runner to match production rather
     // than let the boundary tables drift with the developer's timezone.
