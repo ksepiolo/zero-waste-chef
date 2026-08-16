@@ -339,6 +339,11 @@ three-line note here capturing anything surprising the phase taught.)
 - The expired partition lives in the endpoint, not in `generateRecipe`. That kept
   the service's signature and resolved shape untouched, so every Phase 1 assertion
   survived the change verbatim — the property those tests were written for.
+- One manual check was closed by automation rather than by hand: forcing a real
+  provider to return malformed JSON is not something a person can do on demand, so
+  the "readable toast, not a JSON dump" property is carried by the two suppression
+  tests instead (model prose and `ZodError`, each guarded against passing
+  vacuously). Recorded here because the plan's row reads as manually verified.
 - Mutation gate (same scope and command as Phase 1): **52.68% → 52.80%** total.
   Two real survivors killed, both the same class — a guardrail throwing an
   unclassified error still satisfied `rejects.toThrow()`, so the endpoint would

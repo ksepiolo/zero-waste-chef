@@ -720,7 +720,7 @@ change are reclassified the moment they are read.
 #### Manual
 
 - [x] 5.6 Survived mutants reviewed one by one; assertions added only for user-visible bugs — 00c3f3c
-- [ ] 5.7 A forced malformed provider response produces a readable toast, not a JSON dump
+- [x] 5.7 A forced malformed provider response produces a readable toast, not a JSON dump — 00c3f3c
 
 ### Phase 6: UI surfacing and rollout close-out
 
