@@ -8,7 +8,9 @@ export interface Product {
 
 export type NewProduct = Omit<Product, "id" | "user_id" | "created_at">;
 
-export type ProductWithRisk = Product & { is_at_risk: boolean };
+// Both flags are server-derived on read (classifyExpiry in product.service.ts) — the
+// products table stores neither — and are mutually exclusive by construction.
+export type ProductWithRisk = Product & { is_at_risk: boolean; is_expired: boolean };
 
 export interface ConsumedProduct {
   name: string;

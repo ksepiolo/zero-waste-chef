@@ -1,9 +1,9 @@
 ---
 change_id: expired-product-handling
 title: Exclude expired products from recipe generation and tell the user
-status: new
+status: implementing
 created: 2026-08-15
-updated: 2026-08-15
+updated: 2026-08-16
 archived_at: null
 ---
 

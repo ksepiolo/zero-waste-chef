@@ -41,6 +41,7 @@ function product(n: number, isAtRisk: boolean, name = `Product ${n}`): ProductWi
     expiry_date: expiryIn(isAtRisk ? 1 : 30),
     created_at: "2026-08-01T00:00:00Z",
     is_at_risk: isAtRisk,
+    is_expired: false,
   };
 }
 
