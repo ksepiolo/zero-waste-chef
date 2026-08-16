@@ -468,9 +468,15 @@ branch in `approve.ts`).
 
 ### Unit Tests:
 
-- None new — this phase's test type is integration per `test-plan.md`'s Phased
+- None planned — this phase's test type is integration per `test-plan.md`'s Phased
   Rollout table. Existing unit coverage in `recipe.service.test.ts` is untouched by
   these changes (no assertions there reference `approveRecipe`).
+- Addendum (Phase 5, mutation-testing pass): two unit tests were added to
+  `recipe.service.test.ts` under `describe("approveRecipe", ...)` — an RPC
+  call-shape/return assertion and a `ServiceError` `data_access` assertion on RPC
+  failure — since the integration suite calls the RPC directly and never exercises
+  the `approveRecipe` wrapper, leaving it at 0% mutation coverage otherwise. Raised
+  Phase 2 mutation score from 0.00% to 71.43% (see `test-plan.md` §6.5).
 
 ### Integration Tests:
 

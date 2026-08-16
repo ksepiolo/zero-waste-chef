@@ -1,7 +1,7 @@
 ---
 change_id: testing-approval-contract-integrity
 title: Approval contract integrity — all-or-nothing, and exactly the set displayed
-status: implemented
+status: impl_reviewed
 created: 2026-08-16
 updated: 2026-08-16
 archived_at: null

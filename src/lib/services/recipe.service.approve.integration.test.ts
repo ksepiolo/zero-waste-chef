@@ -145,27 +145,30 @@ describe.skipIf(!supabaseReachable)("approve_recipe — integration", () => {
     const sentinelId = await insertProduct(primaryClient, primaryUserId, SENTINEL_NAME);
     trackRecipe(primaryClient, title);
 
-    const { error } = await callApprove(primaryClient, title, [sentinelId]);
+    try {
+      const { error } = await callApprove(primaryClient, title, [sentinelId]);
 
-    expect(error).toBeTruthy();
+      expect(error).toBeTruthy();
 
-    const { data: recipes } = await primaryClient.from("recipes").select("id").eq("title", title);
-    expect(recipes).toStrictEqual([]);
+      const { data: recipes } = await primaryClient.from("recipes").select("id").eq("title", title);
+      expect(recipes).toStrictEqual([]);
 
-    const { data: product } = await primaryClient
-      .from("products")
-      .select("id")
-      .eq("id", sentinelId)
-      .maybeSingle<{ id: string }>();
-    expect(product?.id).toBe(sentinelId);
-
-    // The trigger blocks any DELETE that targets this exact name — including the shared
-    // afterEach's cleanup — so this row would otherwise leak across every test run.
-    // Renaming first sidesteps it without weakening what the assertions above just proved.
-    await primaryClient
-      .from("products")
-      .update({ name: `cleanup-${crypto.randomUUID()}` })
-      .eq("id", sentinelId);
+      const { data: product } = await primaryClient
+        .from("products")
+        .select("id")
+        .eq("id", sentinelId)
+        .maybeSingle<{ id: string }>();
+      expect(product?.id).toBe(sentinelId);
+    } finally {
+      // The trigger blocks any DELETE that targets this exact name — including the shared
+      // afterEach's cleanup — so this row would otherwise leak across every test run.
+      // Renaming first sidesteps it without weakening what the assertions above just proved.
+      // Runs in `finally` so a failed assertion above still frees the row for afterEach.
+      await primaryClient
+        .from("products")
+        .update({ name: `cleanup-${crypto.randomUUID()}` })
+        .eq("id", sentinelId);
+    }
   });
 
   // Oracle: test-plan §2 Risk #5 — "the set returned in the approval payload and the set
