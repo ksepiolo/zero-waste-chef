@@ -12,6 +12,14 @@ export type NewProduct = Omit<Product, "id" | "user_id" | "created_at">;
 // products table stores neither — and are mutually exclusive by construction.
 export type ProductWithRisk = Product & { is_at_risk: boolean; is_expired: boolean };
 
+// What the generate endpoint reports back about products it held out of the prompt.
+// Deliberately narrower than Product: naming what was skipped needs an id and a name,
+// and a narrower payload is a narrower leak surface.
+export interface ExcludedProduct {
+  id: string;
+  name: string;
+}
+
 export interface ConsumedProduct {
   name: string;
   expiry_date: string; // ISO date — 'YYYY-MM-DD'

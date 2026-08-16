@@ -48,15 +48,15 @@ function uuid(n: number): string {
 }
 
 /**
- * A product 30 days out, so listProducts derives is_at_risk = false against the real clock.
- * Nothing in this file is at risk on purpose: the at-risk floor guard is Risk #1's and is
- * covered in recipe.service.test.ts, and letting it fire here would mask which failure the
- * endpoint is actually reporting. The date stays in the future so expired-product-handling
- * (test-plan §3 Phase 1b) cannot silently turn these into different cases.
+ * A product `dayOffset` days from today, defaulting to 30 days out — so listProducts derives
+ * is_at_risk = false against the real clock. Nothing in this file is at risk on purpose: the
+ * at-risk floor guard is Risk #1's and is covered in recipe.service.test.ts, and letting it
+ * fire here would mask which failure the endpoint is actually reporting. Every pre-existing
+ * caller keeps the +30 default, so the exclusion cases below are the only past-dated rows.
  */
-function productRow(n: number): Product {
+function productRow(n: number, dayOffset = 30): Product {
   const expiry = new Date();
-  expiry.setUTCDate(expiry.getUTCDate() + 30);
+  expiry.setUTCDate(expiry.getUTCDate() + dayOffset);
 
   return {
     id: uuid(n),
@@ -231,5 +231,79 @@ describe("POST /api/recipes/generate — an absent body is a valid request", () 
 
     expect(response.status).toBe(400);
     expect(fetchSpy).not.toHaveBeenCalled();
+  });
+});
+
+// Oracle: research.md decisions D2 and D3a (resolved oracle, 2026-08-15) — an expired product
+// is filtered out *before* the at-risk sort and the prompt cap, so it never reaches the model
+// and never enters the at-risk floor set; and the response reports which products were
+// excluded. Asserted at the outbound request rather than at the recipe, because the recipe is
+// the stub's and only the prompt shows what the model was actually offered.
+describe("POST /api/recipes/generate — expired products are excluded and reported", () => {
+  const fresh = productRow(1);
+  const expired = productRow(2, -1);
+
+  /** Stubs a successful provider and hands back the outbound request body for inspection. */
+  function stubProvider(usedProductIds: string[]): { outbound: () => string } {
+    let body = "";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((...args: unknown[]) => {
+        // recipe.service.ts always sends a JSON string body; narrowing to that rather than
+        // RequestInit keeps the capture from silently stringifying some other BodyInit.
+        body = (args[1] as { body?: string }).body ?? "";
+        return Promise.resolve(providerSuccess(usedProductIds));
+      }),
+    );
+
+    return { outbound: () => body };
+  }
+
+  it("keeps an expired product out of the prompt", async () => {
+    supabase.rows = [expired, fresh];
+    const provider = stubProvider([fresh.id]);
+
+    await POST(routeContext());
+
+    // The fresh id proves the prompt really carries the inventory, so the negative below
+    // cannot pass by the request simply not existing.
+    expect(provider.outbound()).toContain(fresh.id);
+    expect(provider.outbound()).not.toContain(expired.id);
+    expect(provider.outbound()).not.toContain(expired.name);
+  });
+
+  it("still generates a recipe from the remaining fresh stock", async () => {
+    supabase.rows = [expired, fresh];
+    stubProvider([fresh.id]);
+
+    const response = await POST(routeContext());
+    const body = (await response.json()) as Record<string, unknown>;
+
+    expect(response.status).toBe(200);
+    expect(body).toHaveProperty("recipe");
+  });
+
+  // Set identity, not a count: the user is shown these names, so reporting the wrong product
+  // as skipped is the same defect as reporting the wrong number of them.
+  it("reports exactly the products it excluded", async () => {
+    supabase.rows = [expired, fresh];
+    stubProvider([fresh.id]);
+
+    const response = await POST(routeContext());
+    const body = (await response.json()) as { excluded_expired: unknown };
+
+    expect(body.excluded_expired).toEqual([{ id: expired.id, name: expired.name }]);
+  });
+
+  // The key is always present so the client needs no presence check — an absent key and an
+  // empty list are the same fact, and only one of them is safe to consume.
+  it("reports an empty exclusion list when nothing was expired", async () => {
+    supabase.rows = [fresh];
+    stubProvider([fresh.id]);
+
+    const response = await POST(routeContext());
+    const body = (await response.json()) as { excluded_expired: unknown };
+
+    expect(body.excluded_expired).toEqual([]);
   });
 });

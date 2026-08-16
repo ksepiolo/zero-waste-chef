@@ -658,27 +658,27 @@ change are reclassified the moment they are read.
 
 #### Automated
 
-- [x] 1.1 Classification tests pass: `npx vitest run src/lib/services/product.service.test.ts`
-- [x] 1.2 The full suite still passes: `npx vitest run`
-- [x] 1.3 Type checking passes: `npm run typecheck`
-- [x] 1.4 Linting passes: `npm run lint`
+- [x] 1.1 Classification tests pass: `npx vitest run src/lib/services/product.service.test.ts` — 8fac27d
+- [x] 1.2 The full suite still passes: `npx vitest run` — 8fac27d
+- [x] 1.3 Type checking passes: `npm run typecheck` — 8fac27d
+- [x] 1.4 Linting passes: `npm run lint` — 8fac27d
 
 #### Manual
 
-- [x] 1.5 A product dated yesterday no longer shows the "At risk" badge
+- [x] 1.5 A product dated yesterday no longer shows the "At risk" badge — 8fac27d
 
 ### Phase 2: Exclusion from the prompt and the exclusion report (D2, D3a)
 
 #### Automated
 
-- [ ] 2.1 Endpoint tests pass: `npx vitest run src/pages/api/recipes/generate.test.ts`
-- [ ] 2.2 The full suite still passes: `npx vitest run`
-- [ ] 2.3 Type checking passes: `npm run typecheck`
-- [ ] 2.4 Linting passes: `npm run lint`
+- [x] 2.1 Endpoint tests pass: `npx vitest run src/pages/api/recipes/generate.test.ts`
+- [x] 2.2 The full suite still passes: `npx vitest run`
+- [x] 2.3 Type checking passes: `npm run typecheck`
+- [x] 2.4 Linting passes: `npm run lint`
 
 #### Manual
 
-- [ ] 2.5 Generation succeeds and the response lists the expired product under `excluded_expired`
+- [x] 2.5 Generation succeeds and the response lists the expired product under `excluded_expired`
 
 ### Phase 3: The all-expired branch (D4)
 

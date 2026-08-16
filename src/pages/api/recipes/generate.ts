@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase";
 import { listProducts } from "@/lib/services/product.service";
 import { generateRecipe } from "@/lib/services/recipe.service";
+import type { ExcludedProduct } from "@/types";
 import { RECIPE_METHODS, RECIPE_TECHNIQUES, RECIPE_TIMES } from "@/types";
 
 export const prerender = false;
@@ -56,8 +57,20 @@ export const POST: APIRoute = async (context) => {
       return new Response(JSON.stringify({ error: "Inventory is empty — add a product first" }), { status: 400 });
     }
 
-    const recipe = await generateRecipe(products, excludeTitles, { technique, method, time });
-    return new Response(JSON.stringify({ recipe }), {
+    // Expired stock never reaches the model: it is sorted ahead of fresh stock in the
+    // prompt and then required by the at-risk floor guard, so leaving it in makes a
+    // year-old product a precondition for getting any recipe at all. The partition runs
+    // here rather than inside the service so generateRecipe's signature and resolved
+    // shape stay untouched.
+    const usableProducts = products.filter((product) => !product.is_expired);
+    // Always present, empty when nothing was held back — callers branch on length, not
+    // on the key existing.
+    const excludedExpired: ExcludedProduct[] = products
+      .filter((product) => product.is_expired)
+      .map(({ id, name }) => ({ id, name }));
+
+    const recipe = await generateRecipe(usableProducts, excludeTitles, { technique, method, time });
+    return new Response(JSON.stringify({ recipe, excluded_expired: excludedExpired }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
