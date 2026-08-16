@@ -68,8 +68,14 @@ export function InventoryPanel({ initialProducts }: Props) {
   const [params, setParams] = useState<RecipeParams>(DEFAULT_RECIPE_PARAMS);
 
   const { isGenerating, isApproving, recipe, generate, approve, reset } = useRecipeGeneration({
-    onApproveSuccess: (usedIds) => {
-      setProducts((prev) => prev.filter((p) => !usedIds.includes(p.id)));
+    onApproveSuccess: (deletedIds, skippedIds) => {
+      // Resolve names before filtering — a skipped product was already removed
+      // server-side (in another tab), but this tab's stale state still has its name.
+      if (skippedIds.length > 0) {
+        const skippedNames = products.filter((p) => skippedIds.includes(p.id)).map((p) => p.name);
+        toast.info(`Already removed elsewhere: ${skippedNames.join(", ")}`);
+      }
+      setProducts((prev) => prev.filter((p) => !deletedIds.includes(p.id)));
     },
     // Named, not counted: "1 product was skipped" leaves the user checking the list to find
     // out which. The hook only calls this when something was actually held back.

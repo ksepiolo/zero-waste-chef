@@ -530,25 +530,25 @@ consumer is the app code this same change updates in lockstep (Phase 2).
 
 #### Automated
 
-- [x] 2.1 `npm run typecheck` passes
-- [x] 2.2 `npm run lint` passes
-- [x] 2.3 `npm run test` passes
+- [x] 2.1 `npm run typecheck` passes — 541d052
+- [x] 2.2 `npm run lint` passes — 541d052
+- [x] 2.3 `npm run test` passes — 541d052
 
 #### Manual
 
-- [x] 2.4 `curl` the endpoint with a stale id and confirm `deletedIds` excludes it
+- [x] 2.4 `curl` the endpoint with a stale id and confirm `deletedIds` excludes it — 541d052
 
 ### Phase 3: Client Reconciliation
 
 #### Automated
 
-- [ ] 3.1 `npm run typecheck` passes
-- [ ] 3.2 `npm run lint` passes
+- [x] 3.1 `npm run typecheck` passes
+- [x] 3.2 `npm run lint` passes
 
 #### Manual
 
-- [ ] 3.3 Two-tab concurrent-delete scenario reconciles without refresh
-- [ ] 3.4 Toast names the skipped product
+- [x] 3.3 Two-tab concurrent-delete scenario reconciles without refresh
+- [x] 3.4 Toast names the skipped product
 
 ### Phase 4: Integration Tests
 

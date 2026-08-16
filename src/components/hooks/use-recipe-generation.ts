@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import type { ExcludedProduct, GeneratedRecipe, RecipeParams } from "@/types";
 
 interface Options {
-  onApproveSuccess?: (usedProductIds: string[]) => void;
+  onApproveSuccess?: (deletedIds: string[], skippedIds: string[]) => void;
   // Fires only when the endpoint actually held products back, so the component never has to
   // check for an empty list before deciding whether to say anything.
   onExpiredExcluded?: (excluded: ExcludedProduct[]) => void;
@@ -101,7 +101,11 @@ export function useRecipeGeneration({ onApproveSuccess, onExpiredExcluded }: Opt
         throw new Error(await errorMessage(res, "Failed to approve recipe"));
       }
 
-      onApproveSuccess?.(current.used_product_ids);
+      const { deletedIds } = (await res.json()) as { deletedIds: string[] };
+      // The set the server actually deleted may be a strict subset of what was sent —
+      // stale, foreign, or already-deleted ids are silently excluded server-side.
+      const skippedIds = current.used_product_ids.filter((id) => !deletedIds.includes(id));
+      onApproveSuccess?.(deletedIds, skippedIds);
       setRecipe(null);
       // Inventory just changed — previous suggestions are no longer relevant.
       setSeenTitles([]);
