@@ -12,7 +12,8 @@
     "test:watch": "vitest",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "prepare": "husky"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.8",
@@ -71,6 +72,9 @@
   "lint-staged": {
     "*.{ts,tsx,astro}": [
       "eslint --fix"
+    ],
+    "*.{ts,tsx}": [
+      "vitest related --run"
     ],
     "*.{json,css,md}": [
       "prettier --write"
