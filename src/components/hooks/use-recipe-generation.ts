@@ -1,11 +1,14 @@
 import { useCallback, useState } from "react";
-import type { GeneratedRecipe, RecipeParams } from "@/types";
+import type { ExcludedProduct, GeneratedRecipe, RecipeParams } from "@/types";
 
 interface Options {
   onApproveSuccess?: (usedProductIds: string[]) => void;
+  // Fires only when the endpoint actually held products back, so the component never has to
+  // check for an empty list before deciding whether to say anything.
+  onExpiredExcluded?: (excluded: ExcludedProduct[]) => void;
 }
 
-export function useRecipeGeneration({ onApproveSuccess }: Options = {}) {
+export function useRecipeGeneration({ onApproveSuccess, onExpiredExcluded }: Options = {}) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
   const [recipe, setRecipe] = useState<GeneratedRecipe | null>(null);
@@ -29,7 +32,11 @@ export function useRecipeGeneration({ onApproveSuccess }: Options = {}) {
           body: JSON.stringify({ excludeTitles: seenTitles.slice(-10), ...params }),
         });
 
-        const json = (await res.json()) as { recipe?: GeneratedRecipe; error?: string };
+        const json = (await res.json()) as {
+          recipe?: GeneratedRecipe;
+          excluded_expired?: ExcludedProduct[];
+          error?: string;
+        };
         if (!res.ok) {
           throw new Error(json.error ?? "Failed to generate recipe");
         }
@@ -41,11 +48,18 @@ export function useRecipeGeneration({ onApproveSuccess }: Options = {}) {
 
         setRecipe(generated);
         setSeenTitles((prev) => [...prev, generated.title]);
+
+        // After the recipe is set, so the suggestion is what the user sees first — the
+        // exclusion is context for it, not a failure.
+        const excluded = json.excluded_expired ?? [];
+        if (excluded.length > 0) {
+          onExpiredExcluded?.(excluded);
+        }
       } finally {
         setIsGenerating(false);
       }
     },
-    [seenTitles],
+    [seenTitles, onExpiredExcluded],
   );
 
   const approve = useCallback(async () => {

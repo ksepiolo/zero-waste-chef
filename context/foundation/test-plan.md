@@ -77,13 +77,13 @@ Each row is a discrete rollout phase that will open its own change folder
 via `/10x-new`. Status moves left-to-right through the values below; the
 orchestrator updates Status as artifacts appear on disk.
 
-| #   | Phase name                                | Goal (one line)                                                                                                                                           | Risks covered    | Test types                                  | Status        | Change folder                                     |
-| --- | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- | ------------------------------------------- | ------------- | ------------------------------------------------- |
-| 1   | Runner bootstrap + recipe-generation core | Prove at-risk state is computed correctly, reaches the model request, and that failures fail loudly                                                       | #1, #6 (partial) | unit + integration (model boundary stubbed) | complete      | `context/changes/testing-recipe-generation-core/` |
-| 1b  | Expired-product handling                  | Prove past-dated stock never reaches the model and that the user is told, and that each generation failure carries its own status and a user-safe message | #2, #6           | unit + integration (model boundary stubbed) | change opened | `context/changes/expired-product-handling/`       |
-| 2   | Approval contract integrity               | Prove approval is all-or-nothing and removes exactly the set it displayed                                                                                 | #3, #5           | integration                                 | not started   | —                                                 |
-| 3   | Data isolation and input trust            | Prove a second user cannot reach the first user's rows, and that crafted input is rejected at the boundary                                                | #4, #7           | integration + unit                          | not started   | —                                                 |
-| 4   | Quality-gates wiring                      | Lock the floor in the existing CI job                                                                                                                     | cross-cutting    | gates                                       | not started   | —                                                 |
+| #   | Phase name                                | Goal (one line)                                                                                                                                           | Risks covered    | Test types                                  | Status      | Change folder                                     |
+| --- | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- | ------------------------------------------- | ----------- | ------------------------------------------------- |
+| 1   | Runner bootstrap + recipe-generation core | Prove at-risk state is computed correctly, reaches the model request, and that failures fail loudly                                                       | #1, #6 (partial) | unit + integration (model boundary stubbed) | complete    | `context/changes/testing-recipe-generation-core/` |
+| 1b  | Expired-product handling                  | Prove past-dated stock never reaches the model and that the user is told, and that each generation failure carries its own status and a user-safe message | #2, #6           | unit + integration (model boundary stubbed) | complete    | `context/changes/expired-product-handling/`       |
+| 2   | Approval contract integrity               | Prove approval is all-or-nothing and removes exactly the set it displayed                                                                                 | #3, #5           | integration                                 | not started | —                                                 |
+| 3   | Data isolation and input trust            | Prove a second user cannot reach the first user's rows, and that crafted input is rejected at the boundary                                                | #4, #7           | integration + unit                          | not started | —                                                 |
+| 4   | Quality-gates wiring                      | Lock the floor in the existing CI job                                                                                                                     | cross-cutting    | gates                                       | not started | —                                                 |
 
 Phase 1b was split out of Phase 1 on 2026-08-15. Phase 1 research found Risk #2 to
 be a live defect rather than a coverage gap — `isAtRisk()` is one-sided, so expired
@@ -307,11 +307,11 @@ three-line note here capturing anything surprising the phase taught.)
   walk of a truncated provider envelope surfacing a raw `TypeError` /
   `SyntaxError` to the user.
 - Survivors accepted consciously, by group: (a) the `RESPONSE_FORMAT`
-  json_schema literals, `OPENROUTER_URL`, `MODEL`, the request method and
+  json*schema literals, `OPENROUTER_URL`, `MODEL`, the request method and
   headers, the `plugins` list and the message roles — killing these means
   asserting our own constants against themselves through a stub that cannot
   validate them, which is §7's "configuration as a test subject" and a
-  mirror test besides; (b) the guardrail and empty-response _message_
+  mirror test besides; (b) the guardrail and empty-response \_message*
   strings, whose wording is Risk #6 presentation work owned by
   `expired-product-handling`; (c) the temperature ternary and the `join`
   separator, tunables whose mutation costs prompt quality, not correctness;
@@ -321,6 +321,32 @@ three-line note here capturing anything surprising the phase taught.)
   `excludeTitles` regenerate branch is uncovered (its "never append the
   clause" mutant survives), because no risk in §2 covers repeat
   suggestions. Revisit if a user reports the same recipe on regenerate.
+
+**Phase 1b — expired-product handling + the error contract (2026-08-16)**
+
+- The typed service error (`src/lib/services/service-error.ts`) makes hygiene
+  structural rather than habitual: the endpoint answers with a `ServiceError`'s
+  status and message or with its own generic 500, so an unconverted throw site
+  degrades to safe copy instead of leaking. The allowlist being a _type_ is what
+  removes the "remember to sanitise here too" failure mode that let `ZodError`,
+  `SyntaxError` and PostgREST text reach three separate toasts.
+- Keying status _and_ message off one `kind` table has a consequence worth
+  recording: a class cannot carry three different messages, so the empty-response
+  and both guardrail sites collapsed onto shared copy a phase earlier than planned.
+  The distinction they lose is preserved in the server log, and a test asserts the
+  two guardrail causes stay distinguishable there — the log assertion is the
+  compensating control for the shared user-facing string, not an extra.
+- The expired partition lives in the endpoint, not in `generateRecipe`. That kept
+  the service's signature and resolved shape untouched, so every Phase 1 assertion
+  survived the change verbatim — the property those tests were written for.
+- Mutation gate (same scope and command as Phase 1): **52.68% → 52.80%** total.
+  Two real survivors killed, both the same class — a guardrail throwing an
+  unclassified error still satisfied `rejects.toThrow()`, so the endpoint would
+  have answered a generic 500 where the user needs the actionable 502. Survivors
+  accepted: the diagnostic `cause` on the timeout, the log _wording_ at four sites
+  (killing those means snapshotting internal copy, which §6 forbids), and the
+  empty-envelope guard — which now survives only because the parse wrapper catches
+  the fallthrough and produces an identical class, status and message.
 
 ## 7. What We Deliberately Don't Test
 

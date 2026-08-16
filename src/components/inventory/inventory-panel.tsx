@@ -71,6 +71,11 @@ export function InventoryPanel({ initialProducts }: Props) {
     onApproveSuccess: (usedIds) => {
       setProducts((prev) => prev.filter((p) => !usedIds.includes(p.id)));
     },
+    // Named, not counted: "1 product was skipped" leaves the user checking the list to find
+    // out which. The hook only calls this when something was actually held back.
+    onExpiredExcluded: (excluded) => {
+      toast.info(`Skipped expired: ${excluded.map((p) => p.name).join(", ")}`);
+    },
   });
 
   const today = new Date().toISOString().split("T")[0];
@@ -211,6 +216,12 @@ export function InventoryPanel({ initialProducts }: Props) {
                   <span className="text-sm font-medium text-white">{product.name}</span>
                   {product.is_at_risk && (
                     <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">At risk</span>
+                  )}
+                  {/* Mutually exclusive with "At risk" by construction (classifyExpiry derives
+                      both from one call), so no precedence logic. Red rather than amber: this
+                      one is not a deadline to cook towards, it is stock that is already gone. */}
+                  {product.is_expired && (
+                    <span className="rounded bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800">Expired</span>
                   )}
                 </div>
                 <div className="flex items-center gap-3">
