@@ -518,25 +518,25 @@ consumer is the app code this same change updates in lockstep (Phase 2).
 
 #### Automated
 
-- [x] 1.1 `npx supabase db reset` applies both migration changes cleanly
-- [x] 1.2 `npx supabase db reset` seeds two distinct users
-- [x] 1.3 `npm run typecheck` passes
+- [x] 1.1 `npx supabase db reset` applies both migration changes cleanly — b76456b
+- [x] 1.2 `npx supabase db reset` seeds two distinct users — b76456b
+- [x] 1.3 `npm run typecheck` passes — b76456b
 
 #### Manual
 
-- [x] 1.4 `curl` the RPC directly and confirm the JSONB shape
+- [x] 1.4 `curl` the RPC directly and confirm the JSONB shape — b76456b
 
 ### Phase 2: Service & Endpoint Contract
 
 #### Automated
 
-- [ ] 2.1 `npm run typecheck` passes
-- [ ] 2.2 `npm run lint` passes
-- [ ] 2.3 `npm run test` passes
+- [x] 2.1 `npm run typecheck` passes
+- [x] 2.2 `npm run lint` passes
+- [x] 2.3 `npm run test` passes
 
 #### Manual
 
-- [ ] 2.4 `curl` the endpoint with a stale id and confirm `deletedIds` excludes it
+- [x] 2.4 `curl` the endpoint with a stale id and confirm `deletedIds` excludes it
 
 ### Phase 3: Client Reconciliation
 

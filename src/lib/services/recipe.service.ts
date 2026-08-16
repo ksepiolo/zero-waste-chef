@@ -1,7 +1,15 @@
 import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { OPENROUTER_API_KEY } from "astro:env/server";
-import type { ApproveRecipeInput, GeneratedRecipe, ProductWithRisk, Recipe, RecipePage, RecipeParams } from "@/types";
+import type {
+  ApproveRecipeInput,
+  ApproveRecipeResult,
+  GeneratedRecipe,
+  ProductWithRisk,
+  Recipe,
+  RecipePage,
+  RecipeParams,
+} from "@/types";
 import { DEFAULT_RECIPE_PARAMS, RECIPES_PAGE_SIZE } from "@/types";
 import { buildSystemPrompt, FEW_SHOT_USER, FEW_SHOT_ASSISTANT } from "./recipe-prompt";
 import { ServiceError, type ServiceErrorKind } from "./service-error";
@@ -250,7 +258,7 @@ export async function listRecipes(supabase: SupabaseClient, userId: string, page
  * Atomically snapshots the used products, inserts the recipe and deletes the products.
  * The RPC is the only transactional path — PostgREST cannot span the three statements.
  */
-export async function approveRecipe(supabase: SupabaseClient, input: ApproveRecipeInput): Promise<string> {
+export async function approveRecipe(supabase: SupabaseClient, input: ApproveRecipeInput): Promise<ApproveRecipeResult> {
   const { data, error } = await supabase
     .rpc("approve_recipe", {
       p_title: input.title,
@@ -259,15 +267,15 @@ export async function approveRecipe(supabase: SupabaseClient, input: ApproveReci
       p_instructions: input.instructions.join("\n"),
       p_used_product_ids: input.usedProductIds,
     })
-    .overrideTypes<string>();
+    .overrideTypes<{ recipe_id: string; deleted_ids: string[] }>();
 
-  if (error) throw new Error(error.message);
+  if (error) throw new ServiceError("data_access", { cause: error });
 
-  // approve_recipe RETURNS UUID — a scalar. With no generated Database types supabase-js
-  // infers an array shape, so overrideTypes<string> resolves to a branded union rather
-  // than plain string. Narrow it here; the request itself is unchanged.
-  const id = data as unknown as string | null;
-  if (!id) throw new Error("Recipe was not saved");
+  // approve_recipe RETURNS JSONB — a scalar object. With no generated Database types
+  // supabase-js infers an array shape, so overrideTypes resolves to a branded union
+  // rather than the plain object. Narrow it here; the request itself is unchanged.
+  const result = data as unknown as { recipe_id: string; deleted_ids: string[] } | null;
+  if (!result?.recipe_id) throw new ServiceError("data_access");
 
-  return id;
+  return { id: result.recipe_id, deletedIds: result.deleted_ids };
 }
