@@ -542,26 +542,26 @@ consumer is the app code this same change updates in lockstep (Phase 2).
 
 #### Automated
 
-- [x] 3.1 `npm run typecheck` passes
-- [x] 3.2 `npm run lint` passes
+- [x] 3.1 `npm run typecheck` passes — 6109d0a
+- [x] 3.2 `npm run lint` passes — 6109d0a
 
 #### Manual
 
-- [x] 3.3 Two-tab concurrent-delete scenario reconciles without refresh
-- [x] 3.4 Toast names the skipped product
+- [x] 3.3 Two-tab concurrent-delete scenario reconciles without refresh — 6109d0a
+- [x] 3.4 Toast names the skipped product — 6109d0a
 
 ### Phase 4: Integration Tests
 
 #### Automated
 
-- [ ] 4.1 `npx supabase start && npx supabase db reset` succeeds
-- [ ] 4.2 `npm run test` passes with Supabase running
-- [ ] 4.3 `npm run test` passes with Supabase stopped (new tests skip cleanly)
-- [ ] 4.4 `npm run typecheck` and `npm run lint` pass
+- [x] 4.1 `npx supabase start && npx supabase db reset` succeeds
+- [x] 4.2 `npm run test` passes with Supabase running
+- [x] 4.3 `npm run test` passes with Supabase stopped (new tests skip cleanly)
+- [x] 4.4 `npm run typecheck` and `npm run lint` pass
 
 #### Manual
 
-- [ ] 4.5 Manually inspect tables after a failed atomicity run for orphan rows
+- [x] 4.5 Manually inspect tables after a failed atomicity run for orphan rows
 
 ### Phase 5: Close-out
 
