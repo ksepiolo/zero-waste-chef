@@ -567,12 +567,12 @@ consumer is the app code this same change updates in lockstep (Phase 2).
 
 #### Automated
 
-- [x] 5.1 `npm run test` passes (full suite)
-- [x] 5.2 `npm run typecheck` passes
-- [x] 5.3 `npm run lint` passes
-- [x] 5.4 Stryker mutation run completes, survivors triaged
+- [x] 5.1 `npm run test` passes (full suite) — 56468d7
+- [x] 5.2 `npm run typecheck` passes — 56468d7
+- [x] 5.3 `npm run lint` passes — 56468d7
+- [x] 5.4 Stryker mutation run completes, survivors triaged — 56468d7
 
 #### Manual
 
-- [x] 5.5 PRD guardrail wording reviewed for accuracy
-- [x] 5.6 `change.md` and `test-plan.md` rollout status updated
+- [x] 5.5 PRD guardrail wording reviewed for accuracy — 56468d7
+- [x] 5.6 `change.md` and `test-plan.md` rollout status updated — 56468d7
