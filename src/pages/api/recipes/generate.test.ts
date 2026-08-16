@@ -22,17 +22,17 @@ vi.mock("astro:env/server", () => ({ OPENROUTER_API_KEY: OPENROUTER_TEST_KEY }))
 interface QueryStub {
   select: () => QueryStub;
   eq: () => QueryStub;
-  order: () => Promise<{ data: unknown; error: null }>;
+  order: () => Promise<{ data: unknown; error: { message: string } | null }>;
 }
 
-const supabase = vi.hoisted(() => ({ rows: [] as unknown[] }));
+const supabase = vi.hoisted(() => ({ rows: [] as unknown[], error: null as { message: string } | null }));
 
 vi.mock("@/lib/supabase", () => ({
   createClient: () => {
     const query: QueryStub = {
       select: () => query,
       eq: () => query,
-      order: () => Promise.resolve({ data: supabase.rows, error: null }),
+      order: () => Promise.resolve({ data: supabase.rows, error: supabase.error }),
     };
 
     return { from: () => query };
@@ -101,12 +101,14 @@ const UPSTREAM_BODY = JSON.stringify({
 
 beforeEach(() => {
   supabase.rows = [productRow(1)];
+  supabase.error = null;
   // The service logs the upstream body on a non-2xx; stubbing keeps the suite readable.
   vi.spyOn(console, "error").mockImplementation(() => undefined);
 });
 
 afterEach(() => {
   supabase.rows = [];
+  supabase.error = null;
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
@@ -263,6 +265,93 @@ describe("POST /api/recipes/generate — an absent body is a valid request", () 
 
     expect(response.status).toBe(400);
     expect(fetchSpy).not.toHaveBeenCalled();
+  });
+});
+
+// Oracle: test-plan §2 Risk #6 — "rate limit, timeout, and malformed response each produce a
+// distinct non-2xx". Every class used to collapse onto a flat 500, which told a caller nothing:
+// a rate limit is worth retrying shortly, an unusable account is not, and a bug in our own code
+// is neither. The assertion is the *class → status* contract from service-error.ts, driven from
+// the only seam a caller has.
+describe("POST /api/recipes/generate — each failure class answers with its own status", () => {
+  const providerFailures = [
+    {
+      label: "a rate limit",
+      expected: 429,
+      provider: () => Promise.resolve(new Response(UPSTREAM_BODY, { status: 429 })),
+    },
+    {
+      label: "a timeout",
+      expected: 504,
+      provider: () => Promise.reject(new DOMException("aborted due to timeout", "TimeoutError")),
+    },
+    {
+      label: "an unusable provider account",
+      expected: 503,
+      provider: () => Promise.resolve(new Response(UPSTREAM_BODY, { status: 401 })),
+    },
+    {
+      label: "an upstream fault",
+      expected: 502,
+      provider: () => Promise.resolve(new Response(UPSTREAM_BODY, { status: 500 })),
+    },
+    {
+      label: "an unusable model response",
+      expected: 502,
+      provider: () => Promise.resolve(new Response(JSON.stringify({ choices: [] }), { status: 200 })),
+    },
+  ];
+
+  it.each(providerFailures)("answers $label with $expected", async ({ expected, provider }) => {
+    vi.stubGlobal("fetch", provider);
+
+    const response = await POST(routeContext());
+
+    expect(response.status).toBe(expected);
+  });
+
+  // The datastore is the one failure class that never reaches the provider, and the only one
+  // that is genuinely ours — hence 500 rather than a gateway status.
+  it("answers a datastore failure with 500", async () => {
+    supabase.error = { message: "permission denied for table products" };
+    vi.stubGlobal("fetch", vi.fn());
+
+    const response = await POST(routeContext());
+
+    expect(response.status).toBe(500);
+  });
+
+  // Distinctness is the property the test plan asks for, and it is what the per-class rows
+  // above cannot prove one at a time: collapsing every class back onto one status would still
+  // satisfy each of them individually. Only the classes the contract says differ are collected
+  // — an unusable model response shares 502 with an upstream fault by design.
+  it("keeps the classes the contract separates tellable apart", async () => {
+    const statuses = new Set<number>();
+
+    for (const { provider } of providerFailures.filter((failure) => failure.expected !== 502)) {
+      vi.stubGlobal("fetch", provider);
+      statuses.add((await POST(routeContext())).status);
+    }
+    vi.stubGlobal("fetch", () => Promise.resolve(new Response(UPSTREAM_BODY, { status: 500 })));
+    statuses.add((await POST(routeContext())).status);
+
+    expect(statuses.size).toBe(4);
+  });
+
+  // The load-bearing property of the translation: hygiene comes from the allowlist being a
+  // *type*, not from remembering to sanitise at each throw site. An unconverted throw, a bug in
+  // our own code, or a library failing from somewhere unexpected all carry text nobody vetted —
+  // a connection failure is the live example, since the service rethrows it bare on purpose.
+  it("answers an untyped throw with our own copy rather than the thrown text", async () => {
+    const internalDetail = "connect ECONNREFUSED 10.0.0.5:5432";
+    vi.stubGlobal("fetch", () => Promise.reject(new TypeError(`fetch failed: ${internalDetail}`)));
+
+    const response = await POST(routeContext());
+    const body = await response.text();
+
+    expect(response.status).toBe(500);
+    expect(body).not.toContain(internalDetail);
+    expect(body).not.toContain("fetch failed");
   });
 });
 

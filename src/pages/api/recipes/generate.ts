@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase";
 import { listProducts } from "@/lib/services/product.service";
 import { generateRecipe } from "@/lib/services/recipe.service";
+import { ServiceError } from "@/lib/services/service-error";
 import type { ExcludedProduct } from "@/types";
 import { RECIPE_METHODS, RECIPE_TECHNIQUES, RECIPE_TIMES } from "@/types";
 
@@ -86,7 +87,16 @@ export const POST: APIRoute = async (context) => {
       headers: { "Content-Type": "application/json" },
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Unknown error";
-    return new Response(JSON.stringify({ error: message }), { status: 500 });
+    // The allowlist is a *type*, not a habit: only a ServiceError — which the service layer
+    // constructs from a fixed table of statuses and copy we wrote — can set the status and
+    // reach the toast. Anything else is a bug in our own code or a library throwing from
+    // somewhere unexpected, and its message is by definition not something we have vetted.
+    if (err instanceof ServiceError) {
+      return new Response(JSON.stringify({ error: err.message }), { status: err.status });
+    }
+
+    // eslint-disable-next-line no-console -- an unconverted throw is a defect worth surfacing
+    console.error("Unhandled error in POST /api/recipes/generate:", err);
+    return new Response(JSON.stringify({ error: "Something went wrong — try again" }), { status: 500 });
   }
 };

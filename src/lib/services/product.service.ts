@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Product, ProductWithRisk, NewProduct } from "@/types";
+import { ServiceError } from "./service-error";
 
 export const AT_RISK_DAYS = 3;
 
@@ -40,7 +41,13 @@ export async function listProducts(supabase: SupabaseClient, userId: string): Pr
     .eq("user_id", userId)
     .order("expiry_date", { ascending: true });
 
-  if (error) throw new Error(error.message);
+  // PostgREST diagnostics name columns, constraints and policies. Logged for diagnosis, never
+  // thrown — this is the second upstream leaking where OpenRouter's was carefully suppressed.
+  if (error) {
+    // eslint-disable-next-line no-console -- server-side diagnostic for a datastore failure
+    console.error(`listProducts failed: ${error.message}`);
+    throw new ServiceError("data_access", { cause: error });
+  }
 
   return (data as Product[]).map((product) => ({
     ...product,

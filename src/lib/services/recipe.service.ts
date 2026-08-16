@@ -4,6 +4,7 @@ import { OPENROUTER_API_KEY } from "astro:env/server";
 import type { ApproveRecipeInput, GeneratedRecipe, ProductWithRisk, Recipe, RecipePage, RecipeParams } from "@/types";
 import { DEFAULT_RECIPE_PARAMS, RECIPES_PAGE_SIZE } from "@/types";
 import { buildSystemPrompt, FEW_SHOT_USER, FEW_SHOT_ASSISTANT } from "./recipe-prompt";
+import { ServiceError, type ServiceErrorKind } from "./service-error";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 // Free tier. Supports json_schema strict mode; rate-limited per OpenRouter's
@@ -56,10 +57,15 @@ const GeneratedRecipeSchema = z.object({
   used_product_ids: z.array(z.uuid()).min(1),
 });
 
-function openRouterErrorMessage(status: number): string {
-  if (status === 401 || status === 402) return "Recipe service unavailable — try again later";
-  if (status === 429) return "Rate limited — try again shortly";
-  return "Recipe generation failed";
+/**
+ * The failure class an upstream status belongs to. The wording each one carries lives in
+ * service-error.ts; this function only decides which class we are in — 401/402 is our account
+ * being unusable, 429 is worth retrying shortly, anything else is a fault we cannot attribute.
+ */
+function openRouterErrorKind(status: number): ServiceErrorKind {
+  if (status === 401 || status === 402) return "provider_unavailable";
+  if (status === 429) return "rate_limit";
+  return "upstream_fault";
 }
 
 export async function generateRecipe(
@@ -130,8 +136,11 @@ export async function generateRecipe(
     });
   } catch (err) {
     if (err instanceof Error && (err.name === "TimeoutError" || err.name === "AbortError")) {
-      throw new Error("Recipe generation timed out — try again");
+      throw new ServiceError("timeout", { cause: err });
     }
+    // Deliberately still a bare rethrow: a transport failure is not a timeout, and telling the
+    // user to wait and retry is the one thing that will not help. It surfaces as the
+    // endpoint's generic 500 rather than being mislabelled as a class it is not.
     throw err;
   }
 
@@ -141,13 +150,15 @@ export async function generateRecipe(
     // Log it for diagnosis; the thrown message is what reaches the user's toast.
     // eslint-disable-next-line no-console -- server-side diagnostic for an external failure
     console.error(`OpenRouter ${response.status}: ${text}`);
-    throw new Error(openRouterErrorMessage(response.status));
+    throw new ServiceError(openRouterErrorKind(response.status));
   }
 
   const data = (await response.json()) as { choices?: { message?: { content?: string } }[] };
   const content = data.choices?.[0]?.message?.content;
   if (!content) {
-    throw new Error("OpenRouter returned an empty response");
+    // eslint-disable-next-line no-console -- the cause is only distinguishable in the log
+    console.error("OpenRouter returned an empty response");
+    throw new ServiceError("unusable_model_response");
   }
 
   // Content is a JSON string even in json_schema mode.
@@ -156,7 +167,9 @@ export async function generateRecipe(
   // Schema validates syntax, not semantics — cross-check the IDs against the inventory.
   const validIds = new Set(promptProducts.map((p) => p.id));
   if (!recipe.used_product_ids.every((id) => validIds.has(id))) {
-    throw new Error("Model returned unknown product IDs — inventory guardrail violated");
+    // eslint-disable-next-line no-console -- the cause is only distinguishable in the log
+    console.error("Model returned unknown product IDs — inventory guardrail violated");
+    throw new ServiceError("unusable_model_response");
   }
 
   // Sibling invariant. While the prompt list *was* the at-risk list, the cross-check above
@@ -165,7 +178,9 @@ export async function generateRecipe(
   if (atRiskProducts.length > 0) {
     const atRiskIds = new Set(atRiskProducts.map((p) => p.id));
     if (!recipe.used_product_ids.some((id) => atRiskIds.has(id))) {
-      throw new Error("Model ignored all at-risk products — inventory guardrail violated");
+      // eslint-disable-next-line no-console -- the cause is only distinguishable in the log
+      console.error("Model ignored all at-risk products — inventory guardrail violated");
+      throw new ServiceError("unusable_model_response");
     }
   }
 

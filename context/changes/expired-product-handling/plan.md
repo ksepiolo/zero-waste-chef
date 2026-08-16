@@ -684,10 +684,10 @@ change are reclassified the moment they are read.
 
 #### Automated
 
-- [x] 3.1 Endpoint tests pass: `npx vitest run src/pages/api/recipes/generate.test.ts`
-- [x] 3.2 The full suite still passes: `npx vitest run`
-- [x] 3.3 Type checking passes: `npm run typecheck`
-- [x] 3.4 Linting passes: `npm run lint`
+- [x] 3.1 Endpoint tests pass: `npx vitest run src/pages/api/recipes/generate.test.ts` — 113c68e
+- [x] 3.2 The full suite still passes: `npx vitest run` — 113c68e
+- [x] 3.3 Type checking passes: `npm run typecheck` — 113c68e
+- [x] 3.4 Linting passes: `npm run lint` — 113c68e
 
 #### Manual
 
@@ -697,11 +697,11 @@ change are reclassified the moment they are read.
 
 #### Automated
 
-- [ ] 4.1 Service tests pass: `npx vitest run src/lib/services/recipe.service.test.ts`
-- [ ] 4.2 Endpoint tests pass: `npx vitest run src/pages/api/recipes/generate.test.ts`
-- [ ] 4.3 The full suite still passes: `npx vitest run`
-- [ ] 4.4 Type checking passes: `npm run typecheck`
-- [ ] 4.5 Linting passes: `npm run lint`
+- [x] 4.1 Service tests pass: `npx vitest run src/lib/services/recipe.service.test.ts`
+- [x] 4.2 Endpoint tests pass: `npx vitest run src/pages/api/recipes/generate.test.ts`
+- [x] 4.3 The full suite still passes: `npx vitest run`
+- [x] 4.4 Type checking passes: `npm run typecheck`
+- [x] 4.5 Linting passes: `npm run lint`
 
 #### Manual
 

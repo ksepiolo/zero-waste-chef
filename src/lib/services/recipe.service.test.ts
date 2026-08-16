@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { GeneratedRecipe, ProductWithRisk } from "@/types";
 
 import { generateRecipe } from "./recipe.service";
+import { ServiceError } from "./service-error";
 
 // The real key is absent under the runner (all three env fields are optional in
 // astro.config.mjs), and "the message does not contain undefined" would be a vacuous
@@ -434,6 +435,43 @@ describe("generateRecipe — provider failures never fake success", () => {
   // strings above cannot prove one at a time: collapsing every class onto one message would
   // still pass each individual case. A caller that cannot tell a transient fault from a
   // permanent one is back to Risk #6's "indefinite wait" in a different costume.
+  // The endpoint can only translate a failure class it can *read*, and a message is not a
+  // readable class — matching on its text is how the flat 500 survived this long. The four
+  // strings above stay pinned; this asserts the same distinction is carried structurally, which
+  // is what src/pages/api/recipes/generate.test.ts then turns into distinct statuses.
+  it.each([
+    { label: "an unauthorised key", status: 401, kind: "provider_unavailable" },
+    { label: "a rate limit", status: 429, kind: "rate_limit" },
+    { label: "an upstream fault", status: 503, kind: "upstream_fault" },
+  ])("names $label as a failure class on the error itself", async ({ status, kind }) => {
+    stubProviderOutcome(() => Promise.resolve(new Response(UPSTREAM_BODY, { status })));
+
+    const error = await rejectionOf(inventory);
+
+    expect(error).toBeInstanceOf(ServiceError);
+    expect((error as ServiceError).kind).toBe(kind);
+  });
+
+  it("names a timeout as a failure class on the error itself", async () => {
+    stubProviderOutcome(() => Promise.reject(abortTimeout()));
+
+    const error = await rejectionOf(inventory);
+
+    expect(error).toBeInstanceOf(ServiceError);
+    expect((error as ServiceError).kind).toBe("timeout");
+  });
+
+  // The rethrow at the transport branch is deliberate, so it must stay observably *untyped* —
+  // the moment it gains a class the endpoint stops answering it with the generic 500 that says
+  // "this one is ours to fix".
+  it("leaves a connection failure untyped rather than misfiling it as a known class", async () => {
+    stubProviderOutcome(() => Promise.reject(new TypeError("fetch failed")));
+
+    const error = await rejectionOf(inventory);
+
+    expect(error).not.toBeInstanceOf(ServiceError);
+  });
+
   it("gives each class of failure a message the caller can tell apart", async () => {
     const messages = new Set<string>();
 
