@@ -193,6 +193,38 @@ describe("POST /api/recipes/generate — request preconditions", () => {
     expect(response.status).toBe(400);
     expect(fetchSpy).not.toHaveBeenCalled();
   });
+
+  // Oracle: research.md D4 — an inventory where *every* product has expired is not an empty
+  // inventory. This user has stock; it is merely unusable, so the empty-inventory copy above
+  // is untrue and tells them to do the wrong thing. Same resource-abuse property as its
+  // neighbours: the check must land before the spend, which is what the fetch spy proves.
+  it("refuses an all-expired inventory without calling the provider", async () => {
+    supabase.rows = [productRow(1, -1), productRow(2, -30)];
+    const fetchSpy = vi.fn();
+    vi.stubGlobal("fetch", fetchSpy);
+
+    const response = await POST(routeContext());
+
+    expect(response.status).toBe(422);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  // Separating the two branches is only worth anything if the user can tell them apart. This
+  // pins the distinction without snapshotting either string — Phase 1's rule.
+  it("distinguishes an all-expired inventory from an empty one", async () => {
+    vi.stubGlobal("fetch", vi.fn());
+
+    supabase.rows = [];
+    const emptyResponse = await POST(routeContext());
+    const empty = (await emptyResponse.json()) as { error: string };
+
+    supabase.rows = [productRow(1, -1)];
+    const expiredResponse = await POST(routeContext());
+    const allExpired = (await expiredResponse.json()) as { error: string };
+
+    expect(emptyResponse.status).not.toBe(expiredResponse.status);
+    expect(empty.error).not.toBe(allExpired.error);
+  });
 });
 
 // Oracle: generate.ts:10-20 and :31-38 state the requirement — the first generation of a

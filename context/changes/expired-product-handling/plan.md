@@ -671,23 +671,23 @@ change are reclassified the moment they are read.
 
 #### Automated
 
-- [x] 2.1 Endpoint tests pass: `npx vitest run src/pages/api/recipes/generate.test.ts`
-- [x] 2.2 The full suite still passes: `npx vitest run`
-- [x] 2.3 Type checking passes: `npm run typecheck`
-- [x] 2.4 Linting passes: `npm run lint`
+- [x] 2.1 Endpoint tests pass: `npx vitest run src/pages/api/recipes/generate.test.ts` — f872bdd
+- [x] 2.2 The full suite still passes: `npx vitest run` — f872bdd
+- [x] 2.3 Type checking passes: `npm run typecheck` — f872bdd
+- [x] 2.4 Linting passes: `npm run lint` — f872bdd
 
 #### Manual
 
-- [x] 2.5 Generation succeeds and the response lists the expired product under `excluded_expired`
+- [x] 2.5 Generation succeeds and the response lists the expired product under `excluded_expired` — f872bdd
 
 ### Phase 3: The all-expired branch (D4)
 
 #### Automated
 
-- [ ] 3.1 Endpoint tests pass: `npx vitest run src/pages/api/recipes/generate.test.ts`
-- [ ] 3.2 The full suite still passes: `npx vitest run`
-- [ ] 3.3 Type checking passes: `npm run typecheck`
-- [ ] 3.4 Linting passes: `npm run lint`
+- [x] 3.1 Endpoint tests pass: `npx vitest run src/pages/api/recipes/generate.test.ts`
+- [x] 3.2 The full suite still passes: `npx vitest run`
+- [x] 3.3 Type checking passes: `npm run typecheck`
+- [x] 3.4 Linting passes: `npm run lint`
 
 #### Manual
 

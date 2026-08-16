@@ -69,6 +69,17 @@ export const POST: APIRoute = async (context) => {
       .filter((product) => product.is_expired)
       .map(({ id, name }) => ({ id, name }));
 
+    // Ordering is load-bearing: empty → all-expired → generate. An empty inventory is not an
+    // all-expired one, and checking this first would make the 400 above unreachable. The user
+    // here *has* stock, so "Inventory is empty" would be both untrue and unactionable.
+    // Neither branch reaches the provider.
+    if (usableProducts.length === 0) {
+      return new Response(
+        JSON.stringify({ error: "Every product in your inventory has expired — add fresh stock first" }),
+        { status: 422 },
+      );
+    }
+
     const recipe = await generateRecipe(usableProducts, excludeTitles, { technique, method, time });
     return new Response(JSON.stringify({ recipe, excluded_expired: excludedExpired }), {
       status: 200,
