@@ -76,3 +76,68 @@ INSERT INTO auth.identities (
   now(),
   now()
 ) ON CONFLICT (provider, provider_id) DO NOTHING;
+
+-- Second test user: test2@example.com / Test1234!
+-- Needed for cross-user set-identity coverage — a fabricated UUID can't be used as
+-- products.user_id / recipes.user_id since both carry a real FK to auth.users(id).
+INSERT INTO auth.users (
+  instance_id,
+  id,
+  aud,
+  email,
+  encrypted_password,
+  email_confirmed_at,
+  created_at,
+  updated_at,
+  raw_app_meta_data,
+  raw_user_meta_data,
+  is_super_admin,
+  role,
+  confirmation_token,
+  recovery_token,
+  email_change,
+  email_change_token_new,
+  email_change_token_current,
+  phone_change_token,
+  reauthentication_token
+) VALUES (
+  '00000000-0000-0000-0000-000000000000',
+  '00000000-0000-0000-0000-000000000002',
+  'authenticated',
+  'test2@example.com',
+  crypt('Test1234!', gen_salt('bf')),
+  now(),
+  now(),
+  now(),
+  '{"provider":"email","providers":["email"]}',
+  '{}',
+  false,
+  'authenticated',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  ''
+) ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO auth.identities (
+  id,
+  user_id,
+  provider_id,
+  provider,
+  identity_data,
+  last_sign_in_at,
+  created_at,
+  updated_at
+) VALUES (
+  '00000000-0000-0000-0000-000000000002',
+  '00000000-0000-0000-0000-000000000002',
+  'test2@example.com',
+  'email',
+  '{"sub":"00000000-0000-0000-0000-000000000002","email":"test2@example.com","email_verified":true}',
+  now(),
+  now(),
+  now()
+) ON CONFLICT (provider, provider_id) DO NOTHING;
