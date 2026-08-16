@@ -40,4 +40,4 @@ pnpm-debug.log*
 .idea/
 # stryker temp files and generated mutation reports
 .stryker-tmp
-reports/
+reports/mutation/
