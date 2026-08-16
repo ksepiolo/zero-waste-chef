@@ -311,14 +311,25 @@ describe("POST /api/recipes/generate — each failure class answers with its own
   });
 
   // The datastore is the one failure class that never reaches the provider, and the only one
-  // that is genuinely ours — hence 500 rather than a gateway status.
-  it("answers a datastore failure with 500", async () => {
-    supabase.error = { message: "permission denied for table products" };
+  // that is genuinely ours — hence 500 rather than a gateway status. PostgREST diagnostics name
+  // tables, columns and policies; this is the second upstream leaking where OpenRouter's was
+  // carefully suppressed, and the client renders whatever survives here as a toast.
+  it("answers a datastore failure with 500 and none of the datastore's own text", async () => {
+    const postgrestText = 'permission denied for table "products" (policy products_select_own)';
+    supabase.error = { message: postgrestText };
+    const logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
     vi.stubGlobal("fetch", vi.fn());
 
     const response = await POST(routeContext());
+    const body = await response.text();
 
     expect(response.status).toBe(500);
+    expect(body).not.toContain(postgrestText);
+    expect(body).not.toContain("products_select_own");
+    // Guard: the diagnostic really was produced and really did reach the log — otherwise the
+    // negatives above would pass on a failure that never carried anything to leak, and the
+    // suppression would have cost us the ability to diagnose it.
+    expect(logged.mock.calls.flat().join(" ")).toContain(postgrestText);
   });
 
   // Distinctness is the property the test plan asks for, and it is what the per-class rows

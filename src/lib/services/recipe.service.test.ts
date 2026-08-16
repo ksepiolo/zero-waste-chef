@@ -327,6 +327,16 @@ describe("generateRecipe — post-response guardrails", () => {
   const safe = product(2, false);
   const inventory = [atRisk, safe];
 
+  beforeEach(() => {
+    // Each guardrail logs which one fired; stubbing keeps the suite output readable and is
+    // the assertion target for the diagnosability test below.
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   // approve_recipe deletes exactly the ids reported here, so an id the model invented is a
   // deletion of something the user never agreed to — or of nothing, silently.
   it("rejects a recipe claiming a product that was never offered", async () => {
@@ -353,6 +363,39 @@ describe("generateRecipe — post-response guardrails", () => {
     stubProvider(() => providerReply([safe.id]));
 
     await expect(generateRecipe(inventory)).rejects.toThrow();
+  });
+
+  // A guardrail that fires as a TypeError instead of a classified failure is the envelope bug
+  // in a different costume: the endpoint stops recognising it, answers a generic 500, and the
+  // user loses the one message that tells them regenerating is worth a try. `rejects.toThrow()`
+  // above cannot see the difference — every Error satisfies it.
+  it.each([
+    { label: "an invented product id", reply: () => providerReply([uuid(999)]) },
+    { label: "a recipe ignoring the at-risk floor", reply: () => providerReply([safe.id]) },
+  ])("rejects $label as a classified failure rather than an internal one", async ({ reply }) => {
+    stubProvider(reply);
+
+    const error = await rejectionOf(inventory);
+
+    expect(error).toBeInstanceOf(ServiceError);
+    expect((error as ServiceError).kind).toBe("unusable_model_response");
+  });
+
+  // The two guardrails deliberately share one user-facing message — a user acts the same way on
+  // both. That trade is only honest if the distinction survives where it is actually useful, so
+  // the log is asserted as distinguishing them. Distinctness, never the wording.
+  it("keeps the two guardrail causes distinguishable in the server log", async () => {
+    const logs = new Set<string>();
+
+    for (const usedIds of [[uuid(999)], [safe.id]]) {
+      const logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
+      stubProvider(() => providerReply(usedIds));
+      await rejectionOf(inventory);
+      logs.add(logged.mock.calls.flat().join(" "));
+      logged.mockRestore();
+    }
+
+    expect(logs.size).toBe(2);
   });
 
   it("returns the recipe when the at-risk floor is met", async () => {
@@ -541,6 +584,61 @@ describe("generateRecipe — a failure leaks neither the shared key nor the upst
     expect(error.message).not.toContain(OPENROUTER_TEST_KEY);
     expect(error.message).not.toContain(UPSTREAM_MARKER);
     expect(error.message).not.toContain(UPSTREAM_BODY);
+  });
+
+  // The model's own prose. A refusal or an apology arrives as the content of a 200, so
+  // JSON.parse fails on text the *model* wrote — and SyntaxError quotes it verbatim into the
+  // message. Rendered as a toast, that is the model talking directly to the user through an
+  // error channel.
+  it("keeps the model's own prose out of a malformed-response rejection", async () => {
+    const modelProse = "I'm sorry, I can't help with that request.";
+    stubProviderOutcome(() =>
+      Promise.resolve(
+        new Response(JSON.stringify({ choices: [{ message: { content: modelProse } }] }), { status: 200 }),
+      ),
+    );
+
+    const logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const error = await rejectionOf(inventory);
+
+    // Guard: the SyntaxError really was raised and really does quote the model — so the
+    // negatives below assert suppression, not an absence that was always there.
+    expect((error as ServiceError).cause).toBeInstanceOf(SyntaxError);
+    expect(((error as ServiceError).cause as Error).message).toContain("I'm sorry");
+    // Suppression is only acceptable because the detail stays diagnosable. Dropping it from
+    // the log turns a suppressed leak into an unexplainable failure.
+    expect(logged.mock.calls.flat().join(" ")).toContain("SyntaxError");
+
+    expect(error.message).not.toContain(modelProse);
+    expect(error.message).not.toContain("SyntaxError");
+    expect(error.message).not.toContain("JSON");
+  });
+
+  // A ZodError renders as a ~700-byte dump listing every failed path — including the `pattern`
+  // of the internal UUID regex, which is our schema leaking out through the error channel.
+  it("keeps the schema dump out of a schema-violation rejection", async () => {
+    const violation = { title: "", ingredients: [], instructions: [], used_product_ids: ["not-a-uuid"] };
+    stubProviderOutcome(() =>
+      Promise.resolve(
+        new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify(violation) } }] }), {
+          status: 200,
+        }),
+      ),
+    );
+
+    const logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const error = await rejectionOf(inventory);
+
+    // Guard: the ZodError really was raised and really does name the failed path, so the
+    // negatives are asserting suppression rather than an absence that was always there.
+    const cause = (error as ServiceError).cause as Error;
+    expect(cause.message).toContain("used_product_ids");
+    expect(logged.mock.calls.flat().join(" ")).toContain("used_product_ids");
+
+    expect(error.message).not.toContain("used_product_ids");
+    expect(error.message).not.toContain("pattern");
+    expect(error.message).not.toContain("ZodError");
+    expect(error.message).not.toContain("invalid_");
   });
 
   it("sends the upstream body to the server log so the failure stays diagnosable", async () => {

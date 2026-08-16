@@ -697,11 +697,11 @@ change are reclassified the moment they are read.
 
 #### Automated
 
-- [x] 4.1 Service tests pass: `npx vitest run src/lib/services/recipe.service.test.ts`
-- [x] 4.2 Endpoint tests pass: `npx vitest run src/pages/api/recipes/generate.test.ts`
-- [x] 4.3 The full suite still passes: `npx vitest run`
-- [x] 4.4 Type checking passes: `npm run typecheck`
-- [x] 4.5 Linting passes: `npm run lint`
+- [x] 4.1 Service tests pass: `npx vitest run src/lib/services/recipe.service.test.ts` — da36ecd
+- [x] 4.2 Endpoint tests pass: `npx vitest run src/pages/api/recipes/generate.test.ts` — da36ecd
+- [x] 4.3 The full suite still passes: `npx vitest run` — da36ecd
+- [x] 4.4 Type checking passes: `npm run typecheck` — da36ecd
+- [x] 4.5 Linting passes: `npm run lint` — da36ecd
 
 #### Manual
 
@@ -711,11 +711,11 @@ change are reclassified the moment they are read.
 
 #### Automated
 
-- [ ] 5.1 Service tests pass: `npx vitest run src/lib/services/recipe.service.test.ts`
-- [ ] 5.2 The full suite still passes: `npx vitest run`
-- [ ] 5.3 Type checking passes: `npm run typecheck`
-- [ ] 5.4 Linting passes: `npm run lint`
-- [ ] 5.5 Scoped mutation run: `npx stryker run --mutate "src/lib/services/recipe.service.ts"`
+- [x] 5.1 Service tests pass: `npx vitest run src/lib/services/recipe.service.test.ts`
+- [x] 5.2 The full suite still passes: `npx vitest run`
+- [x] 5.3 Type checking passes: `npm run typecheck`
+- [x] 5.4 Linting passes: `npm run lint`
+- [x] 5.5 Scoped mutation run: `npx stryker run --mutate "src/lib/services/recipe.service.ts"`
 
 #### Manual
 

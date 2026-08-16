@@ -162,7 +162,18 @@ export async function generateRecipe(
   }
 
   // Content is a JSON string even in json_schema mode.
-  const recipe = GeneratedRecipeSchema.parse(JSON.parse(content));
+  let recipe: GeneratedRecipe;
+  try {
+    recipe = GeneratedRecipeSchema.parse(JSON.parse(content));
+  } catch (err) {
+    // Neither of these strings is ours to show. JSON.parse quotes the model's own prose back
+    // at the user, and a ZodError is a ~700-byte dump carrying the internal UUID pattern.
+    // Same sanitise-and-log discipline as the non-2xx branch above: the detail reaches the
+    // log, where it is diagnosable, and never the toast.
+    // eslint-disable-next-line no-console -- server-side diagnostic for an unusable response
+    console.error("Unusable model response:", err);
+    throw new ServiceError("unusable_model_response", { cause: err });
+  }
 
   // Schema validates syntax, not semantics — cross-check the IDs against the inventory.
   const validIds = new Set(promptProducts.map((p) => p.id));

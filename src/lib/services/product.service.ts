@@ -66,7 +66,11 @@ export async function createProduct(
     .select()
     .single<Product>();
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    // eslint-disable-next-line no-console -- server-side diagnostic for a datastore failure
+    console.error(`createProduct failed: ${error.message}`);
+    throw new ServiceError("data_access", { cause: error });
+  }
 
   return { ...inserted, ...classifyExpiry(inserted.expiry_date) };
 }
@@ -78,6 +82,12 @@ export async function deleteProduct(supabase: SupabaseClient, userId: string, pr
     .eq("user_id", userId)
     .eq("id", productId);
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    // eslint-disable-next-line no-console -- server-side diagnostic for a datastore failure
+    console.error(`deleteProduct failed: ${error.message}`);
+    throw new ServiceError("data_access", { cause: error });
+  }
+  // Not a leak and not a datastore failure — a domain outcome the DELETE route matches on to
+  // answer 404. Deliberately left as a bare Error; see src/pages/api/products/[id].ts.
   if (count === 0) throw new Error("not found");
 }
