@@ -691,7 +691,7 @@ change are reclassified the moment they are read.
 
 #### Manual
 
-- [ ] 3.5 An all-expired inventory shows a message about expired stock, not "Inventory is empty"
+- [x] 3.5 An all-expired inventory shows a message about expired stock, not "Inventory is empty" — 113c68e
 
 ### Phase 4: Typed service error and distinct statuses (Risk #6a)
 
@@ -705,7 +705,7 @@ change are reclassified the moment they are read.
 
 #### Manual
 
-- [ ] 4.6 An invalid provider key returns 503 rather than 500
+- [x] 4.6 An invalid provider key returns 503 rather than 500 — da36ecd
 
 ### Phase 5: Message hygiene and guardrail copy (Risk #6b)
 
@@ -719,21 +719,21 @@ change are reclassified the moment they are read.
 
 #### Manual
 
-- [ ] 5.6 Survived mutants reviewed one by one; assertions added only for user-visible bugs
+- [x] 5.6 Survived mutants reviewed one by one; assertions added only for user-visible bugs — 00c3f3c
 - [ ] 5.7 A forced malformed provider response produces a readable toast, not a JSON dump
 
 ### Phase 6: UI surfacing and rollout close-out
 
 #### Automated
 
-- [x] 6.1 The full suite still passes: `npx vitest run`
-- [x] 6.2 Type checking passes: `npm run typecheck`
-- [x] 6.3 Linting passes: `npm run lint`
-- [x] 6.4 Build passes: `npm run build`
+- [x] 6.1 The full suite still passes: `npx vitest run` — 685c01e
+- [x] 6.2 Type checking passes: `npm run typecheck` — 685c01e
+- [x] 6.3 Linting passes: `npm run lint` — 685c01e
+- [x] 6.4 Build passes: `npm run build` — 685c01e
 
 #### Manual
 
-- [ ] 6.5 A past-dated product shows an "Expired" badge, visually distinct from "At risk"
-- [ ] 6.6 A mixed inventory raises a toast naming the skipped products
-- [ ] 6.7 An all-fresh inventory raises no such toast
-- [ ] 6.8 The recipe never contains an expired ingredient
+- [x] 6.5 A past-dated product shows an "Expired" badge, visually distinct from "At risk" — 685c01e
+- [x] 6.6 A mixed inventory raises a toast naming the skipped products — 685c01e
+- [x] 6.7 An all-fresh inventory raises no such toast — 685c01e
+- [x] 6.8 The recipe never contains an expired ingredient — 685c01e
