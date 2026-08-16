@@ -8,6 +8,21 @@ interface Options {
   onExpiredExcluded?: (excluded: ExcludedProduct[]) => void;
 }
 
+/**
+ * An error body is not guaranteed to be JSON — Astro's HTML 500 page and Cloudflare's 1102
+ * page both reach the browser. `res.json()` on those throws a SyntaxError quoting the body
+ * prefix, and the callers toast `err.message` verbatim, which would re-open the channel the
+ * server-side error contract exists to close.
+ */
+async function errorMessage(res: Response, fallback: string): Promise<string> {
+  try {
+    const { error } = JSON.parse(await res.text()) as { error?: string };
+    return error ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 export function useRecipeGeneration({ onApproveSuccess, onExpiredExcluded }: Options = {}) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
@@ -32,14 +47,15 @@ export function useRecipeGeneration({ onApproveSuccess, onExpiredExcluded }: Opt
           body: JSON.stringify({ excludeTitles: seenTitles.slice(-10), ...params }),
         });
 
+        // Before any parse: a non-2xx body may not be JSON at all.
+        if (!res.ok) {
+          throw new Error(await errorMessage(res, "Failed to generate recipe"));
+        }
+
         const json = (await res.json()) as {
           recipe?: GeneratedRecipe;
           excluded_expired?: ExcludedProduct[];
-          error?: string;
         };
-        if (!res.ok) {
-          throw new Error(json.error ?? "Failed to generate recipe");
-        }
 
         const generated = json.recipe;
         if (!generated) {
@@ -81,9 +97,8 @@ export function useRecipeGeneration({ onApproveSuccess, onExpiredExcluded }: Opt
         }),
       });
 
-      const json = (await res.json()) as { id?: string; error?: string };
       if (!res.ok) {
-        throw new Error(json.error ?? "Failed to approve recipe");
+        throw new Error(await errorMessage(res, "Failed to approve recipe"));
       }
 
       onApproveSuccess?.(current.used_product_ids);

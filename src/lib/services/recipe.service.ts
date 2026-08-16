@@ -68,6 +68,23 @@ function openRouterErrorKind(status: number): ServiceErrorKind {
   return "upstream_fault";
 }
 
+/**
+ * The abort signal stays live while the response body is consumed, so a timeout can fire
+ * *after* the headers arrive — outside the fetch's own try/catch. Both body reads route
+ * their failures through here so the class→status map stays total and the two timeout
+ * checks cannot drift apart.
+ */
+function bodyReadError(err: unknown): ServiceError {
+  if (err instanceof Error && (err.name === "TimeoutError" || err.name === "AbortError")) {
+    return new ServiceError("timeout", { cause: err });
+  }
+  // A 200 whose body is not JSON — a CDN error page, a truncated stream. Raw text is not
+  // ours to show, same discipline as the parse branch below.
+  // eslint-disable-next-line no-console -- server-side diagnostic for an unreadable response
+  console.error("Provider response body could not be read:", err);
+  return new ServiceError("unusable_model_response", { cause: err });
+}
+
 export async function generateRecipe(
   products: ProductWithRisk[],
   excludeTitles: string[] = [],
@@ -145,7 +162,12 @@ export async function generateRecipe(
   }
 
   if (!response.ok) {
-    const text = await response.text();
+    let text: string;
+    try {
+      text = await response.text();
+    } catch (err) {
+      throw bodyReadError(err);
+    }
     // The upstream body carries account and quota metadata for the shared API key.
     // Log it for diagnosis; the thrown message is what reaches the user's toast.
     // eslint-disable-next-line no-console -- server-side diagnostic for an external failure
@@ -153,7 +175,13 @@ export async function generateRecipe(
     throw new ServiceError(openRouterErrorKind(response.status));
   }
 
-  const data = (await response.json()) as { choices?: { message?: { content?: string } }[] };
+  let data: { choices?: { message?: { content?: string } }[] };
+  try {
+    data = (await response.json()) as { choices?: { message?: { content?: string } }[] };
+  } catch (err) {
+    throw bodyReadError(err);
+  }
+
   const content = data.choices?.[0]?.message?.content;
   if (!content) {
     // eslint-disable-next-line no-console -- the cause is only distinguishable in the log

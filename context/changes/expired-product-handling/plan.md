@@ -497,7 +497,9 @@ log, which is where that distinction is useful.
 
 #### 4. Hygiene tests
 
-**File**: `src/lib/services/recipe.service.test.ts`
+**File**: `src/pages/api/recipes/generate.test.ts` — the datastore case needs a Supabase
+seam, which `recipe.service.test.ts` does not have, so all three cases live at the
+endpoint level.
 
 **Intent**: Assert the negative that matters, using the technique Phase 1
 established for the credential tests.
@@ -578,7 +580,8 @@ pattern, the endpoint-side partition, and anything surprising the phases surface
 
 **Intent**: Reflect the shipped state.
 
-**Contract**: `status: complete`, `updated` stamped.
+**Contract**: `status: implemented`, `updated` stamped. (`complete` is not a value in
+this workflow's vocabulary — `/10x-archive` expects `implemented` or `impl_reviewed`.)
 
 ### Success Criteria:
 

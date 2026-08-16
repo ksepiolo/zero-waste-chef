@@ -307,11 +307,11 @@ three-line note here capturing anything surprising the phase taught.)
   walk of a truncated provider envelope surfacing a raw `TypeError` /
   `SyntaxError` to the user.
 - Survivors accepted consciously, by group: (a) the `RESPONSE_FORMAT`
-  json*schema literals, `OPENROUTER_URL`, `MODEL`, the request method and
+  `json_schema` literals, `OPENROUTER_URL`, `MODEL`, the request method and
   headers, the `plugins` list and the message roles — killing these means
   asserting our own constants against themselves through a stub that cannot
   validate them, which is §7's "configuration as a test subject" and a
-  mirror test besides; (b) the guardrail and empty-response \_message*
+  mirror test besides; (b) the guardrail and empty-response `message`
   strings, whose wording is Risk #6 presentation work owned by
   `expired-product-handling`; (c) the temperature ternary and the `join`
   separator, tunables whose mutation costs prompt quality, not correctness;

@@ -9,29 +9,43 @@ export const AT_RISK_DAYS = 3;
  * calendar date with no timezone, and mixing local accessors with toISOString() (which
  * projects to UTC) shifts the window by a day on a non-UTC machine.
  */
-function utcDateOffset(days: number): string {
-  const date = new Date();
+function utcDateOffset(days: number, from: Date = new Date()): string {
+  const date = new Date(from);
   date.setUTCDate(date.getUTCDate() + days);
   return date.toISOString().split("T")[0];
 }
 
 /** True iff the product is already past its expiry date. */
-export function isExpired(expiryDate: string): boolean {
-  return expiryDate < utcDateOffset(0);
+export function isExpired(expiryDate: string, today: string = utcDateOffset(0)): boolean {
+  return expiryDate < today;
 }
 
 /** True iff `today <= expiryDate <= today + AT_RISK_DAYS`. Past dates are expired, not at risk. */
-export function isAtRisk(expiryDate: string): boolean {
-  return expiryDate >= utcDateOffset(0) && expiryDate <= utcDateOffset(AT_RISK_DAYS);
+export function isAtRisk(
+  expiryDate: string,
+  today: string = utcDateOffset(0),
+  horizon: string = utcDateOffset(AT_RISK_DAYS),
+): boolean {
+  return expiryDate >= today && expiryDate <= horizon;
 }
 
 /**
  * The single derivation point for both flags. Callers use this rather than the predicates
  * individually: computing one without the other is what would let the mutually exclusive
  * states disagree.
+ *
+ * The clock is read once and threaded into both predicates. Reading it per-predicate makes
+ * exclusivity a property of timing rather than of the code — a UTC midnight landing between
+ * two reads would return `is_at_risk` and `is_expired` together, and no frozen-clock test
+ * can catch that.
  */
 export function classifyExpiry(expiryDate: string): { is_at_risk: boolean; is_expired: boolean } {
-  return { is_at_risk: isAtRisk(expiryDate), is_expired: isExpired(expiryDate) };
+  const now = new Date();
+  const today = utcDateOffset(0, now);
+  return {
+    is_at_risk: isAtRisk(expiryDate, today, utcDateOffset(AT_RISK_DAYS, now)),
+    is_expired: isExpired(expiryDate, today),
+  };
 }
 
 export async function listProducts(supabase: SupabaseClient, userId: string): Promise<ProductWithRisk[]> {

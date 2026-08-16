@@ -50,9 +50,15 @@ export class ServiceError extends Error {
   readonly status: number;
 
   constructor(kind: ServiceErrorKind, options?: ErrorOptions) {
-    super(CONTRACT[kind].message, options);
+    // The table is exhaustive by type, so this fallback is unreachable through a normal
+    // call. It covers a kind arriving from a cast or a deserialized value: without it the
+    // lookup throws inside the constructor, replacing a classified 502 with an unclassified
+    // 500 — the fail-safe direction, but the worse answer.
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- unreachable by type, which is the point: the guard covers a `kind` that bypassed the type system
+    const entry = CONTRACT[kind] ?? CONTRACT.upstream_fault;
+    super(entry.message, options);
     this.name = "ServiceError";
     this.kind = kind;
-    this.status = CONTRACT[kind].status;
+    this.status = entry.status;
   }
 }

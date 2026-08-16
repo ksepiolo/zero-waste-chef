@@ -532,8 +532,9 @@ describe("generateRecipe — provider failures never fake success", () => {
   // A 200 whose envelope carries no content is the one shape that could plausibly be read
   // as "nothing went wrong". Returning a recipe assembled from nothing would be the purest
   // form of a failure faking success, so the only acceptable outcome is a rejection. The
-  // message is not asserted: it names the provider, which is Risk #6 presentation work
-  // owned by expired-product-handling.
+  // message is not asserted by text: the empty-content case now carries the shared
+  // unusable_model_response copy, so the assertion is on the kind, not on a snapshot of
+  // the string.
   //
   // What *is* asserted is that the rejection is deliberate. A TypeError means the envelope
   // was walked without checking it and the caller gets "Cannot read properties of

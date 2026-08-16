@@ -34,8 +34,9 @@ export const POST: APIRoute = async (context) => {
   try {
     body = await context.request.json();
   } catch {
-    // No body at all — a first generation posts nothing. A body that is present but
-    // malformed still falls through to validation below.
+    // No body at all — a first generation posts nothing. A malformed body is treated the
+    // same way: every field in generateSchema is optional or defaulted, so `{}` parses and
+    // the request generates with default parameters rather than returning 400.
     body = {};
   }
 
