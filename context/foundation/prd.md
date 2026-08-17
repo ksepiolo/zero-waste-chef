@@ -28,15 +28,18 @@ Existing solutions stop at the warning. Expiry-tracker apps flag at-risk items b
 ## Success Criteria
 
 ### Primary
+
 - The AI generates a recipe that uses at least one at-risk product — defined as the product(s) expiring within 3 days from today's date.
 - After the user approves a recipe on the approval screen, every product shown as "to be consumed" is removed from the inventory. The database state after approval matches exactly what the approval screen displayed.
 
 ### Secondary
+
 - The home screen immediately distinguishes at-risk products (expiring within 3 days) from safe ones, without the user having to navigate or filter.
 
 ### Guardrails
+
 - **Data isolation**: a logged-in user never sees another user's products or recipes. Account data is strictly scoped to the authenticated session.
-- **Inventory consistency**: the approval screen is a contract. The set of products it shows as "to be removed" matches exactly the set removed from the database — never more, never fewer.
+- **Inventory consistency**: the approval screen is a contract. The database never removes more than the approval screen showed — and if a shown product could not be removed (e.g. it changed underneath the approval), that gap is reported back to the caller rather than silently hidden.
 
 ## User Stories
 
@@ -47,6 +50,7 @@ Existing solutions stop at the warning. Expiry-tracker apps flag at-risk items b
 - **Then** a recipe is saved to their recipe list AND the products shown on the approval screen are removed from their inventory
 
 #### Acceptance Criteria
+
 - The generated recipe includes at least one product flagged as at-risk (expiring within 3 days)
 - The approval screen shows exactly which products will be removed before the user confirms
 - After approval, the inventory reflects the removal — the approved products no longer appear in the product list
@@ -55,33 +59,43 @@ Existing solutions stop at the warning. Expiry-tracker apps flag at-risk items b
 ## Functional Requirements
 
 ### Authentication
+
 - FR-001: A visitor can register with email and password. Priority: must-have
+
   > Socrates: Counter-argument considered: "registration is a drop-off point before the user sees value." Resolution: kept; without accounts, product data from different users mixes — auth is foundational to the isolation guarantee.
 
 - FR-002: A registered user can log in with email and password. Priority: must-have
+
   > Socrates: Counter-argument considered: "session management, token storage, and password reset add scope." Resolution: kept; login is the complement of registration — one without the other is incomplete.
 
 - FR-003: A logged-in user can log out. Priority: must-have
   > Socrates: Counter-argument considered: "session expiry makes explicit logout unnecessary." Resolution: kept; logout is a basic security expectation — a user on a shared device needs a way to end their session explicitly.
 
 ### Inventory Management
+
 - FR-004: A user can add a product to their inventory (name + expiry date). Priority: must-have
+
   > Socrates: Counter-argument accepted: "manual entry will be abandoned — users won't maintain a list they have to type by hand." Resolution: known risk, accepted. Barcode scanning and natural language input are explicitly out of MVP scope. The app's viability depends on the user committing to manual upkeep; this is a product bet, not a technical oversight.
 
 - FR-005: A user can view their full product list with at-risk items visually distinguished. Priority: must-have
+
   > Socrates: Counter-argument considered: "sorting by date is enough — visual distinction adds scope without much clarity gain." Tension: the success criteria commits to the home screen "immediately showing at-risk products." Resolution: the form of distinction (colour tag vs sort order vs badge) is an implementation choice; the requirement is that the at-risk signal is present and immediate. Kept as must-have; implementation detail is downstream.
 
 - FR-006: A user can delete a product from their inventory manually. Priority: must-have
   > Socrates: Counter-argument considered: "delete is superseded by the approval flow." Resolution: kept; the recipe flow removes products that were cooked. Delete handles everything else: mistakes, items that can't be cooked, items consumed outside a recipe. Without it, stale data accumulates with no escape.
 
 ### Recipe Generation
+
 - FR-007: A user can request an AI-generated recipe from their inventory at any time. The AI always receives the full inventory. When at-risk products exist, the recipe must include at least one of them; it may also use additional non-at-risk products. When no at-risk products exist, the recipe is generated freely from the full inventory. Priority: must-have
+
   > Socrates: Counter-argument accepted: "bad AI output erodes trust faster than no output at all." Resolution: kept as must-have — this is the product's differentiator. The quality concern surfaces as an NFR: the AI output must be practically usable (see Non-Functional Requirements).
 
 - FR-008: A user can view an approval screen showing the generated recipe and the list of products it would consume. Priority: must-have
+
   > Socrates: Counter-argument considered: "an extra step — users might prefer auto-remove after generation." Resolution: kept; the approval screen is the trust and safety mechanism. It also enforces the inventory consistency guardrail — auto-remove without confirmation breaks the contract.
 
 - FR-009: A user can approve the recipe, which removes the listed products from inventory and saves the recipe. Priority: must-have
+
   > Socrates: Counter-argument considered: "partial failure could leave inventory in a silent inconsistent state." Resolution: kept; this surfaces as a guardrail requirement — the remove and save must succeed or fail as a unit. Implementation detail, but the requirement is must-have.
 
 - FR-010: A user can view a list of previously generated and approved recipes. Priority: must-have

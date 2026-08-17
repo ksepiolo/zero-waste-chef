@@ -94,3 +94,11 @@ export interface ApproveRecipeInput {
   instructions: string[];
   usedProductIds: string[];
 }
+
+// approve_recipe's own report of what happened — deletedIds may be a strict subset of
+// the ids sent (stale, foreign, or already-deleted ids are silently excluded server-side),
+// so callers reconcile against this set, never against the request they made.
+export interface ApproveRecipeResult {
+  id: string;
+  deletedIds: string[];
+}
