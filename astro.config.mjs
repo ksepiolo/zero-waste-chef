@@ -19,6 +19,12 @@ export default defineConfig({
       SUPABASE_URL: envField.string({ context: "server", access: "secret", optional: true }),
       SUPABASE_KEY: envField.string({ context: "server", access: "secret", optional: true }),
       OPENROUTER_API_KEY: envField.string({ context: "server", access: "secret", optional: true }),
+      OPENROUTER_URL: envField.string({
+        context: "server",
+        access: "public",
+        optional: true,
+        default: "https://openrouter.ai/api/v1/chat/completions",
+      }),
     },
   },
 });

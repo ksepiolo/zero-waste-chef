@@ -10,7 +10,10 @@ import { POST } from "./generate";
 // real assertion rather than a check that the string "undefined" is missing.
 const { OPENROUTER_TEST_KEY } = vi.hoisted(() => ({ OPENROUTER_TEST_KEY: "sk-or-v1-endpoint-key-must-not-leak" }));
 
-vi.mock("astro:env/server", () => ({ OPENROUTER_API_KEY: OPENROUTER_TEST_KEY }));
+vi.mock("astro:env/server", () => ({
+  OPENROUTER_API_KEY: OPENROUTER_TEST_KEY,
+  OPENROUTER_URL: "https://openrouter.ai/api/v1/chat/completions",
+}));
 
 /**
  * createClient() returns null whenever SUPABASE_URL/SUPABASE_KEY are unset, and the

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { OPENROUTER_API_KEY } from "astro:env/server";
+import { OPENROUTER_API_KEY, OPENROUTER_URL } from "astro:env/server";
 import type {
   ApproveRecipeInput,
   ApproveRecipeResult,
@@ -14,7 +14,6 @@ import { DEFAULT_RECIPE_PARAMS, RECIPES_PAGE_SIZE } from "@/types";
 import { buildSystemPrompt, FEW_SHOT_USER, FEW_SHOT_ASSISTANT } from "./recipe-prompt";
 import { ServiceError, type ServiceErrorKind } from "./service-error";
 
-const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 // Free tier. Supports json_schema strict mode; rate-limited per OpenRouter's
 // free-model quota. Swap to "google/gemini-2.0-flash-001" (paid) if the limit bites.
 const MODEL = "google/gemma-4-26b-a4b-it:free";

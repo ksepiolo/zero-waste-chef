@@ -13,7 +13,10 @@ import { ServiceError } from "./service-error";
 // so if either path reached the caller the assertion fails.
 const { OPENROUTER_TEST_KEY } = vi.hoisted(() => ({ OPENROUTER_TEST_KEY: "sk-or-v1-test-key-must-not-leak" }));
 
-vi.mock("astro:env/server", () => ({ OPENROUTER_API_KEY: OPENROUTER_TEST_KEY }));
+vi.mock("astro:env/server", () => ({
+  OPENROUTER_API_KEY: OPENROUTER_TEST_KEY,
+  OPENROUTER_URL: "https://openrouter.ai/api/v1/chat/completions",
+}));
 
 const USER_ID = "11111111-1111-4111-8111-111111111111";
 
