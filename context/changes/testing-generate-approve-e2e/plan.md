@@ -334,11 +334,11 @@ Not applicable — no data migration involved.
 
 #### Automated
 
-- [x] 2.1 Spec passes on chromium: `npx playwright test tests/generate-approve.spec.ts --project=chromium`
-- [x] 2.2 Spec passes on firefox: `npx playwright test tests/generate-approve.spec.ts --project=firefox`
-- [x] 2.3 Spec passes on webkit: `npx playwright test tests/generate-approve.spec.ts --project=webkit`
+- [x] 2.1 Spec passes on chromium: `npx playwright test tests/generate-approve.spec.ts --project=chromium` — becab9a
+- [x] 2.2 Spec passes on firefox: `npx playwright test tests/generate-approve.spec.ts --project=firefox` — becab9a
+- [x] 2.3 Spec passes on webkit: `npx playwright test tests/generate-approve.spec.ts --project=webkit` — becab9a
 
 #### Manual
 
-- [ ] 2.4 Headed run confirms dialog copy and Approve/Cancel interactions
-- [ ] 2.5 A developer can reproduce a passing local run from `.env.example` + this plan
+- [x] 2.4 Headed run confirms dialog copy and Approve/Cancel interactions — becab9a
+- [x] 2.5 A developer can reproduce a passing local run from `.env.example` + this plan — becab9a
