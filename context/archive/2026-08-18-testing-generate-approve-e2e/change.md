@@ -1,10 +1,10 @@
 ---
 change_id: testing-generate-approve-e2e
 title: Refresh test-plan to add e2e coverage for the generate→approve→removal loop
-status: impl_reviewed
+status: archived
 created: 2026-08-18
 updated: 2026-08-18
-archived_at: null
+archived_at: 2026-08-18T21:18:47Z
 ---
 
 ## Notes
