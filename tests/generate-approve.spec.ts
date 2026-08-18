@@ -56,11 +56,14 @@ test.beforeAll(async () => {
       );
     });
   });
-  await new Promise<void>((resolve) =>
+  await new Promise<void>((resolve, reject) => {
+    // Without this, a bind failure (e.g. port 4399 already taken by another worker) is an
+    // uncaught exception that crashes the whole test process instead of failing this test.
+    stubServer.on("error", reject);
     stubServer.listen(STUB_PORT, "127.0.0.1", () => {
       resolve();
-    }),
-  );
+    });
+  });
 });
 
 test.afterAll(async () => {
