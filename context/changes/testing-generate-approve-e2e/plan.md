@@ -104,12 +104,21 @@ them.
   `recipe.service.ts:216` and the dialog never opens.
 - **The dev server must already be pointed at the stub before the test starts.** Astro
   resolves `astro:env/server` values when the server process starts, and
-  `playwright.config.ts` has no `webServer` block — so whoever runs this spec must set
-  `OPENROUTER_URL=http://127.0.0.1:4399/mock-openrouter` in `.env` _before_ running
-  `npm run dev`. The spec's `test.beforeAll` only needs to have something listening on that
-  port by the time the test's fetch fires, not before the dev server starts — but the env
-  var itself must already be set at dev-server startup. This is a one-time local setup
-  step, not something the spec can arrange on its own.
+  `playwright.config.ts` has no `webServer` block — so whoever runs this spec must start
+  the dev server with `OPENROUTER_URL=http://127.0.0.1:4399/mock-openrouter` already set.
+  `.env.e2e` (committed — carries no secret, just the loopback stub URL) plus
+  `npm run dev:e2e` (`astro dev --mode e2e`) does this: Astro/Vite loads `.env.[mode]` on
+  top of `.env` automatically when `--mode` is passed, so the override is documented and
+  reproducible without touching the shared `.env`/`.env.local` files. The spec's
+  `test.beforeAll` only needs to have something listening on that port by the time the
+  test's fetch fires, not before the dev server starts — but the env var itself must
+  already be set at dev-server startup.
+- **The stub port collides across concurrent Playwright projects.** `OPENROUTER_URL` is
+  fixed at dev-server startup, so the stub in `tests/generate-approve.spec.ts` binds a
+  fixed port (4399), not an ephemeral one. Running more than one `--project` in the same
+  invocation (or the config's default fully-parallel multi-project run) races multiple
+  workers for that port and fails with `EADDRINUSE`. Run the three Success Criteria
+  commands below one at a time, not combined.
 
 ## Phase 1: Make the OpenRouter endpoint configurable
 
@@ -277,8 +286,8 @@ successful before proceeding to the next phase.
 
 ### Manual Testing Steps:
 
-1. Set `OPENROUTER_URL=http://127.0.0.1:4399/mock-openrouter` in `.env`, start
-   `npm run dev`, then run the Phase 2 spec headed and watch the dialog open/close.
+1. Run `npm run dev:e2e` (loads `.env.e2e` — see Critical Implementation Details), then
+   run the Phase 2 spec headed and watch the dialog open/close.
 2. Confirm the product removed matches exactly the one shown in the "Will remove from
    inventory" line.
 3. Confirm the approved recipe's title is visible on `/recipes` without needing a manual
@@ -311,23 +320,23 @@ Not applicable — no data migration involved.
 
 #### Automated
 
-- [x] 1.1 Typecheck passes: `npm run typecheck`
-- [x] 1.2 Lint passes: `npm run lint`
-- [x] 1.3 Recipe service tests pass unchanged: `npx vitest run src/lib/services/recipe.service.test.ts`
-- [x] 1.4 Generate endpoint tests pass unchanged: `npx vitest run src/pages/api/recipes/generate.test.ts`
-- [x] 1.5 Full unit/integration suite passes: `npm run test`
+- [x] 1.1 Typecheck passes: `npm run typecheck` — 5f0c5cf
+- [x] 1.2 Lint passes: `npm run lint` — 5f0c5cf
+- [x] 1.3 Recipe service tests pass unchanged: `npx vitest run src/lib/services/recipe.service.test.ts` — 5f0c5cf
+- [x] 1.4 Generate endpoint tests pass unchanged: `npx vitest run src/pages/api/recipes/generate.test.ts` — 5f0c5cf
+- [x] 1.5 Full unit/integration suite passes: `npm run test` — 5f0c5cf
 
 #### Manual
 
-- [x] 1.6 `.env.example` comment is clear about the optional override
+- [x] 1.6 `.env.example` comment is clear about the optional override — 5f0c5cf
 
 ### Phase 2: Add the generate→approve→removal E2E test
 
 #### Automated
 
-- [ ] 2.1 Spec passes on chromium: `npx playwright test tests/generate-approve.spec.ts --project=chromium`
-- [ ] 2.2 Spec passes on firefox: `npx playwright test tests/generate-approve.spec.ts --project=firefox`
-- [ ] 2.3 Spec passes on webkit: `npx playwright test tests/generate-approve.spec.ts --project=webkit`
+- [x] 2.1 Spec passes on chromium: `npx playwright test tests/generate-approve.spec.ts --project=chromium`
+- [x] 2.2 Spec passes on firefox: `npx playwright test tests/generate-approve.spec.ts --project=firefox`
+- [x] 2.3 Spec passes on webkit: `npx playwright test tests/generate-approve.spec.ts --project=webkit`
 
 #### Manual
 
