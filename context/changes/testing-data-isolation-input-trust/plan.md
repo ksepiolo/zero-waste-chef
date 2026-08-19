@@ -388,26 +388,26 @@ Phase 2.
 
 #### Automated
 
-- [x] 1.1 `npm run test` passes with local Supabase running (all three new integration tests green)
-- [x] 1.2 `npm run test` passes with local Supabase stopped (new tests skip cleanly)
-- [x] 1.3 `npm run typecheck` passes
-- [x] 1.4 `npm run lint` passes
+- [x] 1.1 `npm run test` passes with local Supabase running (all three new integration tests green) — e4d6e51
+- [x] 1.2 `npm run test` passes with local Supabase stopped (new tests skip cleanly) — e4d6e51
+- [x] 1.3 `npm run typecheck` passes — e4d6e51
+- [x] 1.4 `npm run lint` passes — e4d6e51
 
 #### Manual
 
-- [x] 1.5 `curl -X DELETE` a foreign product id as the second seeded user, confirm 404 and row survival
+- [x] 1.5 `curl -X DELETE` a foreign product id as the second seeded user, confirm 404 and row survival — e4d6e51
 
 ### Phase 2: Input Trust — Closed-List Boundary Coverage
 
 #### Automated
 
-- [ ] 2.1 `npm run test` passes (all three `it.each` cases green)
-- [ ] 2.2 `npm run typecheck` passes
-- [ ] 2.3 `npm run lint` passes
+- [x] 2.1 `npm run test` passes (all three `it.each` cases green)
+- [x] 2.2 `npm run typecheck` passes
+- [x] 2.3 `npm run lint` passes
 
 #### Manual
 
-- [ ] 2.4 `curl -X POST` generate with a crafted `method`/`time` value, confirm 400
+- [x] 2.4 `curl -X POST` generate with a crafted `method`/`time` value, confirm 400
 
 ### Phase 3: Close-out
 
