@@ -413,12 +413,12 @@ Phase 2.
 
 #### Automated
 
-- [x] 3.1 `npm run test` passes (full suite)
-- [x] 3.2 `npm run typecheck` passes
-- [x] 3.3 `npm run lint` passes
-- [x] 3.4 Stryker mutation runs complete, survivors triaged
+- [x] 3.1 `npm run test` passes (full suite) — ee3921c
+- [x] 3.2 `npm run typecheck` passes — ee3921c
+- [x] 3.3 `npm run lint` passes — ee3921c
+- [x] 3.4 Stryker mutation runs complete, survivors triaged — ee3921c
 
 #### Manual
 
-- [x] 3.5 `change.md` and `test-plan.md` rollout status updated
-- [x] 3.6 `test-plan.md` §6.5 phase note added, consistent with existing entries
+- [x] 3.5 `change.md` and `test-plan.md` rollout status updated — ee3921c
+- [x] 3.6 `test-plan.md` §6.5 phase note added, consistent with existing entries — ee3921c
