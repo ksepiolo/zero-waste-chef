@@ -1,7 +1,7 @@
 ---
 change_id: testing-data-isolation-input-trust
 title: Testing data isolation input trust
-status: implemented
+status: impl_reviewed
 created: 2026-08-18
 updated: 2026-08-19
 archived_at: null

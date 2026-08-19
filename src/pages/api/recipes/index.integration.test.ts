@@ -83,6 +83,7 @@ describe.skipIf(!supabaseReachable)("GET /api/recipes — cross-user isolation",
       await primaryClient.from("recipes").delete().eq("title", title);
     }
     cleanupTitles = [];
+    clientHolder.current = null;
   });
 
   // Oracle: [[Always add an app-layer user_id filter alongside RLS on read and delete
