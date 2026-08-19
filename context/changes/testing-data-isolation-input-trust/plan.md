@@ -401,24 +401,24 @@ Phase 2.
 
 #### Automated
 
-- [x] 2.1 `npm run test` passes (all three `it.each` cases green)
-- [x] 2.2 `npm run typecheck` passes
-- [x] 2.3 `npm run lint` passes
+- [x] 2.1 `npm run test` passes (all three `it.each` cases green) — a032bcb
+- [x] 2.2 `npm run typecheck` passes — a032bcb
+- [x] 2.3 `npm run lint` passes — a032bcb
 
 #### Manual
 
-- [x] 2.4 `curl -X POST` generate with a crafted `method`/`time` value, confirm 400
+- [x] 2.4 `curl -X POST` generate with a crafted `method`/`time` value, confirm 400 — a032bcb
 
 ### Phase 3: Close-out
 
 #### Automated
 
-- [ ] 3.1 `npm run test` passes (full suite)
-- [ ] 3.2 `npm run typecheck` passes
-- [ ] 3.3 `npm run lint` passes
-- [ ] 3.4 Stryker mutation runs complete, survivors triaged
+- [x] 3.1 `npm run test` passes (full suite)
+- [x] 3.2 `npm run typecheck` passes
+- [x] 3.3 `npm run lint` passes
+- [x] 3.4 Stryker mutation runs complete, survivors triaged
 
 #### Manual
 
-- [ ] 3.5 `change.md` and `test-plan.md` rollout status updated
-- [ ] 3.6 `test-plan.md` §6.5 phase note added, consistent with existing entries
+- [x] 3.5 `change.md` and `test-plan.md` rollout status updated
+- [x] 3.6 `test-plan.md` §6.5 phase note added, consistent with existing entries
