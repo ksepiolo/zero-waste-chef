@@ -259,12 +259,17 @@ describe("POST /api/recipes/generate — an absent body is a valid request", () 
 
   // The closed lists are a server-side contract, not a dropdown convenience: the endpoint
   // is reachable without the UI, and these values go straight into the prompt on a shared
-  // key. A parseable body still has to clear validation.
-  it("rejects a parseable body carrying an out-of-list parameter", async () => {
+  // key. A parseable body still has to clear validation — for all three closed-list
+  // parameters, not just technique (test-plan cookbook §6.1: one it.each, not one test per row).
+  it.each([
+    { field: "technique", value: "flambe" },
+    { field: "method", value: "sous-vide" },
+    { field: "time", value: "60" },
+  ])("rejects a parseable body carrying an out-of-list $field", async ({ field, value }) => {
     const fetchSpy = vi.fn();
     vi.stubGlobal("fetch", fetchSpy);
 
-    const response = await POST(routeContext({ body: JSON.stringify({ technique: "flambe" }) }));
+    const response = await POST(routeContext({ body: JSON.stringify({ [field]: value }) }));
 
     expect(response.status).toBe(400);
     expect(fetchSpy).not.toHaveBeenCalled();

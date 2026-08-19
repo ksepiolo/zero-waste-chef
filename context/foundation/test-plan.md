@@ -84,7 +84,7 @@ orchestrator updates Status as artifacts appear on disk.
 | 1   | Runner bootstrap + recipe-generation core | Prove at-risk state is computed correctly, reaches the model request, and that failures fail loudly                                                       | #1, #6 (partial) | unit + integration (model boundary stubbed) | complete    | `context/changes/testing-recipe-generation-core/`      |
 | 1b  | Expired-product handling                  | Prove past-dated stock never reaches the model and that the user is told, and that each generation failure carries its own status and a user-safe message | #2, #6           | unit + integration (model boundary stubbed) | complete    | `context/changes/expired-product-handling/`            |
 | 2   | Approval contract integrity               | Prove approval is all-or-nothing and removes exactly the set it displayed                                                                                 | #3, #5           | integration                                 | complete    | `context/changes/testing-approval-contract-integrity/` |
-| 3   | Data isolation and input trust            | Prove a second user cannot reach the first user's rows, and that crafted input is rejected at the boundary                                                | #4, #7           | integration + unit                          | not started | —                                                      |
+| 3   | Data isolation and input trust            | Prove a second user cannot reach the first user's rows, and that crafted input is rejected at the boundary                                                | #4, #7           | integration + unit                          | complete    | `context/changes/testing-data-isolation-input-trust/`  |
 | 4   | Quality-gates wiring                      | Lock the floor in the existing CI job                                                                                                                     | cross-cutting    | gates                                       | not started | —                                                      |
 | 5   | E2E: generate→approve→removal wiring      | Prove the UI wiring for generate→approve→removal matches its API contract, from a real browser                                                            | #8               | e2e (Playwright)                            | not started | `context/changes/testing-generate-approve-e2e/`        |
 
@@ -390,6 +390,37 @@ three-line note here capturing anything surprising the phase taught.)
   mutants on the `if (!result?.recipe_id)` defensive branch — out of scope
   per this phase's plan (unreachable by construction, same category as the
   `ServiceError` `CONTRACT` fallback).
+
+**Phase 3 — data isolation and input trust (2026-08-19)**
+
+- Every route builds its own Supabase client from request cookies rather than reading one
+  off `locals`, so a route-level cross-user test has to substitute what `createClient`
+  returns rather than what `locals` holds. `vi.mock("@/lib/supabase")` returning a real,
+  already-signed-in `@supabase/supabase-js` client through a `vi.hoisted` mutable holder —
+  swapped per test between the primary and secondary seeded user — is what let the exported
+  route handlers run against real RLS without fabricating cookie serialization.
+- Both risks turned out to be coverage gaps, not live defects: `listProducts`,
+  `deleteProduct`, and `listRecipes` already chained `.eq("user_id", userId)` alongside
+  RLS, and the three closed-list generation params already shared one `z.enum()` source of
+  truth. `approveRecipe` was confirmed a compliant structural exception (ownership enforced
+  entirely inside the `SECURITY INVOKER` RPC) and left untouched — already proven by Phase
+  2's own cross-user test. The `time` field's direct prompt interpolation is recorded as an
+  accepted, unreachable gap (zod is the only construction path for `RecipeParams`) rather
+  than closed with a runtime guard, per this phase's plan.
+- Mutation gate (`npx stryker run --mutate "src/lib/services/product.service.ts:51-107"`,
+  then `--mutate "src/lib/services/recipe.service.ts:241-254"`): the `.eq("user_id",
+userId)` mutant was killed on all three functions by the new cross-user tests — the
+  strongest evidence the isolation tests do their job. One real gap surfaced and was
+  closed: `deleteProduct`'s success path (`count !== 0`, no throw) had zero coverage
+  anywhere in the suite, so a mutant that always took the "not found" branch survived; one
+  cheap unit test on the stubbed delete chain killed it. Remaining survivors accepted, by
+  group: (a) `select("*")`/`.order(...)` column and direction tunables on both functions —
+  same "configuration as a test subject" class Phase 1 already accepted; (b) pagination
+  arithmetic on `listRecipes` (the `from`/`range` offset math and `count ?? 0`) — no risk
+  in §2 covers pagination correctness, out of this phase's scope; (c) the defensive
+  `if (error)` datastore-failure branches on `deleteProduct` and `listRecipes` — untested
+  pre-existing branches outside Risk #4/#7, the same category Phase 1b closed only for
+  `generate.ts` specifically.
 
 ## 7. What We Deliberately Don't Test
 

@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { Product } from "@/types";
 
-import { classifyExpiry, listProducts } from "./product.service";
+import { classifyExpiry, deleteProduct, listProducts } from "./product.service";
 
 // The clock is frozen so the boundary table means the same thing on every machine and in
 // every month; vitest.config.ts pins TZ=UTC to match workerd, so the local-date arithmetic
@@ -124,5 +124,34 @@ describe("listProducts", () => {
 
     expect(product.is_at_risk).toBe(false);
     expect(product.is_expired).toBe(false);
+  });
+});
+
+interface DeleteQueryStub {
+  delete: () => DeleteQueryStub;
+  eq: () => DeleteQueryStub;
+  then: PromiseLike<{ count: number; error: null }>["then"];
+}
+
+/** Minimal stand-in for the delete().eq().eq() chain deleteProduct awaits directly. */
+function stubDeleteChain(count: number): SupabaseClient {
+  const result = { count, error: null };
+  const query: DeleteQueryStub = {
+    delete: () => query,
+    eq: () => query,
+    then: (resolve, reject) => Promise.resolve(result).then(resolve, reject),
+  };
+
+  return { from: () => query } as unknown as SupabaseClient;
+}
+
+describe("deleteProduct", () => {
+  // Mutation coverage gap: no test anywhere exercised the success path (a row actually
+  // deleted, count !== 0), so a mutant forcing the "not found" branch unconditionally
+  // survived — the same defect class would ship a delete button that always answers 404.
+  it("resolves without throwing when the row is deleted", async () => {
+    const supabase = stubDeleteChain(1);
+
+    await expect(deleteProduct(supabase, "user-1", "product-1")).resolves.toBeUndefined();
   });
 });
