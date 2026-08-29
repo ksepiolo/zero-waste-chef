@@ -2,7 +2,10 @@
 .claude/prompts/skill-explainer.md
 .claude/prompts/m1l*
 .claude/prompts/m12l*
-.claude/prompts/m3l*ś
+.claude/prompts/m3l*
+.claude/prompts/m4l*
+.claude/prompts/m5l*
+
 .claude/.10x-cli-manifest.json
 
 # from 10x-astro-starter
