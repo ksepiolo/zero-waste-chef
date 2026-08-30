@@ -4,18 +4,17 @@ import { Button } from "@/components/ui/button";
 
 interface SubmitButtonProps {
   pendingText: string;
-  icon: ReactNode;
   children: ReactNode;
 }
 
-export function SubmitButton({ pendingText, icon, children }: SubmitButtonProps) {
+export function SubmitButton({ pendingText, children }: SubmitButtonProps) {
   const { pending } = useFormStatus();
 
   return (
     <Button
       type="submit"
       disabled={pending}
-      className="w-full rounded-lg bg-purple-600 px-4 py-2 font-medium text-white transition-colors hover:bg-purple-500"
+      className="bg-brand-green hover:bg-brand-green/90 h-11 w-full rounded-lg px-4 font-medium text-white transition-colors"
     >
       {pending ? (
         <span className="flex items-center gap-2">
@@ -23,10 +22,7 @@ export function SubmitButton({ pendingText, icon, children }: SubmitButtonProps)
           {pendingText}
         </span>
       ) : (
-        <span className="flex items-center gap-2">
-          {icon}
-          {children}
-        </span>
+        <span className="flex items-center gap-2">{children}</span>
       )}
     </Button>
   );
