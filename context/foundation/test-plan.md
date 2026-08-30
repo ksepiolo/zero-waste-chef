@@ -6,7 +6,7 @@
 >
 > Refresh: re-run `/10x-test-plan --refresh` when stale (see §8).
 >
-> Last updated: 2026-08-18
+> Last updated: 2026-08-30
 
 ## 1. Strategy
 
@@ -154,15 +154,17 @@ phase lands; before that, the gate is planned. Note that deploy currently
 auto-fires on every push to `main` once CI passes — the gate set below is
 the only thing standing between a merge and production.
 
-| Gate                  | Where                                      | Required?                 | Catches                                                                                                                                                                    |
-| --------------------- | ------------------------------------------ | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| lint                  | local + CI                                 | required (wired)          | syntactic drift, lint-rule violations                                                                                                                                      |
-| build                 | CI                                         | required (wired)          | build-breaking and configuration errors                                                                                                                                    |
-| typecheck             | local + CI                                 | required after §3 Phase 4 | type drift — the script exists but is currently ungated                                                                                                                    |
-| unit + integration    | local from §3 Phase 1; CI after §3 Phase 4 | required after §3 Phase 4 | logic regressions on the risks in §2                                                                                                                                       |
-| e2e on critical flows | —                                          | excluded                  | Would catch broken critical user paths end-to-end. Deliberately not adopted (§7); the accepted consequence is that no gate exercises the browser-side of the approval flow |
-| post-edit hook        | local (agent loop)                         | optional                  | regressions at edit time. Not configured by this rollout                                                                                                                   |
-| pre-prod smoke        | between merge and prod                     | optional                  | environment-specific failures                                                                                                                                              |
+| Gate                  | Where                                                                                  | Required?                             | Catches                                                                                                                                                                                                                               |
+| --------------------- | -------------------------------------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| lint                  | local + CI                                                                             | required (wired)                      | syntactic drift, lint-rule violations                                                                                                                                                                                                 |
+| build                 | CI                                                                                     | required (wired)                      | build-breaking and configuration errors                                                                                                                                                                                               |
+| typecheck             | local + CI                                                                             | required (wired)                      | type drift — gating in CI since 2026-08-16 (`ae5333c`), predating this phase                                                                                                                                                          |
+| unit                  | local (pre-commit, post-edit, via `vitest related`) + CI (full unit suite, §3 Phase 4) | required (wired)                      | logic regressions on the risks in §2, DB-independent subset (4 files)                                                                                                                                                                 |
+| integration           | local only (pre-push, §3 Phase 4)                                                      | required locally; not CI-gated        | logic regressions on the risks in §2 that need a real database. Not CI-gated because the only Supabase reachable from CI is the hosted production project — unsafe for a suite that signs in as hardcoded fake users and mutates rows |
+| e2e on critical flows | CI (`.github/workflows/playwright.yml`, separate workflow, post-deploy)                | automated, non-blocking (post-deploy) | Broken critical user paths end-to-end. Runs via `workflow_run` after `CI` succeeds on `main` — i.e. after `deploy` has already shipped — so it is a post-deploy check, not a pre-deploy gate                                          |
+| post-edit hook        | local (agent loop)                                                                     | required (wired)                      | regressions at edit time. Configured in `.claude/settings.json`: `eslint --fix`, `npm run typecheck`, `vitest related --run`                                                                                                          |
+| pre-push              | local                                                                                  | required after §3 Phase 4             | integration-test regressions before they leave the machine; hard-fails with an actionable message rather than silently skipping when local Supabase isn't reachable                                                                   |
+| pre-prod smoke        | between merge and prod                                                                 | optional                              | environment-specific failures                                                                                                                                                                                                         |
 
 ## 6. Cookbook Patterns
 

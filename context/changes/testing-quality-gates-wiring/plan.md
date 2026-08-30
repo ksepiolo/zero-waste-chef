@@ -377,22 +377,22 @@ Not applicable — no data model or schema changes in this phase.
 
 #### Automated
 
-- [x] 2.1 `.husky/pre-push` is executable
-- [x] 2.2 `.husky/pre-push` parses as valid POSIX shell
+- [x] 2.1 `.husky/pre-push` is executable — 1ca031b
+- [x] 2.2 `.husky/pre-push` parses as valid POSIX shell — 1ca031b
 
 #### Manual
 
-- [x] 2.3 Push blocked with actionable message when Supabase is stopped
-- [x] 2.4 Push runs full suite for real (no skip lines) when Supabase is up
+- [x] 2.3 Push blocked with actionable message when Supabase is stopped — 1ca031b
+- [x] 2.4 Push runs full suite for real (no skip lines) when Supabase is up — 1ca031b
 - [x] 2.5 Push blocked on a deliberately-broken integration test, then
-      reverted
+      reverted — 1ca031b
 
 ### Phase 3: Quality-gates documentation sync
 
 #### Automated
 
-- [ ] 3.1 `npx prettier --check context/foundation/test-plan.md` passes
+- [x] 3.1 `npx prettier --check context/foundation/test-plan.md` passes
 
 #### Manual
 
-- [ ] 3.2 §5 table reviewed top to bottom, no stale rows remain
+- [x] 3.2 §5 table reviewed top to bottom, no stale rows remain
