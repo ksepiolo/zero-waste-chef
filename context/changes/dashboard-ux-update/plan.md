@@ -433,30 +433,30 @@ Not applicable — no data model or schema changes.
 
 #### Automated
 
-- [x] 2.1 Type checking passes: `npm run typecheck`
-- [x] 2.2 Linting passes: `npm run lint`
-- [x] 2.3 Build succeeds: `npm run build`
+- [x] 2.1 Type checking passes: `npm run typecheck` — d0ecf86
+- [x] 2.2 Linting passes: `npm run lint` — d0ecf86
+- [x] 2.3 Build succeeds: `npm run build` — d0ecf86
 
 #### Manual
 
-- [x] 2.4 Dropdown opens with "Sign out" item; keyboard navigation works
-- [x] 2.5 Sign out lands on `/`; `/inventory` afterward redirects to `/auth/signin`
-- [x] 2.6 Offline sign-out attempt surfaces a toast error, not a silent failure
+- [x] 2.4 Dropdown opens with "Sign out" item; keyboard navigation works — d0ecf86
+- [x] 2.5 Sign out lands on `/`; `/inventory` afterward redirects to `/auth/signin` — d0ecf86
+- [x] 2.6 Offline sign-out attempt surfaces a toast error, not a silent failure — d0ecf86
 
 ### Phase 3: Restyle InventoryPanel
 
 #### Automated
 
-- [ ] 3.1 Type checking passes: `npm run typecheck`
-- [ ] 3.2 Linting passes: `npm run lint`
-- [ ] 3.3 Build succeeds: `npm run build`
+- [x] 3.1 Type checking passes: `npm run typecheck`
+- [x] 3.2 Linting passes: `npm run lint`
+- [x] 3.3 Build succeeds: `npm run build`
 
 #### Manual
 
-- [ ] 3.4 Page visually matches the Figma frame (layout, add-row, pills, pencil,
+- [x] 3.4 Page visually matches the Figma frame (layout, add-row, pills, pencil,
       selects, button)
-- [ ] 3.5 Add / delete / generate / approve flows all still work end-to-end
-- [ ] 3.6 Product secondary text shows `Exp. date: DD.MM.YYYY` format
-- [ ] 3.7 Pills render in new colors and remain mutually exclusive
-- [ ] 3.8 Layout stacks sensibly at a narrow viewport width
-- [ ] 3.9 No console errors/warnings introduced
+- [x] 3.5 Add / delete / generate / approve flows all still work end-to-end
+- [x] 3.6 Product secondary text shows `Exp. date: DD.MM.YYYY` format
+- [x] 3.7 Pills render in new colors and remain mutually exclusive
+- [x] 3.8 Layout stacks sensibly at a narrow viewport width
+- [x] 3.9 No console errors/warnings introduced
