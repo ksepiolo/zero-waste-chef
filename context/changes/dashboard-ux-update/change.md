@@ -1,7 +1,7 @@
 ---
 change_id: dashboard-ux-update
 title: Redesign inventory.astro as pantry/recipe-settings view per Figma
-status: implementing
+status: implemented
 created: 2026-08-30
 updated: 2026-08-30
 archived_at: null

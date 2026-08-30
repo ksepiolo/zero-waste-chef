@@ -447,16 +447,16 @@ Not applicable — no data model or schema changes.
 
 #### Automated
 
-- [x] 3.1 Type checking passes: `npm run typecheck`
-- [x] 3.2 Linting passes: `npm run lint`
-- [x] 3.3 Build succeeds: `npm run build`
+- [x] 3.1 Type checking passes: `npm run typecheck` — 43aaef3
+- [x] 3.2 Linting passes: `npm run lint` — 43aaef3
+- [x] 3.3 Build succeeds: `npm run build` — 43aaef3
 
 #### Manual
 
 - [x] 3.4 Page visually matches the Figma frame (layout, add-row, pills, pencil,
-      selects, button)
-- [x] 3.5 Add / delete / generate / approve flows all still work end-to-end
-- [x] 3.6 Product secondary text shows `Exp. date: DD.MM.YYYY` format
-- [x] 3.7 Pills render in new colors and remain mutually exclusive
-- [x] 3.8 Layout stacks sensibly at a narrow viewport width
-- [x] 3.9 No console errors/warnings introduced
+      selects, button) — 43aaef3
+- [x] 3.5 Add / delete / generate / approve flows all still work end-to-end — 43aaef3
+- [x] 3.6 Product secondary text shows `Exp. date: DD.MM.YYYY` format — 43aaef3
+- [x] 3.7 Pills render in new colors and remain mutually exclusive — 43aaef3
+- [x] 3.8 Layout stacks sensibly at a narrow viewport width — 43aaef3
+- [x] 3.9 No console errors/warnings introduced — 43aaef3
