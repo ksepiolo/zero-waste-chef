@@ -369,9 +369,9 @@ Not applicable — no data model or schema changes in this phase.
 
 #### Manual
 
-- [ ] 1.5 `test:unit` step runs and passes on GitHub Actions
-- [ ] 1.6 Deliberately-broken unit test fails the `ci` job, then reverted
-- [ ] 1.7 `deploy` job still only fires after full `ci` job passes
+- [x] 1.5 `test:unit` step runs and passes on GitHub Actions
+- [x] 1.6 Deliberately-broken unit test fails the `ci` job, then reverted
+- [x] 1.7 `deploy` job still only fires after full `ci` job passes
 
 ### Phase 2: Pre-push integration gate
 
