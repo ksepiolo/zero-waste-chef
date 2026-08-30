@@ -404,13 +404,13 @@ Not applicable — no data model or persisted state changes.
 
 #### Automated
 
-- [x] 3.1 Type checking passes: `npm run typecheck`
-- [x] 3.2 Linting passes: `npm run lint`
-- [x] 3.3 Build succeeds: `npm run build`
+- [x] 3.1 Type checking passes: `npm run typecheck` — 009e0ee
+- [x] 3.2 Linting passes: `npm run lint` — 009e0ee
+- [x] 3.3 Build succeeds: `npm run build` — 009e0ee
 
 #### Manual
 
-- [x] 3.4 Hero visually matches Figma frame
-- [x] 3.5 "Get started" navigates to `/auth/signup`
-- [x] 3.6 Responsive at mobile/tablet/desktop widths
-- [x] 3.7 Hero image is optimized, not served as raw 2.2MB PNG
+- [x] 3.4 Hero visually matches Figma frame — 009e0ee
+- [x] 3.5 "Get started" navigates to `/auth/signup` — 009e0ee
+- [x] 3.6 Responsive at mobile/tablet/desktop widths — 009e0ee
+- [x] 3.7 Hero image is optimized, not served as raw 2.2MB PNG — 009e0ee
