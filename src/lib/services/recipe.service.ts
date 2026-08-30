@@ -17,7 +17,11 @@ import { ServiceError, type ServiceErrorKind } from "./service-error";
 // Paid. Supports json_schema strict mode. Was on "google/gemma-4-26b-a4b-it:free" —
 // switched off after hitting OpenRouter's shared upstream-provider rate limit
 // (429, "upstream_provider_shared_pool"), not fixable by OpenRouter account credits.
-const MODEL = "google/gemini-2.0-flash-001";
+// "google/gemini-2.0-flash-001" was tried next but is gone from OpenRouter's catalog
+// (404 "No endpoints found"). This is OpenRouter's cheapest model with confirmed
+// structured-output support as of 2026-08-30 ($0.10/M input, $0.40/M output) —
+// an unconfirmed cheaper model risks reintroducing unusable_model_response failures.
+const MODEL = "google/gemini-2.5-flash-lite";
 const GENERATION_TIMEOUT_MS = 30_000;
 const MAX_PROMPT_PRODUCTS = 25;
 
