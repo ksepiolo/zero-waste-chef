@@ -3,9 +3,13 @@ import { UserMenu } from "@/components/nav/user-menu";
 
 interface Props {
   email: string;
+  current: "inventory" | "recipes";
 }
 
-const { email } = Astro.props;
+const { email, current } = Astro.props;
+
+const activeClass = "border-brand-green text-brand-ink border-b-[3px]";
+const inactiveClass = "text-brand-muted hover:text-brand-ink";
 ---
 
 <div class="border-brand-border border-b pb-4">
@@ -40,11 +44,16 @@ const { email } = Astro.props;
       <nav class="flex items-center gap-6">
         <a
           href="/inventory"
-          class="font-body border-brand-green text-brand-ink border-b-[3px] pb-4 text-sm font-semibold"
+          class="font-body pb-4 text-sm font-semibold"
+          class:list={[current === "inventory" ? activeClass : inactiveClass]}
         >
           Moja spiżarnia
         </a>
-        <a href="/recipes" class="font-body text-brand-muted hover:text-brand-ink pb-4 text-sm font-semibold">
+        <a
+          href="/recipes"
+          class="font-body pb-4 text-sm font-semibold"
+          class:list={[current === "recipes" ? activeClass : inactiveClass]}
+        >
           Historia przepisów
         </a>
       </nav>

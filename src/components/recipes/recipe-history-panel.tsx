@@ -1,9 +1,7 @@
 import { useRef, useState } from "react";
 import type { Recipe, RecipePage } from "@/types";
 import { RECIPES_PAGE_SIZE } from "@/types";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { ChevronDown } from "lucide-react";
+import { Dialog } from "radix-ui";
 import { toast } from "sonner";
 
 interface Props {
@@ -28,7 +26,7 @@ export function RecipeHistoryPanel({ initialPage, loadError }: Props) {
   const [pageData, setPageData] = useState<RecipePage>(initialPage);
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
   // isLoading drives the UI; this mirrors it synchronously so two clicks landing in the
   // same frame — before the re-render — still cannot start two overlapping fetches.
   const inFlight = useRef(false);
@@ -56,8 +54,8 @@ export function RecipeHistoryPanel({ initialPage, loadError }: Props) {
       const json = (await res.json()) as RecipePage;
       setPageData(json);
       setPage(next);
-      // The expanded row is gone from the DOM after a page turn; drop the reference.
-      setExpandedId(null);
+      // The open dialog's recipe is gone from the DOM after a page turn; drop the reference.
+      setOpenId(null);
     } catch {
       toast.error("Network error. Please try again.");
     } finally {
@@ -67,124 +65,132 @@ export function RecipeHistoryPanel({ initialPage, loadError }: Props) {
   }
 
   if (loadError) {
-    return <p className="text-sm text-red-300">Couldn&apos;t load your recipes — refresh to try again</p>;
+    return <p className="text-brand-danger text-sm">Couldn&apos;t load your recipes — refresh to try again</p>;
   }
 
   return (
     <div className="space-y-6">
       {/* Live region so a page turn is announced: the container must be in the DOM before
-          its contents swap, which is why it wraps both branches rather than the list only. */}
+          its contents swap, which is why it wraps both branches rather than the grid only. */}
       <div aria-live="polite" aria-busy={isLoading}>
         {pageData.recipes.length === 0 ? (
           // Kept inside the shell rather than an early return: a page that has gone empty
           // because rows were removed still needs its Previous button to get back.
-          <p className="text-sm text-white/50">
+          <p className="text-brand-muted text-sm">
             {page === 1
               ? "No recipes yet — approved recipes will appear here"
               : "Nothing on this page — use Previous to get back to your recipes"}
           </p>
         ) : (
-          <ul className="space-y-2">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
             {pageData.recipes.map((recipe) => (
-              <RecipeEntry
+              <RecipeCard
                 key={recipe.id}
                 recipe={recipe}
-                isExpanded={expandedId === recipe.id}
-                onToggle={() => {
-                  setExpandedId((prev) => (prev === recipe.id ? null : recipe.id));
+                isOpen={openId === recipe.id}
+                onOpenChange={(open) => {
+                  setOpenId(open ? recipe.id : null);
                 }}
               />
             ))}
-          </ul>
+          </div>
         )}
       </div>
 
       {showPagination && (
         <div className="flex items-center justify-between">
-          <Button
+          <button
+            type="button"
             // Clamped, not just `page - 1`: if the total shrank while the user sat on a far
             // page, every page between here and totalPages is also gone, and goToPage
             // rejects an out-of-range target — so step straight back to the last real page.
             onClick={() => void goToPage(Math.min(page - 1, totalPages))}
             aria-disabled={page <= 1 || isLoading}
-            className="border border-white/20 bg-white/10 text-white hover:bg-white/20 aria-disabled:pointer-events-none aria-disabled:opacity-50"
+            className="border-brand-border text-brand-ink hover:bg-brand-surface rounded-lg border bg-white px-4 py-2 text-sm font-medium aria-disabled:pointer-events-none aria-disabled:opacity-50"
           >
             Previous
-          </Button>
-          <span className="text-xs text-white/60">
+          </button>
+          <span className="text-brand-muted text-xs">
             Page {page} of {totalPages}
           </span>
-          <Button
+          <button
+            type="button"
             onClick={() => void goToPage(page + 1)}
             aria-disabled={page >= totalPages || isLoading}
-            className="border border-white/20 bg-white/10 text-white hover:bg-white/20 aria-disabled:pointer-events-none aria-disabled:opacity-50"
+            className="border-brand-border text-brand-ink hover:bg-brand-surface rounded-lg border bg-white px-4 py-2 text-sm font-medium aria-disabled:pointer-events-none aria-disabled:opacity-50"
           >
             Next
-          </Button>
+          </button>
         </div>
       )}
     </div>
   );
 }
 
-interface EntryProps {
+interface CardProps {
   recipe: Recipe;
-  isExpanded: boolean;
-  onToggle: () => void;
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-function RecipeEntry({ recipe, isExpanded, onToggle }: EntryProps) {
-  const panelId = `recipe-panel-${recipe.id}`;
+function RecipeCard({ recipe, isOpen, onOpenChange }: CardProps) {
   // approveRecipe joins the AI's string[] with "\n" into a single TEXT column; this is
   // the matching split on the read side.
   const steps = recipe.instructions.split("\n").filter((step) => step.trim() !== "");
 
   return (
-    <li className="rounded-xl border border-white/10 bg-white/5">
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={isExpanded}
-        aria-controls={panelId}
-        className="flex w-full items-center justify-between px-4 py-3 text-left"
-      >
-        <span className="text-sm font-medium text-white">{recipe.title}</span>
-        <span className="flex items-center gap-3">
-          <span className="text-xs text-white/60">{formatDate(recipe.created_at)}</span>
-          <ChevronDown className={cn("size-4 text-white/40 transition-transform", isExpanded && "rotate-180")} />
-        </span>
-      </button>
-
-      {/* Always mounted so the button's aria-controls always resolves; `hidden` keeps the
-          collapsed body out of the a11y tree and out of tab order. */}
-      <div id={panelId} hidden={!isExpanded} className="space-y-4 border-t border-white/10 px-4 py-3">
-        <div>
-          <h3 className="mb-1 text-xs font-semibold tracking-wide text-white/70 uppercase">Ingredients</h3>
-          <ul className="list-disc space-y-1 pl-5 text-sm text-white/80">
-            {recipe.ingredients.map((ingredient, i) => (
-              <li key={i}>{ingredient}</li>
-            ))}
-          </ul>
-        </div>
-
-        <div>
-          <h3 className="mb-1 text-xs font-semibold tracking-wide text-white/70 uppercase">Steps</h3>
-          <ol className="list-decimal space-y-1 pl-5 text-sm text-white/80">
-            {steps.map((step, i) => (
-              <li key={i}>{step}</li>
-            ))}
-          </ol>
-        </div>
-
-        {/* consumed_products is legitimately empty when the used products vanished
-            between generation and approval — omit the whole block, never a bare label. */}
-        {recipe.consumed_products.length > 0 && (
-          <div>
-            <h3 className="mb-1 text-xs font-semibold tracking-wide text-white/70 uppercase">Used</h3>
-            <p className="text-sm text-white/80">{recipe.consumed_products.map((p) => p.name).join(", ")}</p>
-          </div>
-        )}
+    <Dialog.Root open={isOpen} onOpenChange={onOpenChange}>
+      <div className="border-brand-border relative h-[264px] overflow-hidden rounded-[20px] border bg-white">
+        <Dialog.Trigger asChild>
+          <button type="button" className="h-full w-full p-5 text-left">
+            <h3 className="font-display text-brand-ink text-xl">{recipe.title}</h3>
+            <p className="font-body text-brand-muted text-sm">{formatDate(recipe.created_at)}</p>
+            <p className="font-body text-brand-muted mt-3 text-sm font-medium">Ingredients</p>
+            <p className="font-body text-brand-ink line-clamp-5 text-base">{recipe.ingredients.join(", ")}</p>
+          </button>
+        </Dialog.Trigger>
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-14 rounded-b-[20px] bg-gradient-to-t from-white via-white/80 to-transparent"
+        />
       </div>
-    </li>
+
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 bg-black/40" />
+        <Dialog.Content className="border-brand-border fixed top-1/2 left-1/2 max-h-[80vh] w-full max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border bg-white p-6">
+          <Dialog.Title className="font-display text-brand-ink text-xl">{recipe.title}</Dialog.Title>
+          <p className="font-body text-brand-muted mt-1 text-sm">{formatDate(recipe.created_at)}</p>
+
+          <div className="mt-4 space-y-4">
+            <div>
+              <h4 className="text-brand-muted mb-1 text-xs font-semibold tracking-wide uppercase">Ingredients</h4>
+              <ul className="text-brand-ink list-disc space-y-1 pl-5 text-sm">
+                {recipe.ingredients.map((ingredient, i) => (
+                  <li key={i}>{ingredient}</li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="text-brand-muted mb-1 text-xs font-semibold tracking-wide uppercase">Steps</h4>
+              <ol className="text-brand-ink list-decimal space-y-1 pl-5 text-sm">
+                {steps.map((step, i) => (
+                  <li key={i}>{step}</li>
+                ))}
+              </ol>
+            </div>
+
+            {/* consumed_products is legitimately empty when the used products vanished
+                between generation and approval — omit the whole block, never a bare label. */}
+            {recipe.consumed_products.length > 0 && (
+              <div>
+                <h4 className="text-brand-muted mb-1 text-xs font-semibold tracking-wide uppercase">Used</h4>
+                <p className="text-brand-ink text-sm">{recipe.consumed_products.map((p) => p.name).join(", ")}</p>
+              </div>
+            )}
+          </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }
