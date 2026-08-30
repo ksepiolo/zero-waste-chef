@@ -65,6 +65,9 @@ const astroConfig = tseslint.config({
     "astro/no-set-html-directive": "error",
     "astro/no-unused-css-selector": "warn",
     "astro/prefer-class-list-directive": "warn",
+    // astro-eslint-parser doesn't attach a parent to frontmatter-level nodes, which crashes
+    // this rule's checkReturnStatement on any top-level `return` in frontmatter.
+    "@typescript-eslint/no-misused-promises": "off",
   },
 });
 

@@ -377,15 +377,15 @@ Not applicable — no data model or persisted state changes.
 
 #### Automated
 
-- [ ] 1.1 Type checking passes: `npm run typecheck`
-- [ ] 1.2 Linting passes: `npm run lint`
+- [x] 1.1 Type checking passes: `npm run typecheck`
+- [x] 1.2 Linting passes: `npm run lint`
 
 #### Manual
 
-- [ ] 1.3 Fonts applied and loaded on `/` (logged out)
-- [ ] 1.4 Logged-in visit to `/` redirects to `/dashboard`
-- [ ] 1.5 Browser tab title updated
-- [ ] 1.6 No visual regression on `/auth/signin`, `/auth/signup`, `/dashboard`
+- [x] 1.3 Fonts applied and loaded on `/` (logged out)
+- [x] 1.4 Logged-in visit to `/` redirects to `/dashboard`
+- [x] 1.5 Browser tab title updated
+- [x] 1.6 No visual regression on `/auth/signin`, `/auth/signup`, `/dashboard`
 
 ### Phase 2: Topbar redesign
 
