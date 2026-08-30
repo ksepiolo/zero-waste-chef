@@ -12,6 +12,7 @@
     "test": "vitest run",
     "test:unit": "vitest run --exclude \"**/*.integration.test.ts\"",
     "test:watch": "vitest",
+    "test:e2e": "bash scripts/test-e2e.sh",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",

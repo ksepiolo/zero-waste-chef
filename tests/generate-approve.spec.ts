@@ -80,6 +80,12 @@ test("approving a generated recipe removes the used product from inventory and a
   const expiryDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
   await page.goto("/inventory");
+  // InventoryPanel is a client:load island: the SSR markup is interactive-looking (visible,
+  // enabled) before React attaches its submit handler. Filling and clicking faster than
+  // hydration completes falls through to the native form submit — a GET with the values as a
+  // query string — silently dropping the add. Wait for the network to settle (hydration's JS
+  // chunks finish loading) before interacting.
+  await page.waitForLoadState("networkidle");
   await page.getByLabel("Product name").fill(PRODUCT_NAME);
   await page.getByLabel("Expiry date").fill(expiryDate);
   await page.getByRole("button", { name: "Add", exact: true }).click();

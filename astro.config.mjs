@@ -9,9 +9,28 @@ import cloudflare from "@astrojs/cloudflare";
 // https://astro.build/config
 export default defineConfig({
   output: "server",
+  // The dev toolbar is a fixed-position overlay that intercepts pointer events at
+  // click coordinates under real automation, causing Playwright click retries to
+  // time out (`<astro-dev-toolbar> intercepts pointer events`). Off only for
+  // `npm run dev:e2e`; unaffected for plain `npm run dev`.
+  devToolbar: { enabled: process.env.npm_lifecycle_event !== "dev:e2e" },
   integrations: [react(), sitemap()],
   vite: {
     plugins: [tailwindcss()],
+    // `sonner` is only ever imported by client-hydrated islands, so Vite's initial SSR dep
+    // crawl at server start misses it. The first request that renders it then triggers a
+    // mid-session re-optimize + reload (see Vite's "Automatic Dependency Discovery"), which
+    // races real requests and hands them a stale React copy — "Invalid hook call" /
+    // "Cannot read properties of null (reading 'useState')" in Toaster. Forcing it into the
+    // upfront optimization pass for both environments removes the race.
+    optimizeDeps: {
+      include: ["sonner", "astro/env/runtime"],
+    },
+    ssr: {
+      optimizeDeps: {
+        include: ["sonner", "astro/env/runtime"],
+      },
+    },
   },
   adapter: cloudflare(),
   env: {
