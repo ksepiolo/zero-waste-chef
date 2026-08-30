@@ -12,8 +12,8 @@ export default defineConfig({
   // The dev toolbar is a fixed-position overlay that intercepts pointer events at
   // click coordinates under real automation, causing Playwright click retries to
   // time out (`<astro-dev-toolbar> intercepts pointer events`). Off only for
-  // `npm run dev:e2e`; unaffected for plain `npm run dev`.
-  devToolbar: { enabled: process.env.npm_lifecycle_event !== "dev:e2e" },
+  // `npm run dev:e2e` (which sets E2E=true); unaffected for plain `npm run dev`.
+  devToolbar: { enabled: process.env.E2E !== "true" },
   integrations: [react(), sitemap()],
   vite: {
     plugins: [tailwindcss()],
