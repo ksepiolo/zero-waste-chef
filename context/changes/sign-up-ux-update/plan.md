@@ -264,15 +264,15 @@ Not applicable — no data model or schema changes.
 
 #### Automated
 
-- [ ] 1.1 Type checking passes: `npm run typecheck`
-- [ ] 1.2 Linting passes: `npm run lint`
+- [x] 1.1 Type checking passes: `npm run typecheck`
+- [x] 1.2 Linting passes: `npm run lint`
 
 #### Manual
 
-- [ ] 1.3 FormField renders with no left icon, white background, correct border color, and legible error state
-- [ ] 1.4 PasswordToggle icon is visible and toggles password visibility on a white input
-- [ ] 1.5 SubmitButton renders brand-green, full-width, with working pending/spinner state
-- [ ] 1.6 ServerError banner is legible on white background when an error is present
+- [x] 1.3 FormField renders with no left icon, white background, correct border color, and legible error state
+- [x] 1.4 PasswordToggle icon is visible and toggles password visibility on a white input
+- [x] 1.5 SubmitButton renders brand-green, full-width, with working pending/spinner state
+- [x] 1.6 ServerError banner is legible on white background when an error is present
 
 ### Phase 2: Sign-up page
 

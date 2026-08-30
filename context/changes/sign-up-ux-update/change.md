@@ -1,7 +1,7 @@
 ---
 change_id: sign-up-ux-update
 title: Update sign-up and sign-in forms to match Figma design
-status: planned
+status: implementing
 created: 2026-08-30
 updated: 2026-08-30
 archived_at: null

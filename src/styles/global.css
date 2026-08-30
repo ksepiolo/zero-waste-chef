@@ -115,6 +115,7 @@
   --color-brand-muted-2: #a1ada9;
   --color-brand-surface: #f8fafb;
   --color-brand-border: #e7e7e7;
+  --color-brand-input-border: #b9b6b6;
   --font-display: "Playfair Display", serif;
   /* Named --font-body, not the reserved --font-sans: Tailwind v4 Preflight
      consumes --font-sans as the sitewide default body font, so overriding it
