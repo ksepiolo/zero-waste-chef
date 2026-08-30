@@ -390,23 +390,23 @@ export function InventoryPanel({ initialProducts }: Props) {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{recipe?.title}</AlertDialogTitle>
+            <AlertDialogTitle className="font-display text-brand-ink">{recipe?.title}</AlertDialogTitle>
           </AlertDialogHeader>
 
           <div className="max-h-[50vh] space-y-3 overflow-y-auto">
-            <ul className="list-disc space-y-1 pl-5 text-sm">
+            <ul className="text-brand-ink list-disc space-y-1 pl-5 text-sm">
               {recipe?.ingredients.map((ingredient, i) => (
                 <li key={i}>{ingredient}</li>
               ))}
             </ul>
-            <ol className="list-decimal space-y-1 pl-5 text-sm">
+            <ol className="text-brand-ink list-decimal space-y-1 pl-5 text-sm">
               {recipe?.instructions.map((step, i) => (
                 <li key={i}>{step}</li>
               ))}
             </ol>
           </div>
 
-          <AlertDialogDescription>
+          <AlertDialogDescription className="text-brand-muted">
             Will remove from inventory:{" "}
             {products
               .filter((p) => recipe?.used_product_ids.includes(p.id))
@@ -415,11 +415,25 @@ export function InventoryPanel({ initialProducts }: Props) {
           </AlertDialogDescription>
 
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={reset}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => void handleGenerate()} disabled={isGenerating || isApproving}>
+            <AlertDialogCancel
+              onClick={reset}
+              className="border-brand-input-border text-brand-ink hover:bg-brand-surface!"
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              variant="outline"
+              onClick={() => void handleGenerate()}
+              disabled={isGenerating || isApproving}
+              className="border-brand-green text-brand-green hover:bg-brand-green/10! hover:text-brand-green!"
+            >
               Generate Different Recipe
             </AlertDialogAction>
-            <Button onClick={() => void handleApprove()} disabled={isApproving}>
+            <Button
+              onClick={() => void handleApprove()}
+              disabled={isApproving}
+              className="bg-brand-green hover:bg-brand-green/90 text-white"
+            >
               {isApproving ? (
                 <>
                   <Loader2 className="mr-2 size-4 animate-spin" />
