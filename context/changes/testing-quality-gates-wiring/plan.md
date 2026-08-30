@@ -362,29 +362,29 @@ Not applicable — no data model or schema changes in this phase.
 
 #### Automated
 
-- [x] 1.1 `npm run test:unit` exits 0, exactly 4 files ran
-- [x] 1.2 `npm run typecheck` passes
-- [x] 1.3 `npm run lint` passes
-- [x] 1.4 `.github/workflows/ci.yml` is valid YAML
+- [x] 1.1 `npm run test:unit` exits 0, exactly 4 files ran — 7cb1644
+- [x] 1.2 `npm run typecheck` passes — 7cb1644
+- [x] 1.3 `npm run lint` passes — 7cb1644
+- [x] 1.4 `.github/workflows/ci.yml` is valid YAML — 7cb1644
 
 #### Manual
 
-- [x] 1.5 `test:unit` step runs and passes on GitHub Actions
-- [x] 1.6 Deliberately-broken unit test fails the `ci` job, then reverted
-- [x] 1.7 `deploy` job still only fires after full `ci` job passes
+- [x] 1.5 `test:unit` step runs and passes on GitHub Actions — 7cb1644
+- [x] 1.6 Deliberately-broken unit test fails the `ci` job, then reverted — 7cb1644
+- [x] 1.7 `deploy` job still only fires after full `ci` job passes — 7cb1644
 
 ### Phase 2: Pre-push integration gate
 
 #### Automated
 
-- [ ] 2.1 `.husky/pre-push` is executable
-- [ ] 2.2 `.husky/pre-push` parses as valid POSIX shell
+- [x] 2.1 `.husky/pre-push` is executable
+- [x] 2.2 `.husky/pre-push` parses as valid POSIX shell
 
 #### Manual
 
-- [ ] 2.3 Push blocked with actionable message when Supabase is stopped
-- [ ] 2.4 Push runs full suite for real (no skip lines) when Supabase is up
-- [ ] 2.5 Push blocked on a deliberately-broken integration test, then
+- [x] 2.3 Push blocked with actionable message when Supabase is stopped
+- [x] 2.4 Push runs full suite for real (no skip lines) when Supabase is up
+- [x] 2.5 Push blocked on a deliberately-broken integration test, then
       reverted
 
 ### Phase 3: Quality-gates documentation sync
