@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "astro dev",
-    "dev:e2e": "astro dev --mode e2e",
+    "dev:e2e": "E2E=true astro dev --mode e2e",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
@@ -12,6 +12,7 @@
     "test": "vitest run",
     "test:unit": "vitest run --exclude \"**/*.integration.test.ts\"",
     "test:watch": "vitest",
+    "test:e2e": "bash scripts/test-e2e.sh",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
