@@ -377,28 +377,28 @@ Not applicable — no data model or persisted state changes.
 
 #### Automated
 
-- [x] 1.1 Type checking passes: `npm run typecheck`
-- [x] 1.2 Linting passes: `npm run lint`
+- [x] 1.1 Type checking passes: `npm run typecheck` — ce79d2f
+- [x] 1.2 Linting passes: `npm run lint` — ce79d2f
 
 #### Manual
 
-- [x] 1.3 Fonts applied and loaded on `/` (logged out)
-- [x] 1.4 Logged-in visit to `/` redirects to `/dashboard`
-- [x] 1.5 Browser tab title updated
-- [x] 1.6 No visual regression on `/auth/signin`, `/auth/signup`, `/dashboard`
+- [x] 1.3 Fonts applied and loaded on `/` (logged out) — ce79d2f
+- [x] 1.4 Logged-in visit to `/` redirects to `/dashboard` — ce79d2f
+- [x] 1.5 Browser tab title updated — ce79d2f
+- [x] 1.6 No visual regression on `/auth/signin`, `/auth/signup`, `/dashboard` — ce79d2f
 
 ### Phase 2: Topbar redesign
 
 #### Automated
 
-- [ ] 2.1 Type checking passes: `npm run typecheck`
-- [ ] 2.2 Linting passes: `npm run lint`
+- [x] 2.1 Type checking passes: `npm run typecheck`
+- [x] 2.2 Linting passes: `npm run lint`
 
 #### Manual
 
-- [ ] 2.3 Topbar matches Figma (logo, wordmark, CTA buttons, colors, fonts)
-- [ ] 2.4 "Sign in" and "Create free account" navigate correctly
-- [ ] 2.5 Topbar doesn't overflow/wrap at mobile width
+- [x] 2.3 Topbar matches Figma (logo, wordmark, CTA buttons, colors, fonts)
+- [x] 2.4 "Sign in" and "Create free account" navigate correctly
+- [x] 2.5 Topbar doesn't overflow/wrap at mobile width
 
 ### Phase 3: Hero section rewrite
 

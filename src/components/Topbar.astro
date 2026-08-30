@@ -1,37 +1,46 @@
 ---
-const { user } = Astro.locals;
+
 ---
 
-<div
-  class="mb-4 flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80"
->
-  {
-    user ? (
-      <>
-        <span class="text-blue-100/70">{user.email}</span>
-        <div class="flex items-center gap-3">
-          <a href="/dashboard" class="text-purple-300 transition-colors hover:text-purple-100 hover:underline">
-            Dashboard
-          </a>
-          <form method="POST" action="/api/auth/signout">
-            <button type="submit" class="text-purple-300 transition-colors hover:text-purple-100 hover:underline">
-              Sign out
-            </button>
-          </form>
-        </div>
-      </>
-    ) : (
-      <>
-        <span class="text-blue-100/70">Not signed in</span>
-        <div class="flex gap-3">
-          <a href="/auth/signin" class="text-purple-300 transition-colors hover:text-purple-100 hover:underline">
-            Sign in
-          </a>
-          <a href="/auth/signup" class="text-purple-300 transition-colors hover:text-purple-100 hover:underline">
-            Sign up
-          </a>
-        </div>
-      </>
-    )
-  }
+<div class="flex flex-wrap items-center justify-between gap-y-3">
+  <div class="flex items-center gap-2">
+    <span class="bg-brand-surface text-brand-ink flex h-10 w-10 items-center justify-center rounded-full">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path
+          d="M17 21a1 1 0 0 0 1-1v-5.35c0-.457.316-.844.727-1.041a4 4 0 0 0-2.134-7.589 5 5 0 0 0-9.186 0 4 4 0 0 0-2.134 7.588c.411.198.727.585.727 1.041V20a1 1 0 0 0 1 1Z"
+        ></path>
+        <path d="M6 17h12"></path>
+      </svg>
+    </span>
+    <span class="font-logo text-brand-ink text-[22px] tracking-[-0.02em]">
+      <span class="font-extrabold">Zero</span><span class="font-medium">Waste</span><span class="font-extralight"
+        >Chef</span
+      >
+    </span>
+  </div>
+
+  <div class="flex items-center gap-3">
+    <a
+      href="/auth/signin"
+      class="font-body border-brand-green text-brand-green hover:bg-brand-green/10 inline-flex h-11 items-center justify-center rounded-lg border px-4 text-sm font-semibold whitespace-nowrap transition-colors"
+    >
+      Sign in
+    </a>
+    <a
+      href="/auth/signup"
+      class="font-body bg-brand-green hover:bg-brand-green/90 inline-flex h-11 items-center justify-center rounded-lg px-4 text-sm font-semibold whitespace-nowrap text-white transition-colors"
+    >
+      Create free account
+    </a>
+  </div>
 </div>
