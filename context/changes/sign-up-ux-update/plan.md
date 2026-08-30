@@ -278,31 +278,31 @@ Not applicable — no data model or schema changes.
 
 #### Automated
 
-- [x] 2.1 Type checking passes: `npm run typecheck`
-- [x] 2.2 Linting passes: `npm run lint`
+- [x] 2.1 Type checking passes: `npm run typecheck` — 3ee6f98
+- [x] 2.2 Linting passes: `npm run lint` — 3ee6f98
 
 #### Manual
 
-- [x] 2.3 /auth/signup visually matches the Figma sign-up frame
-- [x] 2.4 Submitting valid email/password/confirm-password redirects to /auth/confirm-email
-- [x] 2.5 Client-side validation errors render legibly on the new light theme
-- [x] 2.6 Server-side error renders via the restyled ServerError banner
-- [x] 2.7 Password and confirm-password visibility toggles work
+- [x] 2.3 /auth/signup visually matches the Figma sign-up frame — 3ee6f98
+- [x] 2.4 Submitting valid email/password/confirm-password redirects to /auth/confirm-email — 3ee6f98
+- [x] 2.5 Client-side validation errors render legibly on the new light theme — 3ee6f98
+- [x] 2.6 Server-side error renders via the restyled ServerError banner — 3ee6f98
+- [x] 2.7 Password and confirm-password visibility toggles work — 3ee6f98
 
 ### Phase 3: Sign-in page (adapted)
 
 #### Automated
 
-- [ ] 3.1 Type checking passes: `npm run typecheck`
-- [ ] 3.2 Linting passes: `npm run lint`
+- [x] 3.1 Type checking passes: `npm run typecheck`
+- [x] 3.2 Linting passes: `npm run lint`
 
 #### Manual
 
-- [ ] 3.3 /auth/signin reads as a visually consistent sibling of /auth/signup with sign-in-appropriate copy
-- [ ] 3.4 Submitting valid credentials redirects to /dashboard
-- [ ] 3.5 Client-side validation errors render legibly
-- [ ] 3.6 Server-side error renders via the restyled ServerError banner
-- [ ] 3.7 Password visibility toggle works
+- [x] 3.3 /auth/signin reads as a visually consistent sibling of /auth/signup with sign-in-appropriate copy
+- [x] 3.4 Submitting valid credentials redirects to /dashboard
+- [x] 3.5 Client-side validation errors render legibly
+- [x] 3.6 Server-side error renders via the restyled ServerError banner
+- [x] 3.7 Password visibility toggle works
 
 ### Phase 4: Confirm-email page
 
