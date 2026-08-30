@@ -209,13 +209,13 @@ None — no schema or data changes.
 
 #### Automated
 
-- [x] 3.1 Type checking passes: `npm run typecheck`
-- [x] 3.2 Linting passes: `npm run lint`
-- [x] 3.3 Build succeeds: `npm run build`
+- [x] 3.1 Type checking passes: `npm run typecheck` — 93b17a5
+- [x] 3.2 Linting passes: `npm run lint` — 93b17a5
+- [x] 3.3 Build succeeds: `npm run build` — 93b17a5
 
 #### Manual
 
-- [x] 3.4 2-column desktop / 1-column narrow-viewport grid renders with clipped ingredient preview and visible bottom fade
-- [x] 3.5 Clicking a card opens a dialog with full ingredients/steps/used-products; closes via overlay click or Escape
-- [x] 3.6 Prev/Next pagination works correctly with 21+ recipes, matching prior behavior
-- [x] 3.7 Empty-state and load-error messages each render distinctly and correctly styled
+- [x] 3.4 2-column desktop / 1-column narrow-viewport grid renders with clipped ingredient preview and visible bottom fade — 93b17a5
+- [x] 3.5 Clicking a card opens a dialog with full ingredients/steps/used-products; closes via overlay click or Escape — 93b17a5
+- [x] 3.6 Prev/Next pagination works correctly with 21+ recipes, matching prior behavior — 93b17a5
+- [x] 3.7 Empty-state and load-error messages each render distinctly and correctly styled — 93b17a5

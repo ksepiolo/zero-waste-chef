@@ -1,7 +1,7 @@
 ---
 change_id: recipe-history-ux-update
 title: Update recipes page into a recipe history view
-status: implementing
+status: implemented
 created: 2026-08-30
 updated: 2026-08-30
 archived_at: null
