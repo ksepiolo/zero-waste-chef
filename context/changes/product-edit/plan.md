@@ -230,36 +230,36 @@ None — no schema or RLS changes required.
 
 #### Automated
 
-- [x] 1.1 Type checking passes: `npm run typecheck`
-- [x] 1.2 Linting passes: `npm run lint`
-- [x] 1.3 Unit tests pass: `npx vitest run src/lib/services/product.service.test.ts`
-- [x] 1.4 Full unit suite still green: `npm run test:unit`
-- [x] 1.5 Cross-user isolation integration test passes: `npx vitest run src/pages/api/products/[id].integration.test.ts`
+- [x] 1.1 Type checking passes: `npm run typecheck` — 56cdaf6
+- [x] 1.2 Linting passes: `npm run lint` — 56cdaf6
+- [x] 1.3 Unit tests pass: `npx vitest run src/lib/services/product.service.test.ts` — 56cdaf6
+- [x] 1.4 Full unit suite still green: `npm run test:unit` — 56cdaf6
+- [x] 1.5 Cross-user isolation integration test passes: `npx vitest run src/pages/api/products/[id].integration.test.ts` — 56cdaf6
 
 #### Manual
 
-- [x] 1.6 Valid `PATCH` on own product returns 200 with updated, re-classified product
-- [x] 1.7 Invalid `PATCH` body (empty name / past date) returns 400 with the same message `POST` would give
-- [x] 1.8 `PATCH` on a foreign product returns 404 and leaves the row unchanged
-- [x] 1.9 `PATCH` with no session returns 401
+- [x] 1.6 Valid `PATCH` on own product returns 200 with updated, re-classified product — 56cdaf6
+- [x] 1.7 Invalid `PATCH` body (empty name / past date) returns 400 with the same message `POST` would give — 56cdaf6
+- [x] 1.8 `PATCH` on a foreign product returns 404 and leaves the row unchanged — 56cdaf6
+- [x] 1.9 `PATCH` with no session returns 401 — 56cdaf6
 
 ### Phase 2: Frontend — edit modal wired to the pencil icon
 
 #### Automated
 
-- [ ] 2.1 Type checking passes: `npm run typecheck`
-- [ ] 2.2 Linting passes: `npm run lint`
-- [ ] 2.3 Full unit suite still passes: `npm run test:unit`
+- [x] 2.1 Type checking passes: `npm run typecheck`
+- [x] 2.2 Linting passes: `npm run lint`
+- [x] 2.3 Full unit suite still passes: `npm run test:unit`
 
 #### Manual
 
-- [ ] 2.4 Pencil icon opens modal pre-filled with current values
-- [ ] 2.5 Save disabled until dirty; re-disabled when reverted to original values
-- [ ] 2.6 Name-only edit updates list without reordering
-- [ ] 2.7 Expiry-date edit re-sorts the list correctly
-- [ ] 2.8 Invalid input (empty name / past date) blocks submission
-- [ ] 2.9 Dirty cancel/Escape/overlay shows discard confirmation; confirm discards, cancel keeps edits
-- [ ] 2.10 Non-dirty cancel/Escape/overlay closes immediately, no confirmation
-- [ ] 2.11 Cancel and Escape/overlay are blocked while a save is in flight
-- [ ] 2.12 Stale-404 (product removed in another tab) closes modal, removes row, shows toast
-- [ ] 2.13 No regressions in add/delete/recipe-generation flows
+- [x] 2.4 Pencil icon opens modal pre-filled with current values
+- [x] 2.5 Save disabled until dirty; re-disabled when reverted to original values
+- [x] 2.6 Name-only edit updates list without reordering
+- [x] 2.7 Expiry-date edit re-sorts the list correctly
+- [x] 2.8 Invalid input (empty name / past date) blocks submission
+- [x] 2.9 Dirty cancel/Escape/overlay shows discard confirmation; confirm discards, cancel keeps edits
+- [x] 2.10 Non-dirty cancel/Escape/overlay closes immediately, no confirmation
+- [x] 2.11 Cancel and Escape/overlay are blocked while a save is in flight
+- [x] 2.12 Stale-404 (product removed in another tab) closes modal, removes row, shows toast
+- [x] 2.13 No regressions in add/delete/recipe-generation flows
