@@ -1,7 +1,7 @@
 ---
 change_id: testing-quality-gates-wiring
 title: Wire typecheck and unit/integration tests into the CI quality gate
-status: implementing
+status: implemented
 created: 2026-08-30
 updated: 2026-08-30
 archived_at: null

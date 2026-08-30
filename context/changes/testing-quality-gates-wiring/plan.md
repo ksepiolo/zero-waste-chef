@@ -391,8 +391,8 @@ Not applicable — no data model or schema changes in this phase.
 
 #### Automated
 
-- [x] 3.1 `npx prettier --check context/foundation/test-plan.md` passes
+- [x] 3.1 `npx prettier --check context/foundation/test-plan.md` passes — 0b3fc33
 
 #### Manual
 
-- [x] 3.2 §5 table reviewed top to bottom, no stale rows remain
+- [x] 3.2 §5 table reviewed top to bottom, no stale rows remain — 0b3fc33
