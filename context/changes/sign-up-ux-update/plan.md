@@ -293,26 +293,26 @@ Not applicable — no data model or schema changes.
 
 #### Automated
 
-- [x] 3.1 Type checking passes: `npm run typecheck`
-- [x] 3.2 Linting passes: `npm run lint`
+- [x] 3.1 Type checking passes: `npm run typecheck` — c94cf69
+- [x] 3.2 Linting passes: `npm run lint` — c94cf69
 
 #### Manual
 
-- [x] 3.3 /auth/signin reads as a visually consistent sibling of /auth/signup with sign-in-appropriate copy
-- [x] 3.4 Submitting valid credentials redirects to /dashboard
-- [x] 3.5 Client-side validation errors render legibly
-- [x] 3.6 Server-side error renders via the restyled ServerError banner
-- [x] 3.7 Password visibility toggle works
+- [x] 3.3 /auth/signin reads as a visually consistent sibling of /auth/signup with sign-in-appropriate copy — c94cf69
+- [x] 3.4 Submitting valid credentials redirects to /dashboard — c94cf69
+- [x] 3.5 Client-side validation errors render legibly — c94cf69
+- [x] 3.6 Server-side error renders via the restyled ServerError banner — c94cf69
+- [x] 3.7 Password visibility toggle works — c94cf69
 
 ### Phase 4: Confirm-email page
 
 #### Automated
 
-- [ ] 4.1 Type checking passes: `npm run typecheck`
-- [ ] 4.2 Linting passes: `npm run lint`
+- [x] 4.1 Type checking passes: `npm run typecheck`
+- [x] 4.2 Linting passes: `npm run lint`
 
 #### Manual
 
-- [ ] 4.3 /auth/confirm-email reads as a visually consistent sibling of the redesigned signup/signin pages
-- [ ] 4.4 Both dev-mode and prod-mode copy variants render correctly restyled
-- [ ] 4.5 Link back to /auth/signin works
+- [x] 4.3 /auth/confirm-email reads as a visually consistent sibling of the redesigned signup/signin pages
+- [x] 4.4 Both dev-mode and prod-mode copy variants render correctly restyled
+- [x] 4.5 Link back to /auth/signin works
