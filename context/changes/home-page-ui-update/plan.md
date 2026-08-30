@@ -391,26 +391,26 @@ Not applicable — no data model or persisted state changes.
 
 #### Automated
 
-- [x] 2.1 Type checking passes: `npm run typecheck`
-- [x] 2.2 Linting passes: `npm run lint`
+- [x] 2.1 Type checking passes: `npm run typecheck` — 3b601e7
+- [x] 2.2 Linting passes: `npm run lint` — 3b601e7
 
 #### Manual
 
-- [x] 2.3 Topbar matches Figma (logo, wordmark, CTA buttons, colors, fonts)
-- [x] 2.4 "Sign in" and "Create free account" navigate correctly
-- [x] 2.5 Topbar doesn't overflow/wrap at mobile width
+- [x] 2.3 Topbar matches Figma (logo, wordmark, CTA buttons, colors, fonts) — 3b601e7
+- [x] 2.4 "Sign in" and "Create free account" navigate correctly — 3b601e7
+- [x] 2.5 Topbar doesn't overflow/wrap at mobile width — 3b601e7
 
 ### Phase 3: Hero section rewrite
 
 #### Automated
 
-- [ ] 3.1 Type checking passes: `npm run typecheck`
-- [ ] 3.2 Linting passes: `npm run lint`
-- [ ] 3.3 Build succeeds: `npm run build`
+- [x] 3.1 Type checking passes: `npm run typecheck`
+- [x] 3.2 Linting passes: `npm run lint`
+- [x] 3.3 Build succeeds: `npm run build`
 
 #### Manual
 
-- [ ] 3.4 Hero visually matches Figma frame
-- [ ] 3.5 "Get started" navigates to `/auth/signup`
-- [ ] 3.6 Responsive at mobile/tablet/desktop widths
-- [ ] 3.7 Hero image is optimized, not served as raw 2.2MB PNG
+- [x] 3.4 Hero visually matches Figma frame
+- [x] 3.5 "Get started" navigates to `/auth/signup`
+- [x] 3.6 Responsive at mobile/tablet/desktop widths
+- [x] 3.7 Hero image is optimized, not served as raw 2.2MB PNG
