@@ -21,7 +21,7 @@ if (supabase && Astro.locals.user) {
 <Layout title="My Inventory">
   <div class="min-h-screen bg-white p-6 sm:p-10">
     <div class="mx-auto max-w-[1000px]">
-      <AppNav email={Astro.locals.user?.email ?? ""} />
+      <AppNav email={Astro.locals.user?.email ?? ""} current="inventory" />
       <div class="mt-6 mb-8">
         <h1 class="font-display text-brand-ink text-2xl">Moja spiżarnia</h1>
         <p class="font-body text-brand-muted mt-1 text-sm">
