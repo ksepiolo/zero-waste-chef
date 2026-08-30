@@ -185,25 +185,25 @@ None — no schema or data changes.
 
 #### Automated
 
-- [x] 1.1 Type checking passes: `npm run typecheck`
-- [x] 1.2 Linting passes: `npm run lint`
-- [x] 1.3 Build succeeds: `npm run build`
+- [x] 1.1 Type checking passes: `npm run typecheck` — de1a067
+- [x] 1.2 Linting passes: `npm run lint` — de1a067
+- [x] 1.3 Build succeeds: `npm run build` — de1a067
 
 #### Manual
 
-- [x] 1.4 `/inventory` still shows the green underline on "Moja spiżarnia" with no visual change from before
+- [x] 1.4 `/inventory` still shows the green underline on "Moja spiżarnia" with no visual change from before — de1a067
 
 ### Phase 2: recipes.astro page shell restyle
 
 #### Automated
 
-- [ ] 2.1 Type checking passes: `npm run typecheck`
-- [ ] 2.2 Linting passes: `npm run lint`
-- [ ] 2.3 Build succeeds: `npm run build`
+- [x] 2.1 Type checking passes: `npm run typecheck`
+- [x] 2.2 Linting passes: `npm run lint`
+- [x] 2.3 Build succeeds: `npm run build`
 
 #### Manual
 
-- [ ] 2.4 `/recipes` shows the light theme, correct nav underline on "Historia przepisów", and the new heading/subtitle
+- [x] 2.4 `/recipes` shows the light theme, correct nav underline on "Historia przepisów", and the new heading/subtitle
 
 ### Phase 3: RecipeHistoryPanel rewrite — card grid, truncation, detail dialog, pagination
 
