@@ -308,11 +308,11 @@ Not applicable — no data model or schema changes.
 
 #### Automated
 
-- [x] 4.1 Type checking passes: `npm run typecheck`
-- [x] 4.2 Linting passes: `npm run lint`
+- [x] 4.1 Type checking passes: `npm run typecheck` — e1f1fa9
+- [x] 4.2 Linting passes: `npm run lint` — e1f1fa9
 
 #### Manual
 
-- [x] 4.3 /auth/confirm-email reads as a visually consistent sibling of the redesigned signup/signin pages
-- [x] 4.4 Both dev-mode and prod-mode copy variants render correctly restyled
-- [x] 4.5 Link back to /auth/signin works
+- [x] 4.3 /auth/confirm-email reads as a visually consistent sibling of the redesigned signup/signin pages — e1f1fa9
+- [x] 4.4 Both dev-mode and prod-mode copy variants render correctly restyled — e1f1fa9
+- [x] 4.5 Link back to /auth/signin works — e1f1fa9
