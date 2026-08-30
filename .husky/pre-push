@@ -1,0 +1,10 @@
+set -e
+
+SUPABASE_HEALTH_URL="${SUPABASE_URL:-http://127.0.0.1:54321}/auth/v1/health"
+
+if ! curl -sf --max-time 2 "$SUPABASE_HEALTH_URL" > /dev/null; then
+  echo "Pre-push requires local Supabase for integration tests. Run: npx supabase start"
+  exit 1
+fi
+
+npm run test
