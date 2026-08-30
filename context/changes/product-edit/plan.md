@@ -247,19 +247,19 @@ None — no schema or RLS changes required.
 
 #### Automated
 
-- [x] 2.1 Type checking passes: `npm run typecheck`
-- [x] 2.2 Linting passes: `npm run lint`
-- [x] 2.3 Full unit suite still passes: `npm run test:unit`
+- [x] 2.1 Type checking passes: `npm run typecheck` — 4b7f4b1
+- [x] 2.2 Linting passes: `npm run lint` — 4b7f4b1
+- [x] 2.3 Full unit suite still passes: `npm run test:unit` — 4b7f4b1
 
 #### Manual
 
-- [x] 2.4 Pencil icon opens modal pre-filled with current values
-- [x] 2.5 Save disabled until dirty; re-disabled when reverted to original values
-- [x] 2.6 Name-only edit updates list without reordering
-- [x] 2.7 Expiry-date edit re-sorts the list correctly
-- [x] 2.8 Invalid input (empty name / past date) blocks submission
-- [x] 2.9 Dirty cancel/Escape/overlay shows discard confirmation; confirm discards, cancel keeps edits
-- [x] 2.10 Non-dirty cancel/Escape/overlay closes immediately, no confirmation
-- [x] 2.11 Cancel and Escape/overlay are blocked while a save is in flight
-- [x] 2.12 Stale-404 (product removed in another tab) closes modal, removes row, shows toast
-- [x] 2.13 No regressions in add/delete/recipe-generation flows
+- [x] 2.4 Pencil icon opens modal pre-filled with current values — 4b7f4b1
+- [x] 2.5 Save disabled until dirty; re-disabled when reverted to original values — 4b7f4b1
+- [x] 2.6 Name-only edit updates list without reordering — 4b7f4b1
+- [x] 2.7 Expiry-date edit re-sorts the list correctly — 4b7f4b1
+- [x] 2.8 Invalid input (empty name / past date) blocks submission — 4b7f4b1
+- [x] 2.9 Dirty cancel/Escape/overlay shows discard confirmation; confirm discards, cancel keeps edits — 4b7f4b1
+- [x] 2.10 Non-dirty cancel/Escape/overlay closes immediately, no confirmation — 4b7f4b1
+- [x] 2.11 Cancel and Escape/overlay are blocked while a save is in flight — 4b7f4b1
+- [x] 2.12 Stale-404 (product removed in another tab) closes modal, removes row, shows toast — 4b7f4b1
+- [x] 2.13 No regressions in add/delete/recipe-generation flows — 4b7f4b1
