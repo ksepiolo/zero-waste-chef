@@ -52,6 +52,8 @@ Two phases, backend then frontend, since the frontend's `PATCH` calls depend on 
 
 Radix's `Dialog.Content` unmounts from the DOM when closed (via its internal `Presence`), which can look like it resets component state — but the _parent_ function component holding `useState` (the new `EditProductDialog`) does **not** unmount just because its child `Dialog.Content` does. Without an explicit reset, reopening the modal for a different product (or the same one after a prior edit) would show stale `name`/`expiryDate` values from the previous session. `EditProductDialog` must reset its `name`, `expiryDate`, `error`, and `showDiscardConfirm` state in a `useEffect` keyed on `product?.id` whenever a product is opened for editing.
 
+**Addendum (post-impl-review, 2026-08-30):** the actual implementation (`src/components/inventory/inventory-panel.tsx:499-515`) uses React's documented "adjust state during render" pattern instead of a `useEffect`, keyed on the open/close transition (`product !== null`) rather than `product?.id` — this also correctly covers reopening the _same_ product after a discarded edit. Functionally equivalent for every reachable path; kept as a deliberate deviation rather than reworked to match the `useEffect` description above.
+
 ### State sequencing — close-attempt precedence
 
 Three behaviors interact on every close attempt (Escape, overlay click, or the Cancel button): block-while-submitting, confirm-if-dirty, and otherwise-just-close. They must be checked in this order inside a single `attemptClose()` function, not as three independent handlers:

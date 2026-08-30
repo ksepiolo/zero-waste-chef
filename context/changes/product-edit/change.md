@@ -1,7 +1,7 @@
 ---
 change_id: product-edit
 title: Edit existing pantry product via modal in inventory panel
-status: implemented
+status: impl_reviewed
 created: 2026-08-30
 updated: 2026-08-30
 archived_at: null
