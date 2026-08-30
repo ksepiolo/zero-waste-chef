@@ -20,7 +20,7 @@ const SECONDARY_USER = { email: "test2@example.com", password: "Test1234!" };
 const clientHolder = vi.hoisted(() => ({ current: null as SupabaseClient | null }));
 vi.mock("@/lib/supabase", () => ({ createClient: () => clientHolder.current }));
 
-import { DELETE } from "./[id]";
+import { DELETE, PATCH } from "./[id]";
 
 async function isSupabaseReachable(): Promise<boolean> {
   if (!SUPABASE_URL) return false;
@@ -54,6 +54,19 @@ type RouteContext = Parameters<APIRoute>[0];
 /** DELETE /api/products/[id] reads `request`, `cookies` (both ignored by the mocked client), `params.id` and `locals.user`. */
 function routeContext(id: string, user: { id: string } | null): RouteContext {
   const request = new Request(`https://zero-waste-chef.test/api/products/${id}`, { method: "DELETE" });
+  return { request, cookies: {}, params: { id }, locals: { user } } as unknown as RouteContext;
+}
+
+/** PATCH /api/products/[id] additionally reads a JSON body. */
+function patchRouteContext(
+  id: string,
+  user: { id: string } | null,
+  body: { name: string; expiry_date: string },
+): RouteContext {
+  const request = new Request(`https://zero-waste-chef.test/api/products/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
   return { request, cookies: {}, params: { id }, locals: { user } } as unknown as RouteContext;
 }
 
@@ -118,5 +131,74 @@ describe.skipIf(!supabaseReachable)("DELETE /api/products/[id] — cross-user is
       .eq("id", data.id)
       .maybeSingle<{ id: string }>();
     expect(stillOwned?.id).toBe(data.id);
+  });
+});
+
+describe.skipIf(!supabaseReachable)("PATCH /api/products/[id] — cross-user isolation", () => {
+  let primaryClient: SupabaseClient;
+  let secondaryClient: SupabaseClient;
+  let primaryUserId: string;
+  let secondaryUserId: string;
+  let cleanupIds: string[] = [];
+
+  beforeAll(async () => {
+    if (!SUPABASE_URL || !SUPABASE_KEY) {
+      throw new Error("SUPABASE_URL and SUPABASE_KEY must be set to run this suite");
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- createClient()'s and SupabaseClient's default generics differ only in ordering
+    primaryClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- createClient()'s and SupabaseClient's default generics differ only in ordering
+    secondaryClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const [primarySignIn, secondarySignIn] = await Promise.all([
+      primaryClient.auth.signInWithPassword(PRIMARY_USER),
+      secondaryClient.auth.signInWithPassword(SECONDARY_USER),
+    ]);
+
+    if (primarySignIn.error) throw primarySignIn.error;
+    if (secondarySignIn.error) throw secondarySignIn.error;
+    primaryUserId = primarySignIn.data.user.id;
+    secondaryUserId = secondarySignIn.data.user.id;
+  });
+
+  afterEach(async () => {
+    for (const id of cleanupIds) {
+      await primaryClient.from("products").delete().eq("id", id);
+    }
+    cleanupIds = [];
+    clientHolder.current = null;
+  });
+
+  // Oracle: [[Always add an app-layer user_id filter alongside RLS on read and delete
+  // queries]] — updateProduct's PGRST116 branch collapses "foreign" and "nonexistent" into
+  // the same 404 by design (plan.md's Key Discoveries), so this asserts the non-leaking
+  // rejection and, separately, that the row's name/expiry_date genuinely survive — not
+  // inferred from the status code alone.
+  it("rejects a foreign product id with 404 and leaves the row unchanged", async () => {
+    const originalName = `Isolation ${crypto.randomUUID()}`;
+    const originalExpiry = futureExpiry();
+    const { data, error } = await primaryClient
+      .from("products")
+      .insert({ user_id: primaryUserId, name: originalName, expiry_date: originalExpiry })
+      .select("id")
+      .single<{ id: string }>();
+    if (error) throw error;
+    cleanupIds.push(data.id);
+
+    clientHolder.current = secondaryClient;
+    const response = await PATCH(
+      patchRouteContext(data.id, { id: secondaryUserId }, { name: "Hijacked", expiry_date: futureExpiry() }),
+    );
+
+    expect(response.status).toBe(404);
+
+    const { data: stillOwned } = await primaryClient
+      .from("products")
+      .select("name, expiry_date")
+      .eq("id", data.id)
+      .maybeSingle<{ name: string; expiry_date: string }>();
+    expect(stillOwned?.name).toBe(originalName);
+    expect(stillOwned?.expiry_date).toBe(originalExpiry);
   });
 });

@@ -89,6 +89,33 @@ export async function createProduct(
   return { ...inserted, ...classifyExpiry(inserted.expiry_date) };
 }
 
+export async function updateProduct(
+  supabase: SupabaseClient,
+  userId: string,
+  productId: string,
+  data: NewProduct,
+): Promise<ProductWithRisk> {
+  const { data: updated, error } = await supabase
+    .from("products")
+    .update({ name: data.name, expiry_date: data.expiry_date })
+    .eq("user_id", userId)
+    .eq("id", productId)
+    .select()
+    .single<Product>();
+
+  if (error) {
+    // id is the table's primary key, so PGRST116 here can only mean zero matching rows —
+    // a domain 404 the PATCH route string-matches on, mirroring deleteProduct's bare-Error
+    // not-found convention, not an upstream ServiceError.
+    if (error.code === "PGRST116") throw new Error("not found");
+    // eslint-disable-next-line no-console -- server-side diagnostic for a datastore failure
+    console.error(`updateProduct failed: ${error.message}`);
+    throw new ServiceError("data_access", { cause: error });
+  }
+
+  return { ...updated, ...classifyExpiry(updated.expiry_date) };
+}
+
 export async function deleteProduct(supabase: SupabaseClient, userId: string, productId: string): Promise<void> {
   const { count, error } = await supabase
     .from("products")

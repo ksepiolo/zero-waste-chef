@@ -13,6 +13,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { ChevronDown, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
+import { Dialog } from "radix-ui";
 import { toast } from "sonner";
 import { useRecipeGeneration } from "@/components/hooks/use-recipe-generation";
 
@@ -66,6 +67,7 @@ export function InventoryPanel({ initialProducts }: Props) {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [editingProduct, setEditingProduct] = useState<ProductWithRisk | null>(null);
   // Session-only by decision: no localStorage, no preferences table. A reload resets to Any.
   const [params, setParams] = useState<RecipeParams>(DEFAULT_RECIPE_PARAMS);
 
@@ -242,9 +244,16 @@ export function InventoryPanel({ initialProducts }: Props) {
                       )}
                     </div>
                     <div className="flex items-center gap-1">
-                      <span aria-hidden="true" className="text-brand-muted-2 p-1">
+                      <button
+                        type="button"
+                        aria-label={`Edit ${product.name}`}
+                        onClick={() => {
+                          setEditingProduct(product);
+                        }}
+                        className="text-brand-muted-2 hover:text-brand-green rounded p-1 transition-colors"
+                      >
                         <Pencil className="size-4" />
-                      </span>
+                      </button>
                       <button
                         type="button"
                         aria-label={`Delete ${product.name}`}
@@ -446,6 +455,217 @@ export function InventoryPanel({ initialProducts }: Props) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <EditProductDialog
+        product={editingProduct}
+        today={today}
+        onOpenChange={(open) => {
+          if (!open) setEditingProduct(null);
+        }}
+        onSaved={(updated) => {
+          setProducts((prev) =>
+            [...prev.filter((p) => p.id !== updated.id), updated].sort((a, b) =>
+              a.expiry_date.localeCompare(b.expiry_date),
+            ),
+          );
+          setEditingProduct(null);
+        }}
+        onRemoved={(id) => {
+          setProducts((prev) => prev.filter((p) => p.id !== id));
+          toast.info("This product was removed elsewhere");
+          setEditingProduct(null);
+        }}
+      />
     </div>
+  );
+}
+
+interface EditProductDialogProps {
+  product: ProductWithRisk | null;
+  today: string;
+  onOpenChange: (open: boolean) => void;
+  onSaved: (updated: ProductWithRisk) => void;
+  onRemoved: (id: string) => void;
+}
+
+function EditProductDialog({ product, today, onOpenChange, onSaved, onRemoved }: EditProductDialogProps) {
+  const [name, setName] = useState("");
+  const [expiryDate, setExpiryDate] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
+  const [wasOpen, setWasOpen] = useState(false);
+
+  // Reset on every product opened for editing, adjusted during render (not an effect) per
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes —
+  // the Dialog.Content unmounts on close via Radix's Presence, but this parent component does
+  // not, so without this the fields would keep showing a previous product's (or a stale) value
+  // on reopen. Keyed on the null->non-null "opening" transition, not product.id: onOpenChange
+  // always routes a close through setEditingProduct(null) first, so reopening the SAME product
+  // (e.g. after a discarded edit) also needs a reset, and id alone would miss that case.
+  const isOpen = product !== null;
+  if (isOpen !== wasOpen) {
+    setWasOpen(isOpen);
+    if (isOpen) {
+      setName(product.name);
+      setExpiryDate(product.expiry_date);
+      setError(null);
+      setShowDiscardConfirm(false);
+    }
+  }
+
+  const isDirty = product !== null && (name !== product.name || expiryDate !== product.expiry_date);
+  const isValid = name.length > 0 && name.length <= 255 && expiryDate >= today;
+
+  // Close precedence, checked in this order on every close attempt (Escape, overlay click,
+  // or Cancel): block while submitting, confirm if dirty, otherwise close immediately.
+  function attemptClose(discard = false) {
+    if (isSubmitting) return;
+    if (!discard && isDirty) {
+      setShowDiscardConfirm(true);
+      return;
+    }
+    setShowDiscardConfirm(false);
+    onOpenChange(false);
+  }
+
+  async function handleSubmit(e: { preventDefault(): void }) {
+    e.preventDefault();
+    if (!product) return;
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      const res = await fetch(`/api/products/${product.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, expiry_date: expiryDate }),
+      });
+
+      if (res.status === 404) {
+        onRemoved(product.id);
+        return;
+      }
+
+      if (!res.ok) {
+        const json = (await res.json()) as { error?: string };
+        setError(json.error ?? "Failed to update product");
+        return;
+      }
+
+      const json = (await res.json()) as { product: ProductWithRisk };
+      onSaved(json.product);
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <Dialog.Root
+      open={product !== null}
+      onOpenChange={(open) => {
+        if (!open) attemptClose();
+      }}
+    >
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 bg-black/40" />
+        <Dialog.Content className="border-brand-border fixed top-1/2 left-1/2 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border bg-white p-6">
+          <Dialog.Title className="font-display text-brand-ink text-xl">Edit product</Dialog.Title>
+
+          <form onSubmit={(e) => void handleSubmit(e)} className="mt-4 space-y-4">
+            <div>
+              <label htmlFor="edit-name" className="text-brand-muted mb-1 block text-xs">
+                Product name
+              </label>
+              <input
+                id="edit-name"
+                type="text"
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                }}
+                required
+                className="border-brand-input-border text-brand-ink focus:border-brand-green w-full rounded-lg border px-3 py-2 text-sm focus:outline-none"
+              />
+            </div>
+            <div>
+              <label htmlFor="edit-expiry-date" className="text-brand-muted mb-1 block text-xs">
+                Expiry date
+              </label>
+              <input
+                id="edit-expiry-date"
+                type="date"
+                min={today}
+                value={expiryDate}
+                onChange={(e) => {
+                  setExpiryDate(e.target.value);
+                }}
+                required
+                className="border-brand-input-border text-brand-ink focus:border-brand-green w-full rounded-lg border px-3 py-2 text-sm focus:outline-none"
+              />
+            </div>
+
+            {error && <p className="text-brand-danger text-sm">{error}</p>}
+
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isSubmitting}
+                onClick={() => {
+                  attemptClose();
+                }}
+                className="border-brand-input-border text-brand-ink hover:bg-brand-surface!"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={!isDirty || !isValid || isSubmitting}
+                className="bg-brand-green hover:bg-brand-green/90 text-white"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 size-4 animate-spin" />
+                    Saving…
+                  </>
+                ) : (
+                  "Save"
+                )}
+              </Button>
+            </div>
+          </form>
+        </Dialog.Content>
+      </Dialog.Portal>
+
+      <AlertDialog open={showDiscardConfirm} onOpenChange={setShowDiscardConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Discard changes?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved changes to <span className="font-semibold">{product?.name}</span>. Discard them?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setShowDiscardConfirm(false);
+              }}
+            >
+              Keep editing
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                attemptClose(true);
+              }}
+            >
+              Discard
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </Dialog.Root>
   );
 }
