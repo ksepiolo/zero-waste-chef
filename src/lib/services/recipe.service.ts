@@ -14,9 +14,10 @@ import { DEFAULT_RECIPE_PARAMS, RECIPES_PAGE_SIZE } from "@/types";
 import { buildSystemPrompt, FEW_SHOT_USER, FEW_SHOT_ASSISTANT } from "./recipe-prompt";
 import { ServiceError, type ServiceErrorKind } from "./service-error";
 
-// Free tier. Supports json_schema strict mode; rate-limited per OpenRouter's
-// free-model quota. Swap to "google/gemini-2.0-flash-001" (paid) if the limit bites.
-const MODEL = "google/gemma-4-26b-a4b-it:free";
+// Paid. Supports json_schema strict mode. Was on "google/gemma-4-26b-a4b-it:free" —
+// switched off after hitting OpenRouter's shared upstream-provider rate limit
+// (429, "upstream_provider_shared_pool"), not fixable by OpenRouter account credits.
+const MODEL = "google/gemini-2.0-flash-001";
 const GENERATION_TIMEOUT_MS = 30_000;
 const MAX_PROMPT_PRODUCTS = 25;
 
