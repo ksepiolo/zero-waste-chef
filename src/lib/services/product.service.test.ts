@@ -2,8 +2,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { Product } from "@/types";
+import { ServiceError } from "./service-error";
 
-import { classifyExpiry, deleteProduct, listProducts } from "./product.service";
+import { classifyExpiry, deleteProduct, listProducts, updateProduct } from "./product.service";
 
 // The clock is frozen so the boundary table means the same thing on every machine and in
 // every month; vitest.config.ts pins TZ=UTC to match workerd, so the local-date arithmetic
@@ -153,5 +154,58 @@ describe("deleteProduct", () => {
     const supabase = stubDeleteChain(1);
 
     await expect(deleteProduct(supabase, "user-1", "product-1")).resolves.toBeUndefined();
+  });
+});
+
+interface UpdateQueryStub {
+  update: () => UpdateQueryStub;
+  eq: () => UpdateQueryStub;
+  select: () => UpdateQueryStub;
+  single: () => Promise<{ data: unknown; error: { code: string; message: string } | null }>;
+}
+
+/** Minimal stand-in for the update().eq().eq().select().single() chain updateProduct awaits. */
+function stubUpdateChain(result: { data: unknown; error: { code: string; message: string } | null }): SupabaseClient {
+  const query: UpdateQueryStub = {
+    update: () => query,
+    eq: () => query,
+    select: () => query,
+    single: () => Promise.resolve(result),
+  };
+
+  return { from: () => query } as unknown as SupabaseClient;
+}
+
+describe("updateProduct", () => {
+  // Oracle: plan.md Phase 1 #3 — on success, the returned row is re-classified via
+  // classifyExpiry rather than trusting whatever expiry flags (if any) the row carries.
+  it("returns the updated row with classifyExpiry re-applied", async () => {
+    const updated = productRow({ id: "product-1", name: "Milk", expiry_date: expiryIn(1) });
+    const supabase = stubUpdateChain({ data: updated, error: null });
+
+    const result = await updateProduct(supabase, "user-1", "product-1", { name: "Milk", expiry_date: expiryIn(1) });
+
+    expect(result).toStrictEqual({ ...updated, is_at_risk: true, is_expired: false });
+  });
+
+  // Oracle: plan.md Phase 1 #3 — id is the primary key, so PGRST116 here can only mean zero
+  // matching rows; this is the domain 404 the PATCH route string-matches on, not a
+  // ServiceError, mirroring deleteProduct's bare-Error not-found convention.
+  it("throws a bare not-found error when PGRST116 is returned", async () => {
+    const supabase = stubUpdateChain({ data: null, error: { code: "PGRST116", message: "no rows" } });
+
+    await expect(
+      updateProduct(supabase, "user-1", "product-1", { name: "Milk", expiry_date: expiryIn(1) }),
+    ).rejects.toThrow("not found");
+  });
+
+  // Oracle: plan.md Phase 1 #3 — any other error shape is an upstream datastore failure,
+  // classified as ServiceError("data_access") like createProduct/deleteProduct/listProducts.
+  it("throws a ServiceError with kind data_access for any other failure", async () => {
+    const supabase = stubUpdateChain({ data: null, error: { code: "500", message: "connection refused" } });
+
+    await expect(
+      updateProduct(supabase, "user-1", "product-1", { name: "Milk", expiry_date: expiryIn(1) }),
+    ).rejects.toThrow(ServiceError);
   });
 });
