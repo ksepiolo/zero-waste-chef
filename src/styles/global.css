@@ -108,6 +108,19 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  --color-brand-green: #35ba6d;
+  --color-brand-ink: #2f3231;
+  --color-brand-muted: #757e7b;
+  --color-brand-muted-2: #a1ada9;
+  --color-brand-surface: #f8fafb;
+  --color-brand-border: #e7e7e7;
+  --font-display: "Playfair Display", serif;
+  /* Named --font-body, not the reserved --font-sans: Tailwind v4 Preflight
+     consumes --font-sans as the sitewide default body font, so overriding it
+     would reflow every other page instead of staying opt-in like font-display/font-logo. */
+  --font-body: "Inter", sans-serif;
+  --font-logo: "Montserrat", sans-serif;
 }
 
 @utility bg-cosmic {

@@ -1,8 +1,12 @@
 ---
 import Welcome from "@/components/Welcome.astro";
 import Layout from "@/layouts/Layout.astro";
+
+if (Astro.locals.user) {
+  return Astro.redirect("/dashboard");
+}
 ---
 
-<Layout>
+<Layout title="Zero Waste Chef — Przepisy dopasowane do twojej lodówki">
   <Welcome />
 </Layout>
