@@ -88,10 +88,10 @@ test("approving a generated recipe removes the used product from inventory and a
   await page.waitForLoadState("networkidle");
   await page.getByLabel("Product name").fill(PRODUCT_NAME);
   await page.getByLabel("Expiry date").fill(expiryDate);
-  await page.getByRole("button", { name: "Add", exact: true }).click();
+  await page.getByRole("button", { name: "Add product", exact: true }).click();
   await expect(page.getByText(PRODUCT_NAME, { exact: true })).toBeVisible();
 
-  await page.getByRole("button", { name: "Generate Recipe" }).click();
+  await page.getByRole("button", { name: "Generate", exact: true }).click();
 
   const dialog = page.getByRole("alertdialog");
   await expect(dialog.getByRole("heading", { name: STUB_TITLE })).toBeVisible();
