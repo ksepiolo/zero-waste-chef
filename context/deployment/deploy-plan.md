@@ -7,6 +7,7 @@ This is the **Plan Mode deploy** step of the 10xDevs Module 1 / Lesson 5 infra c
 **Key correction surfaced during research:** `infrastructure.md` was written against the **Cloudflare Pages** model (`wrangler pages deploy`, `wrangler pages project create`). That is outdated. The project uses `@astrojs/cloudflare` **v13.5.0** on **Astro 6**, and [v13 removed Pages support entirely](https://docs.astro.build/en/guides/integrations-guide/cloudflare/) — the adapter now deploys to **Cloudflare Workers (Static Assets)** via `wrangler deploy`. The existing `wrangler.jsonc` already matches the Workers model exactly (`main: "@astrojs/cloudflare/entrypoints/server"` + `assets` binding). So we deploy as **Workers**, and we correct the doc.
 
 **Codebase readiness (verified):**
+
 - `wrangler.jsonc` already has `compatibility_flags: ["nodejs_compat"]`, `compatibility_date: 2026-05-08`, the correct `main` entrypoint, the `ASSETS` binding, and `observability.enabled: true`. No changes needed to deploy.
 - Zero Node built-in imports, zero `Astro.locals.runtime` usage, zero `process.env` — the code is workerd-safe. Supabase uses `@supabase/ssr` reading env via `astro:env/server` (`src/lib/supabase.ts`).
 - **No OpenRouter/AI code exists yet** — only auth + Supabase. The doc's high-risk "10ms CPU on AI recipe generation" does not yet apply; Supabase calls are network I/O, not CPU. → Deploy on **Free tier** now; revisit Paid before the AI endpoint ships.
@@ -29,10 +30,12 @@ This is the **Plan Mode deploy** step of the 10xDevs Module 1 / Lesson 5 infra c
 Complete these before Phase 0. They are one-time-per-machine setup, not part of the repeatable deploy loop.
 
 ### P.1 Local toolchain
+
 - [ ] Node `22.14.0` active — `nvm use` (version pinned in `.nvmrc`)
 - [ ] `npm ci` — installs `wrangler@^4.90.0` (and the Supabase CLI) as local devDeps. Invoke everything via `npx wrangler …` / `npx supabase …`; **no global install required**.
 
 ### P.2 Wrangler CLI authentication (Cloudflare)
+
 - [ ] **Have a Cloudflare account.** If you don't, sign up free at [dash.cloudflare.com/sign-up](https://dash.cloudflare.com/sign-up) (email + password, verify the email — **no credit card** required for the Free plan). The **Free** Workers plan is what this deploy targets; 100k requests/day, commercial use allowed.
 - [ ] **Note your Account ID** — Cloudflare dashboard → **Workers & Pages** (or any zone's Overview); the Account ID is shown in the right sidebar / URL. You'll need it for `CLOUDFLARE_ACCOUNT_ID` in Phase 5's CI deploy and to disambiguate if you belong to multiple accounts.
 - [ ] `npx wrangler login` — opens a browser for OAuth; credentials are stored in `~/.config/.wrangler/` (per-machine, never in the repo)
@@ -40,11 +43,13 @@ Complete these before Phase 0. They are one-time-per-machine setup, not part of 
 - [ ] **CI / headless alternative:** instead of interactive login, export `CLOUDFLARE_API_TOKEN` (+ `CLOUDFLARE_ACCOUNT_ID` if multi-account). This is exactly what Phase 5's GitHub Action consumes — create the **scoped** token described in Phase 1.
 
 **Edge-case support:**
-- *Multiple Cloudflare accounts* → wrangler prompts you to pick; set `CLOUDFLARE_ACCOUNT_ID` in your shell to remove the ambiguity for scripted runs.
-- *Corporate proxy / no browser available* → skip OAuth and use the `CLOUDFLARE_API_TOKEN` token flow.
-- *"Not logged in" in a fresh shell* → re-run `wrangler login`; auth does not travel with the repo.
+
+- _Multiple Cloudflare accounts_ → wrangler prompts you to pick; set `CLOUDFLARE_ACCOUNT_ID` in your shell to remove the ambiguity for scripted runs.
+- _Corporate proxy / no browser available_ → skip OAuth and use the `CLOUDFLARE_API_TOKEN` token flow.
+- _"Not logged in" in a fresh shell_ → re-run `wrangler login`; auth does not travel with the repo.
 
 ### P.3 Supabase credentials (reusing the existing project)
+
 - [ ] In the Supabase dashboard → **Project Settings → API**, copy:
   - **Project URL** → use as `SUPABASE_URL`
   - **anon / public** key (the **publishable** key in Supabase's newer key UI) → use as `SUPABASE_KEY`
@@ -53,6 +58,7 @@ Complete these before Phase 0. They are one-time-per-machine setup, not part of 
 - [ ] (If using the Supabase CLI for migrations later) `npx supabase login` with a personal access token, then `npx supabase link --project-ref <ref>` — not needed for this deploy, listed for completeness.
 
 ### P.4 Local env files (verify — they already exist)
+
 - [ ] `.dev.vars` (gitignored) — read by `wrangler dev` and Astro 6's `astro dev`/`preview` on **workerd**. Holds `SUPABASE_URL` + `SUPABASE_KEY` for local runs.
 - [ ] `.env` (gitignored) — dotenv fallback for Node-based tooling.
 - [ ] `.env.example` (checked in) — placeholders only; never commit real keys.
@@ -85,7 +91,8 @@ Complete these before Phase 0. They are one-time-per-machine setup, not part of 
 - [x] No redeploy required — secrets apply to the running Worker immediately.
 
 **Edge-case support:**
-- If `wrangler secret put` is run *before* the first `deploy`, wrangler prompts to create the Worker — that's why we **deploy first**.
+
+- If `wrangler secret put` is run _before_ the first `deploy`, wrangler prompts to create the Worker — that's why we **deploy first**.
 - If the deploy errors with a `workers.dev` subdomain message, enable the subdomain once in the dashboard (Workers & Pages → your subdomain).
 - Do **not** add named `[env.production]` blocks to `wrangler.jsonc` — known adapter bugs ([#14540](https://github.com/withastro/astro/issues/14540), [#16031](https://github.com/withastro/astro/issues/16031)) break `astro:env`/wrangler env-var resolution under named environments. Keep a single environment.
 
@@ -135,19 +142,19 @@ Edit `.github/workflows/ci.yml`:
 
 ## Files touched
 
-| File | Change |
-|---|---|
-| `.github/workflows/ci.yml` | Fix `master`→`main` trigger; add gated `wrangler-action` deploy job |
-| `context/foundation/infrastructure.md` | Correct Pages→Workers commands + risk rows |
-| `.dev.vars.example` | New (optional) — onboarding template |
-| `wrangler.jsonc`, `astro.config.mjs`, `src/**` | **No changes** — already workerd-ready |
+| File                                           | Change                                                              |
+| ---------------------------------------------- | ------------------------------------------------------------------- |
+| `.github/workflows/ci.yml`                     | Fix `master`→`main` trigger; add gated `wrangler-action` deploy job |
+| `context/foundation/infrastructure.md`         | Correct Pages→Workers commands + risk rows                          |
+| `.dev.vars.example`                            | New (optional) — onboarding template                                |
+| `wrangler.jsonc`, `astro.config.mjs`, `src/**` | **No changes** — already workerd-ready                              |
 
 ## What's explicitly NOT in scope
 
 - Workers Paid upgrade (deferred until the OpenRouter recipe endpoint exists; re-verify CPU via `wrangler tail` then)
 - OpenRouter/AI integration (no code yet)
 - Custom domain / DNS, multi-region, named wrangler environments
-- Dockerfiles, DB migration automation
+- Dockerfiles, DB migration automation — this was a deliberate initial scope cut, not an oversight, but it later caused a real production incident (a migration committed 2026-06-07 was never pushed, so its RPC 404'd in production for months). See `context/foundation/infrastructure.md`'s Operational Story and Risk Register for the manual process this now requires (`npx supabase db push`) and the proposed CI gate.
 
 ## Verification summary (how we know it worked)
 

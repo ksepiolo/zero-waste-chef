@@ -22,14 +22,14 @@ The project is already bootstrapped for this platform — `@astrojs/cloudflare` 
 
 ### Full Scoring Matrix
 
-| Platform | CLI-first | Managed/Serverless | Agent docs | Stable deploy API | MCP/Integration | **Score** |
-|---|---|---|---|---|---|---|
-| **Cloudflare** | Pass | Pass | Pass | Pass | Pass | **5 / 5** |
-| **Netlify** | Pass | Pass | Pass | Pass | Pass | **5 / 5** |
-| **Vercel** | Pass | Pass | Pass | Pass | Partial | **4.5 / 5** |
-| **Railway** | Pass | Partial | Pass | Pass | Partial | **3.5 / 5** |
-| **Fly.io** | Partial | Partial | Partial | Pass | Partial | **2.5 / 5** |
-| **Render** | Partial | Partial | Pass | Partial | Partial | **2.5 / 5** |
+| Platform       | CLI-first | Managed/Serverless | Agent docs | Stable deploy API | MCP/Integration | **Score**   |
+| -------------- | --------- | ------------------ | ---------- | ----------------- | --------------- | ----------- |
+| **Cloudflare** | Pass      | Pass               | Pass       | Pass              | Pass            | **5 / 5**   |
+| **Netlify**    | Pass      | Pass               | Pass       | Pass              | Pass            | **5 / 5**   |
+| **Vercel**     | Pass      | Pass               | Pass       | Pass              | Partial         | **4.5 / 5** |
+| **Railway**    | Pass      | Partial            | Pass       | Pass              | Partial         | **3.5 / 5** |
+| **Fly.io**     | Partial   | Partial            | Partial    | Pass              | Partial         | **2.5 / 5** |
+| **Render**     | Partial   | Partial            | Pass       | Partial           | Partial         | **2.5 / 5** |
 
 **Scoring notes by criterion:**
 
@@ -40,6 +40,7 @@ The project is already bootstrapped for this platform — `@astrojs/cloudflare` 
 - **MCP/Integration**: Vercel MCP is beta (as of 2026-02-12). Fly.io MCP is early/experimental (blog post May 2025, no GA announcement). Railway MCP is explicitly "work in progress" in their docs. Render MCP cannot trigger deploys or modify scaling. Cloudflare (15+ GA servers) and Netlify (GA `@netlify/mcp`) are the strongest.
 
 **Soft weights applied (interview answers):**
+
 - Cost vs. DX: no preference → no reweighting
 - Familiarity: none → no tie-breaking applied
 - Geographic reach: single region → no edge-native bonus
@@ -98,21 +99,23 @@ By month two, the developer has accumulated a private mental model of workerd-vs
 - **Rollback**: `wrangler rollback` (or `wrangler versions list` + `wrangler versions deploy`) reverts to a prior Worker version immediately. Time-to-revert is typically under 30 seconds. Database migrations do NOT roll back automatically — a code rollback after a schema migration requires a separate migration rollback in Supabase.
 - **Approval**: Agent may perform unattended: `wrangler deploy`, `wrangler secret put`, `wrangler tail`, `wrangler rollback`. Human-only actions: deleting the Worker, rotating the Supabase service role key, changing billing tier, modifying DNS / custom domain configuration, and Cloudflare Access policy changes.
 - **Logs**: `wrangler tail zero-waste-chef --format json` streams live invocation logs with request metadata. Filter by status: `--status error`. Cloudflare MCP observability server exposes structured log queries for agent use.
+- **Database migrations**: `supabase/migrations/` is **not** deployed by CI — `.github/workflows/ci.yml`'s `deploy` job only builds and pushes the Worker (app code); it never touches the database. After adding a new migration, run `npx supabase db push` manually against the linked production project (`npx supabase migration list --linked` shows what's pending). Nothing currently blocks a deploy whose code depends on a migration that was never pushed — see the Risk Register row below.
 
 ## Risk Register
 
-| Risk | Source | Likelihood | Impact | Mitigation |
-|---|---|---|---|---|
-| CPU time exceeded on free tier during AI recipe generation | Devil's advocate | High | High | Upgrade to Workers Paid ($5/month) before first production deploy. Verify with `wrangler tail --status error` after deploying recipe generation route. |
-| `nodejs_compat` flag missing causes Supabase/crypto failures in workerd | Devil's advocate | High | High | Confirm `compatibility_flags = ["nodejs_compat"]` is in `wrangler.jsonc` before first deploy. Test `wrangler dev` (not `astro dev`) against real Supabase calls. |
-| `Astro.locals.runtime` removed in v13 — old tutorial patterns break silently | Devil's advocate | Medium | Medium | Audit `src/middleware.ts` and any Cloudflare env access for `Astro.locals.runtime` usage. Replace with `import { env } from "cloudflare:workers"` per v13 docs. |
-| Wrong wrangler command used (`wrangler pages deploy` instead of `wrangler deploy`) | Devil's advocate | Medium | Low | Use `wrangler deploy` (Workers). `wrangler pages deploy` targets Pages and will fail — v13 adapter removed Pages support. CI uses `wrangler-action` with `command: deploy`. |
-| Daily 100k request free-tier limit causes 1015 errors during demo/spike | Devil's advocate | Low | High | Pre-emptively upgrade to Workers Paid ($5/month) before any public demo or submission deadline. |
-| `astro dev` vs `wrangler dev` env-access divergence causes test/seed failures | Unknown unknowns | Medium | Low | Use `wrangler dev` for any test involving Cloudflare-specific APIs. Document in CLAUDE.md. |
-| Write-only secrets make key rotation debugging opaque | Unknown unknowns | Low | Medium | Keep a private (not-in-repo) record of which secret values are set. Use `wrangler secret list` to audit names; re-set if values are suspected incorrect. |
-| Two deploy paths conflict (manual `wrangler deploy` + GitHub Actions both target the same Worker) | Unknown unknowns | Low | Low | Both paths call `wrangler deploy` against the same Worker — the last deploy wins. Keep `main` as the single source of truth; avoid manual deploys after CI is wired up. |
-| Astro 6 hybrid-site SSR+prerender middleware bug (#15237) | Research finding | Low | Medium | Project is full SSR (no prerendered routes) so this bug does not apply. If prerendered routes are added, test middleware behavior against that route before shipping. |
-| `wrangler deploy --x-versions` (gradual rollout) is in open beta | Research finding | Low | Low | Do not use `--x-versions` for production deploys until GA is announced. Use standard `wrangler deploy` + `wrangler rollback` instead. |
+| Risk                                                                                              | Source                                                                                                                                | Likelihood                   | Impact                                                                    | Mitigation                                                                                                                                                                                                                                |
+| ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CPU time exceeded on free tier during AI recipe generation                                        | Devil's advocate                                                                                                                      | High                         | High                                                                      | Upgrade to Workers Paid ($5/month) before first production deploy. Verify with `wrangler tail --status error` after deploying recipe generation route.                                                                                    |
+| `nodejs_compat` flag missing causes Supabase/crypto failures in workerd                           | Devil's advocate                                                                                                                      | High                         | High                                                                      | Confirm `compatibility_flags = ["nodejs_compat"]` is in `wrangler.jsonc` before first deploy. Test `wrangler dev` (not `astro dev`) against real Supabase calls.                                                                          |
+| `Astro.locals.runtime` removed in v13 — old tutorial patterns break silently                      | Devil's advocate                                                                                                                      | Medium                       | Medium                                                                    | Audit `src/middleware.ts` and any Cloudflare env access for `Astro.locals.runtime` usage. Replace with `import { env } from "cloudflare:workers"` per v13 docs.                                                                           |
+| Wrong wrangler command used (`wrangler pages deploy` instead of `wrangler deploy`)                | Devil's advocate                                                                                                                      | Medium                       | Low                                                                       | Use `wrangler deploy` (Workers). `wrangler pages deploy` targets Pages and will fail — v13 adapter removed Pages support. CI uses `wrangler-action` with `command: deploy`.                                                               |
+| Daily 100k request free-tier limit causes 1015 errors during demo/spike                           | Devil's advocate                                                                                                                      | Low                          | High                                                                      | Pre-emptively upgrade to Workers Paid ($5/month) before any public demo or submission deadline.                                                                                                                                           |
+| `astro dev` vs `wrangler dev` env-access divergence causes test/seed failures                     | Unknown unknowns                                                                                                                      | Medium                       | Low                                                                       | Use `wrangler dev` for any test involving Cloudflare-specific APIs. Document in CLAUDE.md.                                                                                                                                                |
+| Write-only secrets make key rotation debugging opaque                                             | Unknown unknowns                                                                                                                      | Low                          | Medium                                                                    | Keep a private (not-in-repo) record of which secret values are set. Use `wrangler secret list` to audit names; re-set if values are suspected incorrect.                                                                                  |
+| Two deploy paths conflict (manual `wrangler deploy` + GitHub Actions both target the same Worker) | Unknown unknowns                                                                                                                      | Low                          | Low                                                                       | Both paths call `wrangler deploy` against the same Worker — the last deploy wins. Keep `main` as the single source of truth; avoid manual deploys after CI is wired up.                                                                   |
+| Astro 6 hybrid-site SSR+prerender middleware bug (#15237)                                         | Research finding                                                                                                                      | Low                          | Medium                                                                    | Project is full SSR (no prerendered routes) so this bug does not apply. If prerendered routes are added, test middleware behavior against that route before shipping.                                                                     |
+| `wrangler deploy --x-versions` (gradual rollout) is in open beta                                  | Research finding                                                                                                                      | Low                          | Low                                                                       | Do not use `--x-versions` for production deploys until GA is announced. Use standard `wrangler deploy` + `wrangler rollback` instead.                                                                                                     |
+| Code deploys ahead of a migration it depends on — CI never pushes `supabase/migrations/`          | Confirmed 2026-08-30 (`approve_recipe` RPC returned 404 in production; 3 migrations committed since 2026-06-07 had never been pushed) | High — already happened once | High — the dependent feature is fully broken with no client-visible cause | After adding any migration, run `npx supabase db push` before/with the deploy. Longer-term: add a CI check that fails when `npx supabase migration list --linked` shows pending migrations, so a deploy can't silently outrun the schema. |
 
 ## Getting Started
 
@@ -121,30 +124,38 @@ The project is already bootstrapped for Cloudflare Workers — these steps deplo
 > **v13 note:** `@astrojs/cloudflare` v13 removed Pages support. Deploy with `wrangler deploy`, NOT `wrangler pages deploy`.
 
 1. **Authenticate wrangler** (one-time):
+
    ```bash
    npx wrangler login
    ```
+
    This opens a browser for OAuth with your Cloudflare account. Credentials are stored in `~/.config/.wrangler/`.
 
 2. **Set production secrets** (after first deploy creates the Worker):
+
    ```bash
    npm run build
    npx wrangler deploy
    npx wrangler secret put SUPABASE_URL
    npx wrangler secret put SUPABASE_KEY
    ```
+
    Do not pass `--env production` — the project uses a single environment (named envs trigger a known adapter bug with `astro:env`).
 
 3. **Verify `nodejs_compat` is in `wrangler.jsonc`** before first deploy:
+
    ```json
    { "compatibility_flags": ["nodejs_compat"] }
    ```
+
    Without this, `@supabase/ssr` will fail in `workerd` at runtime.
 
 4. **Confirm secrets are registered**:
+
    ```bash
    npx wrangler secret list
    ```
+
    Both `SUPABASE_URL` and `SUPABASE_KEY` should appear. Values are write-only — names only are shown.
 
 5. **Tail live logs to verify**:
@@ -156,6 +167,7 @@ The project is already bootstrapped for Cloudflare Workers — these steps deplo
 ## Out of Scope
 
 The following were not evaluated in this research:
+
 - Docker image configuration
 - CI/CD pipeline setup (GitHub Actions auto-deploy-on-merge from tech-stack.md is covered separately)
 - Production-scale architecture (multi-region, HA, DR)
