@@ -417,31 +417,31 @@ Not applicable — no data model or schema changes.
 
 #### Automated
 
-- [x] 1.1 Type checking passes: `npm run typecheck`
-- [x] 1.2 Linting passes: `npm run lint`
-- [x] 1.3 Build succeeds: `npm run build`
+- [x] 1.1 Type checking passes: `npm run typecheck` — 9576cd8
+- [x] 1.2 Linting passes: `npm run lint` — 9576cd8
+- [x] 1.3 Build succeeds: `npm run build` — 9576cd8
 
 #### Manual
 
 - [x] 1.4 New nav bar (logo, underlined tab, link, static email+chevron) and
-      heading/subtitle render per Figma
-- [x] 1.5 "Historia przepisów" navigates to `/recipes`
-- [x] 1.6 Page remains usable at a narrow viewport width
-- [x] 1.7 InventoryPanel below still functions as before (dark-themed, expected)
+      heading/subtitle render per Figma — 9576cd8
+- [x] 1.5 "Historia przepisów" navigates to `/recipes` — 9576cd8
+- [x] 1.6 Page remains usable at a narrow viewport width — 9576cd8
+- [x] 1.7 InventoryPanel below still functions as before (dark-themed, expected) — 9576cd8
 
 ### Phase 2: UserMenu sign-out dropdown
 
 #### Automated
 
-- [ ] 2.1 Type checking passes: `npm run typecheck`
-- [ ] 2.2 Linting passes: `npm run lint`
-- [ ] 2.3 Build succeeds: `npm run build`
+- [x] 2.1 Type checking passes: `npm run typecheck`
+- [x] 2.2 Linting passes: `npm run lint`
+- [x] 2.3 Build succeeds: `npm run build`
 
 #### Manual
 
-- [ ] 2.4 Dropdown opens with "Sign out" item; keyboard navigation works
-- [ ] 2.5 Sign out lands on `/`; `/inventory` afterward redirects to `/auth/signin`
-- [ ] 2.6 Offline sign-out attempt surfaces a toast error, not a silent failure
+- [x] 2.4 Dropdown opens with "Sign out" item; keyboard navigation works
+- [x] 2.5 Sign out lands on `/`; `/inventory` afterward redirects to `/auth/signin`
+- [x] 2.6 Offline sign-out attempt surfaces a toast error, not a silent failure
 
 ### Phase 3: Restyle InventoryPanel
 
