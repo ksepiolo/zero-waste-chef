@@ -12,7 +12,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Loader2, Trash2 } from "lucide-react";
+import { ChevronDown, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useRecipeGeneration } from "@/components/hooks/use-recipe-generation";
 
@@ -21,9 +21,11 @@ interface Props {
 }
 
 // Matches the add-product inputs above — src/components/ui/ has no Select component,
-// and this form is native inputs with inline Tailwind throughout.
+// and this form is native inputs with inline Tailwind throughout. appearance-none +
+// the absolutely positioned ChevronDown below reproduces the Figma bordered-box-with-
+// chevron look, since native <select> arrows aren't stylable.
 const selectClasses =
-  "rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white focus:border-white/40 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50";
+  "w-full appearance-none rounded-lg border border-brand-input-border bg-white px-3 py-2 pr-9 text-sm text-brand-ink focus:border-brand-green focus:outline-none disabled:cursor-not-allowed disabled:opacity-50";
 
 // Display copy for the three selects — a view-layer concern, so it lives with the view;
 // src/types.ts stays entities and DTOs. Keyed by the enum, so adding a token there fails to
@@ -160,28 +162,28 @@ export function InventoryPanel({ initialProducts }: Props) {
   const pendingDeleteProduct = products.find((p) => p.id === pendingDeleteId);
 
   return (
-    <div className="space-y-8">
-      <div className="rounded-xl border border-white/10 bg-white/5 p-6">
-        <h2 className="mb-4 text-lg font-semibold text-white">Add product</h2>
-        <form onSubmit={(e) => void handleAdd(e)} className="flex flex-col gap-3 sm:flex-row sm:items-end">
-          <div className="flex flex-1 flex-col gap-1">
-            <label htmlFor="name" className="text-xs text-white/70">
+    <div className="grid gap-6 sm:grid-cols-5">
+      <div className="border-brand-border rounded-[20px] border bg-white p-6 sm:col-span-3">
+        <h2 className="font-display text-brand-ink mb-4 text-lg">Produkty</h2>
+
+        <div className="mb-4">
+          <p className="font-body text-brand-muted mb-2 text-xs font-medium">Nowy produkt</p>
+          <form onSubmit={(e) => void handleAdd(e)} className="flex items-center gap-2">
+            <label htmlFor="name" className="sr-only">
               Product name
             </label>
             <input
               id="name"
               name="name"
               type="text"
-              placeholder="e.g. Milk"
+              placeholder="Nazwa produktu"
               required
-              className="rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder-white/40 focus:border-white/40 focus:outline-none"
+              className="border-brand-input-border placeholder-brand-muted-2 text-brand-ink focus:border-brand-green flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none"
               onChange={() => {
                 setAddError(null);
               }}
             />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label htmlFor="expiry_date" className="text-xs text-white/70">
+            <label htmlFor="expiry_date" className="sr-only">
               Expiry date
             </label>
             <input
@@ -190,72 +192,88 @@ export function InventoryPanel({ initialProducts }: Props) {
               type="date"
               min={today}
               required
-              className="rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white focus:border-white/40 focus:outline-none"
+              className="border-brand-input-border text-brand-ink focus:border-brand-green rounded-lg border px-3 py-2 text-sm focus:outline-none"
               onChange={() => {
                 setAddError(null);
               }}
             />
-          </div>
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            className="border border-white/20 bg-white/10 text-white hover:bg-white/20"
-          >
-            {isSubmitting ? "Adding…" : "Add"}
-          </Button>
-        </form>
-        {addError && <p className="mt-2 text-sm text-red-300">{addError}</p>}
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              aria-label="Add product"
+              className="bg-brand-green hover:bg-brand-green/90 flex size-9 shrink-0 items-center justify-center rounded-full p-0 text-white"
+            >
+              {isSubmitting ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
+            </Button>
+          </form>
+          {addError && <p className="text-brand-danger mt-2 text-sm">{addError}</p>}
+        </div>
+
+        <div>
+          {deleteError && <p className="text-brand-danger mb-3 text-sm">{deleteError}</p>}
+          {products.length === 0 ? (
+            <p className="text-brand-muted text-sm">No products yet — add one above</p>
+          ) : (
+            <ul className="space-y-2">
+              {products.map((product) => {
+                const [year, month, day] = product.expiry_date.split("-");
+                return (
+                  <li
+                    key={product.id}
+                    className="bg-brand-surface flex items-center justify-between rounded-[20px] px-4 py-3"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div>
+                        <p className="text-brand-ink text-sm font-medium">{product.name}</p>
+                        <p className="text-brand-muted text-xs">{`Exp. date: ${day}.${month}.${year}`}</p>
+                      </div>
+                      {product.is_at_risk && (
+                        <span className="bg-brand-warn-bg text-brand-warn border-brand-warn-border rounded border px-2 py-0.5 text-xs font-medium">
+                          At risk
+                        </span>
+                      )}
+                      {/* Mutually exclusive with "At risk" by construction (classifyExpiry derives
+                          both from one call), so no precedence logic. Danger rather than warn: this
+                          one is not a deadline to cook towards, it is stock that is already gone. */}
+                      {product.is_expired && (
+                        <span className="bg-brand-danger-bg text-brand-danger border-brand-danger-border rounded border px-2 py-0.5 text-xs font-medium">
+                          Expired
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span aria-hidden="true" className="text-brand-muted-2 p-1">
+                        <Pencil className="size-4" />
+                      </span>
+                      <button
+                        type="button"
+                        aria-label={`Delete ${product.name}`}
+                        onClick={() => {
+                          setDeleteError(null);
+                          setPendingDeleteId(product.id);
+                        }}
+                        className="text-brand-muted-2 hover:text-brand-danger rounded p-1 transition-colors"
+                      >
+                        <Trash2 className="size-4" />
+                      </button>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
       </div>
 
-      <div>
-        {deleteError && <p className="mb-3 text-sm text-red-300">{deleteError}</p>}
-        {products.length === 0 ? (
-          <p className="text-sm text-white/50">No products yet — add one above</p>
-        ) : (
-          <ul className="space-y-2">
-            {products.map((product) => (
-              <li
-                key={product.id}
-                className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-3"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-medium text-white">{product.name}</span>
-                  {product.is_at_risk && (
-                    <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">At risk</span>
-                  )}
-                  {/* Mutually exclusive with "At risk" by construction (classifyExpiry derives
-                      both from one call), so no precedence logic. Red rather than amber: this
-                      one is not a deadline to cook towards, it is stock that is already gone. */}
-                  {product.is_expired && (
-                    <span className="rounded bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800">Expired</span>
-                  )}
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-xs text-white/60">{product.expiry_date}</span>
-                  <button
-                    type="button"
-                    aria-label={`Delete ${product.name}`}
-                    onClick={() => {
-                      setDeleteError(null);
-                      setPendingDeleteId(product.id);
-                    }}
-                    className="rounded p-1 text-white/40 transition-colors hover:bg-white/10 hover:text-red-300"
-                  >
-                    <Trash2 className="size-4" />
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {products.length > 0 && (
-          <div className="mt-4 space-y-3">
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <div className="flex flex-1 flex-col gap-1">
-                <label htmlFor="recipe-technique" className="text-xs text-white/70">
-                  Technique
-                </label>
+      {products.length > 0 && (
+        <div className="bg-brand-surface rounded-[20px] p-6 sm:col-span-2">
+          <h2 className="font-display text-brand-ink mb-4 text-lg">Ustawienia przepisu</h2>
+          <div className="space-y-3">
+            <div>
+              <label htmlFor="recipe-technique" className="text-brand-muted mb-1 block text-xs">
+                Technique
+              </label>
+              <div className="relative">
                 <select
                   id="recipe-technique"
                   value={params.technique}
@@ -266,16 +284,19 @@ export function InventoryPanel({ initialProducts }: Props) {
                   className={selectClasses}
                 >
                   {RECIPE_TECHNIQUES.map((value) => (
-                    <option key={value} value={value} className="bg-slate-900 text-white">
+                    <option key={value} value={value}>
                       {RECIPE_TECHNIQUE_LABELS[value]}
                     </option>
                   ))}
                 </select>
+                <ChevronDown className="text-brand-muted pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2" />
               </div>
-              <div className="flex flex-1 flex-col gap-1">
-                <label htmlFor="recipe-method" className="text-xs text-white/70">
-                  Method
-                </label>
+            </div>
+            <div>
+              <label htmlFor="recipe-method" className="text-brand-muted mb-1 block text-xs">
+                Method
+              </label>
+              <div className="relative">
                 <select
                   id="recipe-method"
                   value={params.method}
@@ -286,16 +307,19 @@ export function InventoryPanel({ initialProducts }: Props) {
                   className={selectClasses}
                 >
                   {RECIPE_METHODS.map((value) => (
-                    <option key={value} value={value} className="bg-slate-900 text-white">
+                    <option key={value} value={value}>
                       {RECIPE_METHOD_LABELS[value]}
                     </option>
                   ))}
                 </select>
+                <ChevronDown className="text-brand-muted pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2" />
               </div>
-              <div className="flex flex-1 flex-col gap-1">
-                <label htmlFor="recipe-time" className="text-xs text-white/70">
-                  Time preference
-                </label>
+            </div>
+            <div>
+              <label htmlFor="recipe-time" className="text-brand-muted mb-1 block text-xs">
+                Time preference
+              </label>
+              <div className="relative">
                 <select
                   id="recipe-time"
                   value={params.time}
@@ -306,22 +330,23 @@ export function InventoryPanel({ initialProducts }: Props) {
                   className={selectClasses}
                 >
                   {RECIPE_TIMES.map((value) => (
-                    <option key={value} value={value} className="bg-slate-900 text-white">
+                    <option key={value} value={value}>
                       {RECIPE_TIME_LABELS[value]}
                     </option>
                   ))}
                 </select>
+                <ChevronDown className="text-brand-muted pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2" />
               </div>
             </div>
 
-            <p className="text-xs text-white/50">
+            <p className="text-brand-muted text-xs">
               These guide the AI — it aims for them, but does not always hit them.
             </p>
 
             <Button
               onClick={() => void handleGenerate()}
               disabled={isGenerating || isApproving}
-              className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:opacity-90"
+              className="bg-brand-green hover:bg-brand-green/90 w-full text-white"
             >
               {isGenerating ? (
                 <>
@@ -329,12 +354,12 @@ export function InventoryPanel({ initialProducts }: Props) {
                   Generating…
                 </>
               ) : (
-                "Generate Recipe"
+                "Generate"
               )}
             </Button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <AlertDialog
         open={pendingDeleteId !== null}
@@ -365,23 +390,23 @@ export function InventoryPanel({ initialProducts }: Props) {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{recipe?.title}</AlertDialogTitle>
+            <AlertDialogTitle className="font-display text-brand-ink">{recipe?.title}</AlertDialogTitle>
           </AlertDialogHeader>
 
           <div className="max-h-[50vh] space-y-3 overflow-y-auto">
-            <ul className="list-disc space-y-1 pl-5 text-sm">
+            <ul className="text-brand-ink list-disc space-y-1 pl-5 text-sm">
               {recipe?.ingredients.map((ingredient, i) => (
                 <li key={i}>{ingredient}</li>
               ))}
             </ul>
-            <ol className="list-decimal space-y-1 pl-5 text-sm">
+            <ol className="text-brand-ink list-decimal space-y-1 pl-5 text-sm">
               {recipe?.instructions.map((step, i) => (
                 <li key={i}>{step}</li>
               ))}
             </ol>
           </div>
 
-          <AlertDialogDescription>
+          <AlertDialogDescription className="text-brand-muted">
             Will remove from inventory:{" "}
             {products
               .filter((p) => recipe?.used_product_ids.includes(p.id))
@@ -390,11 +415,25 @@ export function InventoryPanel({ initialProducts }: Props) {
           </AlertDialogDescription>
 
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={reset}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => void handleGenerate()} disabled={isGenerating || isApproving}>
+            <AlertDialogCancel
+              onClick={reset}
+              className="border-brand-input-border text-brand-ink hover:bg-brand-surface!"
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              variant="outline"
+              onClick={() => void handleGenerate()}
+              disabled={isGenerating || isApproving}
+              className="border-brand-green text-brand-green hover:bg-brand-green/10! hover:text-brand-green!"
+            >
               Generate Different Recipe
             </AlertDialogAction>
-            <Button onClick={() => void handleApprove()} disabled={isApproving}>
+            <Button
+              onClick={() => void handleApprove()}
+              disabled={isApproving}
+              className="bg-brand-green hover:bg-brand-green/90 text-white"
+            >
               {isApproving ? (
                 <>
                   <Loader2 className="mr-2 size-4 animate-spin" />

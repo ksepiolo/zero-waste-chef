@@ -9,7 +9,7 @@ archived_at: null
 
 ## Notes
 
-Dostosować stronę główną do designu z Figmy: https://www.figma.com/design/HijlsMP1h4eCPUbUIjBoPI/Zero-waste
+Dostosuj stronę główną do designu z Figmy: https://www.figma.com/design/HijlsMP1h4eCPUbUIjBoPI/Zero-waste
 
 Scope pinned to Figma frame **"Desktop - 1"** (node `#1:2`) only — the file's other three
 frames (sign-up form, pantry/recipe-settings, recipe history) map to different existing

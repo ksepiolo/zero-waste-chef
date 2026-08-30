@@ -14,7 +14,7 @@ test("added product appears in inventory and persists after reload", async ({ pa
   await page.waitForLoadState("networkidle");
   await page.getByLabel("Product name").fill(productName);
   await page.getByLabel("Expiry date").fill(expiryDate);
-  await page.getByRole("button", { name: "Add", exact: true }).click();
+  await page.getByRole("button", { name: "Add product", exact: true }).click();
 
   await expect(page.getByText(productName, { exact: true })).toBeVisible();
 
