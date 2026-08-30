@@ -264,30 +264,30 @@ Not applicable — no data model or schema changes.
 
 #### Automated
 
-- [x] 1.1 Type checking passes: `npm run typecheck`
-- [x] 1.2 Linting passes: `npm run lint`
+- [x] 1.1 Type checking passes: `npm run typecheck` — 831c176
+- [x] 1.2 Linting passes: `npm run lint` — 831c176
 
 #### Manual
 
-- [x] 1.3 FormField renders with no left icon, white background, correct border color, and legible error state
-- [x] 1.4 PasswordToggle icon is visible and toggles password visibility on a white input
-- [x] 1.5 SubmitButton renders brand-green, full-width, with working pending/spinner state
-- [x] 1.6 ServerError banner is legible on white background when an error is present
+- [x] 1.3 FormField renders with no left icon, white background, correct border color, and legible error state — 831c176
+- [x] 1.4 PasswordToggle icon is visible and toggles password visibility on a white input — 831c176
+- [x] 1.5 SubmitButton renders brand-green, full-width, with working pending/spinner state — 831c176
+- [x] 1.6 ServerError banner is legible on white background when an error is present — 831c176
 
 ### Phase 2: Sign-up page
 
 #### Automated
 
-- [ ] 2.1 Type checking passes: `npm run typecheck`
-- [ ] 2.2 Linting passes: `npm run lint`
+- [x] 2.1 Type checking passes: `npm run typecheck`
+- [x] 2.2 Linting passes: `npm run lint`
 
 #### Manual
 
-- [ ] 2.3 /auth/signup visually matches the Figma sign-up frame
-- [ ] 2.4 Submitting valid email/password/confirm-password redirects to /auth/confirm-email
-- [ ] 2.5 Client-side validation errors render legibly on the new light theme
-- [ ] 2.6 Server-side error renders via the restyled ServerError banner
-- [ ] 2.7 Password and confirm-password visibility toggles work
+- [x] 2.3 /auth/signup visually matches the Figma sign-up frame
+- [x] 2.4 Submitting valid email/password/confirm-password redirects to /auth/confirm-email
+- [x] 2.5 Client-side validation errors render legibly on the new light theme
+- [x] 2.6 Server-side error renders via the restyled ServerError banner
+- [x] 2.7 Password and confirm-password visibility toggles work
 
 ### Phase 3: Sign-in page (adapted)
 
