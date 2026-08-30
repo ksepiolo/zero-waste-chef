@@ -417,17 +417,17 @@ Not applicable — no data model or schema changes.
 
 #### Automated
 
-- [ ] 1.1 Type checking passes: `npm run typecheck`
-- [ ] 1.2 Linting passes: `npm run lint`
-- [ ] 1.3 Build succeeds: `npm run build`
+- [x] 1.1 Type checking passes: `npm run typecheck`
+- [x] 1.2 Linting passes: `npm run lint`
+- [x] 1.3 Build succeeds: `npm run build`
 
 #### Manual
 
-- [ ] 1.4 New nav bar (logo, underlined tab, link, static email+chevron) and
+- [x] 1.4 New nav bar (logo, underlined tab, link, static email+chevron) and
       heading/subtitle render per Figma
-- [ ] 1.5 "Historia przepisów" navigates to `/recipes`
-- [ ] 1.6 Page remains usable at a narrow viewport width
-- [ ] 1.7 InventoryPanel below still functions as before (dark-themed, expected)
+- [x] 1.5 "Historia przepisów" navigates to `/recipes`
+- [x] 1.6 Page remains usable at a narrow viewport width
+- [x] 1.7 InventoryPanel below still functions as before (dark-themed, expected)
 
 ### Phase 2: UserMenu sign-out dropdown
 

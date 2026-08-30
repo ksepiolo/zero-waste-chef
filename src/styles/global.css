@@ -116,6 +116,12 @@
   --color-brand-surface: #f8fafb;
   --color-brand-border: #e7e7e7;
   --color-brand-input-border: #b9b6b6;
+  --color-brand-danger: #b14039;
+  --color-brand-danger-bg: #fbebea;
+  --color-brand-danger-border: #f0d2d0;
+  --color-brand-warn: #b17939;
+  --color-brand-warn-bg: #fbf3ea;
+  --color-brand-warn-border: #f0e1d0;
   --font-display: "Playfair Display", serif;
   /* Named --font-body, not the reserved --font-sans: Tailwind v4 Preflight
      consumes --font-sans as the sitewide default body font, so overriding it
