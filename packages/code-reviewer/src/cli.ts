@@ -11,7 +11,7 @@ import { relative, resolve } from "node:path";
 import { argv, cwd, env, exit, stderr, stdout } from "node:process";
 import { pathToFileURL } from "node:url";
 
-import type { ReviewFinding, ReviewInputFile } from "./review.schema.js";
+import type { ReviewFinding, ReviewInputFile } from "./schemas/reviews.js";
 import { reviewCode } from "./review.service.js";
 
 const SEVERITY_LABEL: Record<ReviewFinding["severity"], string> = {

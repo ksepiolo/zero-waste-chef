@@ -451,28 +451,28 @@ both are internal and neither is re-exported by path.
 
 #### Automated
 
-- [x] 1.1 Type checking passes
-- [x] 1.2 Build succeeds and emits both entry points
-- [x] 1.3 Library import has no side effects and needs no API key
+- [x] 1.1 Type checking passes — e508ebb
+- [x] 1.2 Build succeeds and emits both entry points — e508ebb
+- [x] 1.3 Library import has no side effects and needs no API key — e508ebb
 
 #### Manual
 
-- [x] 1.4 CLI output shape unchanged
-- [x] 1.5 Exit codes 0/1/2 still behave
+- [x] 1.4 CLI output shape unchanged — e508ebb
+- [x] 1.5 Exit codes 0/1/2 still behave — e508ebb
 
 ### Phase 2: Extract Schemas and Prompts
 
 #### Automated
 
-- [ ] 2.1 Type checking passes
-- [ ] 2.2 Build succeeds
-- [ ] 2.3 Deleted module gone and unreferenced
-- [ ] 2.4 Public exports unchanged from Phase 1
+- [x] 2.1 Type checking passes
+- [x] 2.2 Build succeeds
+- [x] 2.3 Deleted module gone and unreferenced
+- [x] 2.4 Public exports unchanged from Phase 1
 
 #### Manual
 
-- [ ] 2.5 CLI findings render in the same format
-- [ ] 2.6 Numbered-source prompt block byte-identical to before
+- [x] 2.5 CLI findings render in the same format
+- [x] 2.6 Numbered-source prompt block byte-identical to before
 
 ### Phase 3: Test Harness and Contract Tests
 

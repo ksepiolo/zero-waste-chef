@@ -17,5 +17,5 @@ export {
   type ReviewInputFile,
   type ReviewResult,
   type Severity,
-} from "./review.schema.js";
+} from "./schemas/reviews.js";
 export { reviewCode, type ReviewCodeOptions, type ReviewCodeResponse } from "./review.service.js";

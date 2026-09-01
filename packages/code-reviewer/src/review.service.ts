@@ -1,14 +1,8 @@
 import { generateText, Output, type LanguageModel, type LanguageModelUsage } from "ai";
 
 import { createProviderContext } from "./openrouter.provider.js";
-import { reviewResultSchema, type ReviewInputFile, type ReviewResult } from "./review.schema.js";
-
-const INSTRUCTIONS = [
-  "You are a precise, senior code reviewer.",
-  "Report only defects you can point at in the code you were given: correctness bugs, unhandled failure modes, security problems, and clear simplifications.",
-  "Do not invent findings to fill the list — an empty findings array is the right answer for sound code.",
-  "Anchor every finding to a file path and, where possible, a line number from the numbered source you were shown.",
-].join(" ");
+import { buildReviewPrompt, REVIEW_INSTRUCTIONS } from "./prompts/reviews.js";
+import { reviewResultSchema, type ReviewInputFile, type ReviewResult } from "./schemas/reviews.js";
 
 export interface ReviewCodeOptions {
   files: ReviewInputFile[];
@@ -42,9 +36,9 @@ export async function reviewCode(options: ReviewCodeOptions): Promise<ReviewCode
 
   const { output, usage } = await generateText({
     model,
-    instructions: INSTRUCTIONS,
+    instructions: REVIEW_INSTRUCTIONS,
     output: Output.object({ schema: reviewResultSchema }),
-    prompt: buildPrompt(files, context),
+    prompt: buildReviewPrompt(files, context),
     ...(abortSignal ? { abortSignal } : {}),
   });
 
@@ -61,24 +55,4 @@ function resolveModel(override: LanguageModel | undefined): { model: LanguageMod
 
   const context = createProviderContext();
   return { model: context.model, modelId: context.modelId };
-}
-
-function buildPrompt(files: ReviewInputFile[], context: string | undefined): string {
-  const sections = files.map((file) => {
-    const numbered = file.content
-      .split("\n")
-      .map((line, index) => `${index + 1}\t${line}`)
-      .join("\n");
-
-    return `--- ${file.path} ---\n${numbered}`;
-  });
-
-  return [
-    context ? `Context for this review:\n${context}\n` : "",
-    "Review the following files. Line numbers are prefixed and are not part of the source.",
-    "",
-    sections.join("\n\n"),
-  ]
-    .filter(Boolean)
-    .join("\n");
 }
