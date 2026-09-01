@@ -464,15 +464,15 @@ both are internal and neither is re-exported by path.
 
 #### Automated
 
-- [x] 2.1 Type checking passes
-- [x] 2.2 Build succeeds
-- [x] 2.3 Deleted module gone and unreferenced
-- [x] 2.4 Public exports unchanged from Phase 1
+- [x] 2.1 Type checking passes — 863ad85
+- [x] 2.2 Build succeeds — 863ad85
+- [x] 2.3 Deleted module gone and unreferenced — 863ad85
+- [x] 2.4 Public exports unchanged from Phase 1 — 863ad85
 
 #### Manual
 
-- [x] 2.5 CLI findings render in the same format
-- [x] 2.6 Numbered-source prompt block byte-identical to before
+- [x] 2.5 CLI findings render in the same format — 863ad85
+- [x] 2.6 Numbered-source prompt block byte-identical to before — 863ad85
 
 ### Phase 3: Test Harness and Contract Tests
 
