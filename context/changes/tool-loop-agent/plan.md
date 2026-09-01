@@ -478,13 +478,13 @@ both are internal and neither is re-exported by path.
 
 #### Automated
 
-- [ ] 3.1 Tests pass
-- [ ] 3.2 Type checking still passes
-- [ ] 3.3 Build output contains no test artifacts
+- [x] 3.1 Tests pass
+- [x] 3.2 Type checking still passes
+- [x] 3.3 Build output contains no test artifacts
 
 #### Manual
 
-- [ ] 3.4 Deliberate numbering break makes the prompt test fail
+- [x] 3.4 Deliberate numbering break makes the prompt test fail
 
 ### Phase 4: ToolLoopAgent Conversion
 

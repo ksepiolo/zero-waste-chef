@@ -1,0 +1,7 @@
+{
+  // Emit config. `tsconfig.json` is the whole project — tests included — so `npm run
+  // typecheck` covers them; this one drops the tests so `tsc` never emits `dist/**/*.test.js`
+  // or drags `vitest` into the declaration graph (`declaration: true` in the base).
+  "extends": "./tsconfig.json",
+  "exclude": ["dist", "node_modules", "src/**/*.test.ts"]
+}
