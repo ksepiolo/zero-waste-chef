@@ -9,6 +9,7 @@
  */
 export { loadEnv, type Env } from "./env.config.js";
 export { createProviderContext, type ProviderContext } from "./openrouter.provider.js";
+export { buildReviewPrompt, REVIEW_INSTRUCTIONS } from "./prompts/reviews.js";
 export {
   reviewFindingSchema,
   reviewResultSchema,
@@ -18,4 +19,10 @@ export {
   type ReviewResult,
   type Severity,
 } from "./schemas/reviews.js";
-export { reviewCode, type ReviewCodeOptions, type ReviewCodeResponse } from "./review.service.js";
+export {
+  createReviewAgent,
+  reviewCode,
+  type CreateReviewAgentOptions,
+  type ReviewCodeOptions,
+  type ReviewCodeResponse,
+} from "./agents/reviews.js";

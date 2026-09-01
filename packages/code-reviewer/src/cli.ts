@@ -12,7 +12,7 @@ import { argv, cwd, env, exit, stderr, stdout } from "node:process";
 import { pathToFileURL } from "node:url";
 
 import type { ReviewFinding, ReviewInputFile } from "./schemas/reviews.js";
-import { reviewCode } from "./review.service.js";
+import { reviewCode } from "./agents/reviews.js";
 
 const SEVERITY_LABEL: Record<ReviewFinding["severity"], string> = {
   critical: "CRITICAL",

@@ -478,26 +478,26 @@ both are internal and neither is re-exported by path.
 
 #### Automated
 
-- [x] 3.1 Tests pass
-- [x] 3.2 Type checking still passes
-- [x] 3.3 Build output contains no test artifacts
+- [x] 3.1 Tests pass — 8f67597
+- [x] 3.2 Type checking still passes — 8f67597
+- [x] 3.3 Build output contains no test artifacts — 8f67597
 
 #### Manual
 
-- [x] 3.4 Deliberate numbering break makes the prompt test fail
+- [x] 3.4 Deliberate numbering break makes the prompt test fail — 8f67597
 
 ### Phase 4: ToolLoopAgent Conversion
 
 #### Automated
 
-- [ ] 4.1 Tests pass, including agent tests
-- [ ] 4.2 Type checking passes
-- [ ] 4.3 Build succeeds
-- [ ] 4.4 Retired service module gone and unreferenced
-- [ ] 4.5 Library import side-effect-free without credentials
+- [x] 4.1 Tests pass, including agent tests
+- [x] 4.2 Type checking passes
+- [x] 4.3 Build succeeds
+- [x] 4.4 Retired service module gone and unreferenced
+- [x] 4.5 Library import side-effect-free without credentials
 
 #### Manual
 
-- [ ] 4.6 Review quality comparable on the same file
-- [ ] 4.7 Repeat runs materially stable under temperature 0
-- [ ] 4.8 Buggy fixture still yields a critical finding and exit code 1
+- [x] 4.6 Review quality comparable on the same file
+- [x] 4.7 Repeat runs materially stable under temperature 0
+- [x] 4.8 Buggy fixture still yields a critical finding and exit code 1
