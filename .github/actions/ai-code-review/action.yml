@@ -1,0 +1,204 @@
+name: AI code review
+description: >-
+  Reviews a pull request's diff against six criteria, posts the scores as a single upserted PR
+  comment, and records the verdict as an `ai-cr:passed` / `ai-cr:failed` label.
+
+# SAFETY ENVELOPE — this action is called from a `pull_request_target` workflow, which means it runs
+# with a writable token in the context of the base repository. The pull request's code is therefore
+# only ever inspected as data and never executed:
+#
+#   * the caller checks out the BASE branch (no `ref:`), so `npm ci` below installs the base
+#     branch's `packages/code-reviewer/package-lock.json` — never a fork's;
+#   * the diff and the pull request metadata arrive as text from the `gh` API, never from fetching
+#     or checking out a fork ref;
+#   * nothing from the pull request reaches a `run:` step through `${{ }}` interpolation — the
+#     title and body are read from files, the model output only through `jq`/the renderer.
+#
+# Every change here has to preserve all four. See `context/changes/ci-cd-code-review/plan.md`.
+
+inputs:
+  pr-number:
+    description: Number of the pull request to review.
+    required: true
+  api-key:
+    description: >-
+      OpenRouter API key. A composite action cannot read the `secrets` context, so the calling
+      workflow has to pass it in as an input.
+    required: true
+  github-token:
+    description: "Token for the `gh` calls. Needs `pull-requests: write` and `issues: write`."
+    required: true
+  model:
+    description: >-
+      OpenRouter model id. Empty means the reviewer package's own default (`OPENROUTER_MODEL` is
+      dropped when blank, so the schema default applies).
+    required: false
+    default: ""
+
+# Composite outputs are not implicit — each needs an explicit `value:` mapping to a step output.
+outputs:
+  verdict:
+    description: "`passed`, `failed`, or `error` when the reviewer itself did not complete."
+    value: ${{ steps.review.outputs.verdict }}
+  failing-criteria:
+    description: Comma-separated criterion keys at or below the failing floor. Empty on a pass.
+    value: ${{ steps.review.outputs.failing-criteria }}
+
+runs:
+  using: composite
+  steps:
+    # `working-directory` does not apply to `uses:` steps, so `cache-dependency-path` is the only
+    # way to point the cache at this package's lockfile rather than the repo root's.
+    - uses: actions/setup-node@v4
+      with:
+        node-version: "22.14"
+        cache: npm
+        cache-dependency-path: packages/code-reviewer/package-lock.json
+
+    # Not `--omit=dev`: `tsx` and `typescript` are both devDependencies and the reviewer runs from
+    # source. This installs the BASE branch's lockfile — see the safety envelope above.
+    - name: Install the reviewer
+      shell: bash
+      working-directory: packages/code-reviewer
+      run: npm ci
+
+    - name: Fetch the pull request as text
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        GH_REPO: ${{ github.repository }}
+        PR_NUMBER: ${{ inputs.pr-number }}
+      run: |
+        set -euo pipefail
+        gh pr diff "$PR_NUMBER" > "$RUNNER_TEMP/pr.diff"
+        gh pr view "$PR_NUMBER" --json title,body > "$RUNNER_TEMP/pr.json"
+        jq -r '.title' "$RUNNER_TEMP/pr.json" > "$RUNNER_TEMP/pr-title.txt"
+        jq -r '.body // ""' "$RUNNER_TEMP/pr.json" > "$RUNNER_TEMP/pr-body.md"
+        echo "diff is $(wc -c < "$RUNNER_TEMP/pr.diff") bytes"
+
+    # `npx tsx` rather than a `tsc` build: one step fewer, and `dist/` is gitignored so CI must
+    # never assume a prebuilt artifact. The build path is already gated by the `code-reviewer` job
+    # in `ci.yml`.
+    - name: Run the reviewer
+      id: review
+      shell: bash
+      working-directory: packages/code-reviewer
+      env:
+        OPENROUTER_API_KEY: ${{ inputs.api-key }}
+        OPENROUTER_MODEL: ${{ inputs.model }}
+      run: |
+        set -uo pipefail
+        status=0
+        npx tsx src/cli.ts --json \
+          --title "$(cat "$RUNNER_TEMP/pr-title.txt")" \
+          --diff "$RUNNER_TEMP/pr.diff" \
+          --body "$RUNNER_TEMP/pr-body.md" \
+          > "$RUNNER_TEMP/review.json" 2> "$RUNNER_TEMP/review.err" || status=$?
+        cat "$RUNNER_TEMP/review.err" >&2
+
+        # Exit codes are contract (see `src/cli.ts`): 0 pass, 1 failing verdict, 2 usage error,
+        # 3 reviewer error. A failing verdict is a result; 2 and 3 mean there is no verdict at all,
+        # and labelling every pull request `ai-cr:failed` on a bad API key would be worse than
+        # saying nothing.
+        case "$status" in
+          0) verdict=passed ;;
+          1) verdict=failed ;;
+          *) verdict=error ;;
+        esac
+
+        failing=""
+        if [ "$verdict" = error ]; then
+          echo "::error::the code reviewer did not complete (exit $status) — no verdict label applied"
+        else
+          failing=$(jq -r '.verdict.failing | join(",")' "$RUNNER_TEMP/review.json")
+        fi
+
+        {
+          echo "verdict=$verdict"
+          echo "failing-criteria=$failing"
+          echo "exit-code=$status"
+        } >> "$GITHUB_OUTPUT"
+
+    # The reason is derived from the exit code rather than echoed from stderr: the comment is
+    # public, and provider errors are not guaranteed to be free of credential material.
+    - name: Render the comment
+      shell: bash
+      env:
+        VERDICT: ${{ steps.review.outputs.verdict }}
+        EXIT_CODE: ${{ steps.review.outputs.exit-code }}
+        RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      run: |
+        set -euo pipefail
+        if [ "$VERDICT" = error ]; then
+          if [ "$EXIT_CODE" = 2 ]; then
+            reason="The reviewer rejected its inputs (exit 2) — most often an empty diff."
+          else
+            reason="The reviewer failed to complete (exit $EXIT_CODE): bad credentials, an unreachable provider, or model output it could not parse."
+          fi
+          node "$GITHUB_ACTION_PATH/render-comment.mjs" \
+            --error --reason "$reason" --run-url "$RUN_URL" > "$RUNNER_TEMP/comment.md"
+        else
+          node "$GITHUB_ACTION_PATH/render-comment.mjs" \
+            --review "$RUNNER_TEMP/review.json" --run-url "$RUN_URL" > "$RUNNER_TEMP/comment.md"
+        fi
+        jq -Rs '{body: .}' < "$RUNNER_TEMP/comment.md" > "$RUNNER_TEMP/comment.json"
+
+    # Upsert by marker: GitHub has no "update my comment" endpoint, so the previous body is found
+    # by its leading `<!-- ai-cr:marker -->`. Without this every push appends another comment.
+    - name: Upsert the review comment
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        GH_REPO: ${{ github.repository }}
+        PR_NUMBER: ${{ inputs.pr-number }}
+      run: |
+        set -euo pipefail
+        existing=$(gh api --paginate "repos/$GH_REPO/issues/$PR_NUMBER/comments" \
+          --jq '.[] | select(.body | startswith("<!-- ai-cr:marker -->")) | .id' | head -n 1)
+
+        if [ -n "$existing" ]; then
+          gh api --method PATCH "repos/$GH_REPO/issues/comments/$existing" \
+            --input "$RUNNER_TEMP/comment.json" --silent
+          echo "updated comment $existing"
+        else
+          gh api --method POST "repos/$GH_REPO/issues/$PR_NUMBER/comments" \
+            --input "$RUNNER_TEMP/comment.json" --silent
+          echo "posted a new comment"
+        fi
+
+    # `--force` upserts the definition, which makes an existence check unnecessary. Colours are hex
+    # without `#`, matching the repo's existing `status:ready` / `status:proposed` convention.
+    - name: Apply the verdict label
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        GH_REPO: ${{ github.repository }}
+        PR_NUMBER: ${{ inputs.pr-number }}
+        VERDICT: ${{ steps.review.outputs.verdict }}
+      run: |
+        set -euo pipefail
+        gh label create "ai-cr:passed" --color 0e8a16 --description "AI code review passed" --force
+        gh label create "ai-cr:failed" --color d93f0b --description "AI code review found blocking issues" --force
+        gh label create "ai-cr:review" --color 1d76db --description "Re-run the AI code review" --force
+
+        case "$VERDICT" in
+          passed) add="ai-cr:passed"; drop="ai-cr:failed" ;;
+          failed) add="ai-cr:failed"; drop="ai-cr:passed" ;;
+          *) echo "no verdict — leaving the existing labels alone"; exit 0 ;;
+        esac
+
+        # No label-swap endpoint exists, and removing an absent label is a 404.
+        gh pr edit "$PR_NUMBER" --add-label "$add"
+        gh pr edit "$PR_NUMBER" --remove-label "$drop" || true
+
+    # Always, including the error path: re-adding a label that is already present emits no event,
+    # so leaving `ai-cr:review` in place would make the next retry a silent no-op. `unlabeled` is
+    # deliberately absent from the workflow's `types:`, so this removal does not re-trigger.
+    - name: Consume the retry label
+      if: always()
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        GH_REPO: ${{ github.repository }}
+        PR_NUMBER: ${{ inputs.pr-number }}
+      run: gh pr edit "$PR_NUMBER" --remove-label "ai-cr:review" || true

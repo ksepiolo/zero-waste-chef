@@ -71,6 +71,19 @@ const astroConfig = tseslint.config({
   },
 });
 
+// Plain Node scripts that ship inside a GitHub composite action. They live under a dot-directory,
+// which TypeScript's `include: ["**/*"]` glob skips, so the project service cannot resolve them and
+// every type-aware rule errors out. Lint them with the untyped rules instead of not at all.
+const githubScriptsConfig = tseslint.config({
+  files: [".github/**/*.mjs"],
+  extends: [tseslint.configs.disableTypeChecked],
+  languageOptions: {
+    globals: {
+      process: "readonly",
+    },
+  },
+});
+
 const nodeConfigFilesConfig = tseslint.config({
   files: ["*.config.{js,mjs,cjs,ts}"],
   languageOptions: {
@@ -92,5 +105,6 @@ export default tseslint.config(
   ...eslintPluginAstro.configs["flat/jsx-a11y-recommended"],
   astroConfig,
   nodeConfigFilesConfig,
+  githubScriptsConfig,
   eslintPluginPrettier,
 );

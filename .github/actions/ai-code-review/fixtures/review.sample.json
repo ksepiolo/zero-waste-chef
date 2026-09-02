@@ -1,0 +1,136 @@
+{
+  "summary": "This PR introduces a product search endpoint with critical security vulnerabilities and unsafe practices. The code contains SQL injection, secrets leakage in logs, and unused helper functions, making it unsuitable for production without substantial fixes.",
+  "criteria": {
+    "implementation_correctness": {
+      "score": 2,
+      "rationale": "The code has fundamental logic flaws: SQL injection via unsanitized user input, missing null checks for query parameters, and a ranking helper that is defined but never used. The endpoint will fail or behave unexpectedly when q is null or contains SQL metacharacters.",
+      "issues": [
+        {
+          "file": "src/pages/api/products/search.ts",
+          "quote": "const q = url.searchParams.get(\"q\");\n\n  const { data } = await supabase.rpc(\"search_products\", {\n    sql: `select * from products where name like '%${q}%'`,",
+          "explanation": "Direct string interpolation of user input into SQL creates a SQL injection vulnerability. If q is null, the query becomes invalid. If q contains SQL metacharacters like %, ', or --, the query logic breaks or executes unintended SQL.",
+          "suggestion": "Use parameterized queries: pass q as a separate parameter to the RPC function and let Supabase handle escaping. For example: `supabase.rpc(\"search_products\", { query: q })` where the RPC function uses parameterized queries internally."
+        },
+        {
+          "file": "src/lib/services/search.service.ts",
+          "quote": "export function rank(items: { name: string; score: number }[], q: string) {\n  return items\n    .map((i) => ({ ...i, score: i.name.indexOf(q) }))\n    .sort((a, b) => a.score - b.score)\n    .filter((i) => i.score > -1)\n    .slice(0, 10);\n}",
+          "explanation": "The rank function overwrites the input score field with indexOf result, losing the original score. It is defined but never imported or called in the search endpoint, making it dead code.",
+          "suggestion": "Either remove the unused function or integrate it into the search endpoint. If keeping it, clarify intent: should it preserve original scores or use indexOf as the sole ranking criterion?"
+        }
+      ]
+    },
+    "idiomaticity": {
+      "score": 3,
+      "rationale": "The code mixes concerns (API route directly constructs SQL) and violates separation of concerns by not using the search service. Error handling is absent, and the logging pattern is non-standard for a framework like Astro.",
+      "issues": [
+        {
+          "file": "src/pages/api/products/search.ts",
+          "quote": "const { data } = await supabase.rpc(\"search_products\", {\n    sql: `select * from products where name like '%${q}%'`,\n  });",
+          "explanation": "Constructing SQL in the API route violates the service layer pattern. The search.service.ts exists but is not used, suggesting incomplete refactoring or architectural confusion.",
+          "suggestion": "Move SQL construction into search.service.ts or use Supabase's query builder (e.g., `.from('products').select().ilike('name', ...)`). Call the service from the API route."
+        },
+        {
+          "file": "src/pages/api/products/search.ts",
+          "quote": "return new Response(JSON.stringify(data), { status: 200 });",
+          "explanation": "Missing error handling and Content-Type header. Astro conventions typically use Response helpers or return objects directly. No try-catch for the async RPC call.",
+          "suggestion": "Add try-catch, set Content-Type header, and handle null/error cases: `return new Response(JSON.stringify(data || []), { status: 200, headers: { 'Content-Type': 'application/json' } });`"
+        }
+      ]
+    },
+    "complexity": {
+      "score": 2,
+      "rationale": "The solution is over-engineered in some ways (unused service function) and under-engineered in others (no abstraction for SQL safety). The ranking logic is convoluted and doesn't match typical search patterns.",
+      "issues": [
+        {
+          "file": "src/lib/services/search.service.ts",
+          "quote": "return items\n    .map((i) => ({ ...i, score: i.name.indexOf(q) }))\n    .sort((a, b) => a.score - b.score)\n    .filter((i) => i.score > -1)\n    .slice(0, 10);",
+          "explanation": "The ranking logic is unnecessarily complex: it maps to add a score, sorts, filters, and slices. The logic also conflates two concerns—ranking and limiting results. indexOf returns -1 for no match, making the filter condition confusing.",
+          "suggestion": "Simplify: `return items.filter(i => i.name.includes(q)).sort((a, b) => i.name.indexOf(q) - b.name.indexOf(q)).slice(0, 10);` or better yet, let the database handle filtering and ranking via SQL ORDER BY."
+        }
+      ]
+    },
+    "test_risk_coverage": {
+      "score": 1,
+      "rationale": "No tests are provided for either the endpoint or the service. The endpoint has high-risk paths (SQL injection, null input, RPC failure) that are completely untested. The ranking function is untested and unused.",
+      "issues": [
+        {
+          "file": "src/pages/api/products/search.ts",
+          "quote": "export const GET: APIRoute = async ({ url, locals }) => {",
+          "explanation": "The endpoint lacks any test coverage. Critical paths like missing query parameter, SQL injection attempts, RPC errors, and authentication checks are not exercised.",
+          "suggestion": "Add tests covering: (1) missing q parameter, (2) q with SQL metacharacters, (3) successful search, (4) RPC failure, (5) authentication/authorization."
+        },
+        {
+          "file": "src/lib/services/search.service.ts",
+          "quote": "export function rank(items: { name: string; score: number }[], q: string) {",
+          "explanation": "The rank function has no tests. Edge cases like empty array, q not found in any name, or duplicate scores are not covered.",
+          "suggestion": "Add unit tests for: (1) empty input, (2) no matches, (3) multiple matches with different positions, (4) results limited to 10 items."
+        }
+      ]
+    },
+    "documentation": {
+      "score": 2,
+      "rationale": "No comments or documentation explain the intent of the endpoint, the ranking strategy, or why the service function exists but is unused. The console.log suggests debugging code left behind.",
+      "issues": [
+        {
+          "file": "src/pages/api/products/search.ts",
+          "quote": "console.log(\"search for user\", locals.user.email, \"token\", import.meta.env.SUPABASE_KEY);",
+          "explanation": "Debug logging left in production code that exposes sensitive information (user email, API key). This is not documentation; it's a security and operational liability.",
+          "suggestion": "Remove this line entirely. If audit logging is needed, use a proper logging service that redacts secrets."
+        },
+        {
+          "file": "src/pages/api/products/search.ts",
+          "quote": "export const GET: APIRoute = async ({ url, locals }) => {",
+          "explanation": "No JSDoc or comment explaining the endpoint's purpose, parameters, response format, or error handling.",
+          "suggestion": "Add a JSDoc comment: `/** GET /api/products/search?q=query - Search products by name. Returns up to 10 matching products. */`"
+        },
+        {
+          "file": "src/lib/services/search.service.ts",
+          "quote": "export function rank(items: { name: string; score: number }[], q: string) {",
+          "explanation": "No explanation of why this function exists, how it's meant to be used, or why it overwrites the score field.",
+          "suggestion": "Add a comment explaining the ranking strategy and whether this function is actively used or deprecated."
+        }
+      ]
+    },
+    "security_safety": {
+      "score": 1,
+      "rationale": "The code contains multiple critical security flaws: SQL injection via unsanitized user input, exposure of secrets (API key and user email) in console logs, and no input validation or authentication checks visible.",
+      "issues": [
+        {
+          "file": "src/pages/api/products/search.ts",
+          "quote": "const { data } = await supabase.rpc(\"search_products\", {\n    sql: `select * from products where name like '%${q}%'`,\n  });",
+          "explanation": "SQL injection vulnerability. An attacker can craft a query like `q='; DROP TABLE products; --` to execute arbitrary SQL. This is a critical vulnerability that can lead to data loss or unauthorized access.",
+          "suggestion": "Use parameterized queries. Pass q as a parameter to the RPC function and let Supabase handle escaping: `supabase.rpc('search_products', { query: q })` with the RPC function using `$1` placeholders."
+        },
+        {
+          "file": "src/pages/api/products/search.ts",
+          "quote": "console.log(\"search for user\", locals.user.email, \"token\", import.meta.env.SUPABASE_KEY);",
+          "explanation": "Secrets leakage: the Supabase API key is logged to console, potentially exposing it in logs, monitoring systems, or error reports. User email is also logged without consent or purpose.",
+          "suggestion": "Remove this line entirely. If audit logging is required, log only non-sensitive identifiers (e.g., user ID) to a secure logging service that redacts secrets."
+        },
+        {
+          "file": "src/pages/api/products/search.ts",
+          "quote": "const q = url.searchParams.get(\"q\");",
+          "explanation": "No validation of q. If q is null or an empty string, the query behavior is undefined. No length limits prevent denial-of-service via extremely long search strings.",
+          "suggestion": "Validate and sanitize: `const q = url.searchParams.get('q'); if (!q || q.length > 100) return new Response(JSON.stringify({ error: 'Invalid query' }), { status: 400 });`"
+        },
+        {
+          "file": "src/pages/api/products/search.ts",
+          "quote": "export const GET: APIRoute = async ({ url, locals }) => {",
+          "explanation": "No visible authentication or authorization check. The endpoint assumes locals.user exists but doesn't verify it. If locals.user is undefined, accessing locals.user.email will crash.",
+          "suggestion": "Add authentication check: `if (!locals.user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });`"
+        }
+      ]
+    }
+  },
+  "verdict": {
+    "passed": false,
+    "failing": [
+      "implementation_correctness",
+      "idiomaticity",
+      "complexity",
+      "test_risk_coverage",
+      "documentation",
+      "security_safety"
+    ]
+  }
+}

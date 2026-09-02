@@ -806,13 +806,13 @@ have to be restored from git.
 
 #### Automated
 
-- [ ] 3.1 action.yml and ai-code-review.yml parse as valid YAML
-- [ ] 3.2 Every composite run step declares shell
-- [ ] 3.3 Both composite outputs have explicit value mappings
-- [ ] 3.4 actionlint reports no errors
-- [ ] 3.5 No PR-head checkout ref and no allow-unsafe-pr-checkout anywhere
-- [ ] 3.6 Comment renderer produces a marker-led body with all six criteria
-- [ ] 3.7 Root and package gates still pass
+- [x] 3.1 action.yml and ai-code-review.yml parse as valid YAML
+- [x] 3.2 Every composite run step declares shell
+- [x] 3.3 Both composite outputs have explicit value mappings
+- [x] 3.4 actionlint reports no errors
+- [x] 3.5 No PR-head checkout ref and no allow-unsafe-pr-checkout anywhere
+- [x] 3.6 Comment renderer produces a marker-led body with all six criteria
+- [x] 3.7 Root and package gates still pass
 
 #### Manual
 

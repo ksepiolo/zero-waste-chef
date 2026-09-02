@@ -6,7 +6,7 @@
 >
 > Refresh: re-run `/10x-test-plan --refresh` when stale (see §8).
 >
-> Last updated: 2026-08-30
+> Last updated: 2026-09-03
 
 ## 1. Strategy
 
@@ -447,7 +447,12 @@ contributors should respect these unless the underlying assumption changes.
   the Astro config, the Worker config, the environment schema, or CI
   definitions. The build gate already fails on a broken configuration.
   Re-evaluate if a configuration error reaches production despite a green
-  build. (Source: Phase 2 interview Q5.)
+  build. (Source: Phase 2 interview Q5.) **Unchanged 2026-09-03:** the
+  `ci-cd-code-review` change adds an advisory AI review of every pull
+  request diff (`.github/workflows/ai-code-review.yml`). That is a semantic
+  judgement about the change under review, not an assertion about the
+  contents of a config file, so this exclusion still holds — there are no
+  tests asserting what the new workflow or composite action contain.
 - **Test infrastructure beyond the minimum** — no fixture factories, no
   custom test DSL, no coverage thresholds, no CI matrix, no containerized
   test rigs. A phase that appears to need one should re-ask whether a

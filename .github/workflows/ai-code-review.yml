@@ -1,0 +1,58 @@
+# Advisory AI review of every pull request against `main`. Deliberately thin: all of the logic
+# lives in `.github/actions/ai-code-review`. What cannot be hidden is the secret plumbing — a
+# composite action cannot read the `secrets` context, so the key is passed in as an input.
+name: AI Code Review
+
+on:
+  # `pull_request_target`, not `pull_request`, so fork pull requests get a token that can comment
+  # and label. The action never executes the pull request's code — see the safety envelope in
+  # `.github/actions/ai-code-review/action.yml`.
+  pull_request_target:
+    branches: [main]
+    # `ready_for_review` is listed because that transition emits neither `opened` nor `synchronize`.
+    # `unlabeled` is deliberately absent: the action removes `ai-cr:review` once it has consumed it.
+    types: [opened, synchronize, reopened, labeled, ready_for_review]
+  # `pull_request_target` always reads this file from the default branch, so the trigger wiring is
+  # not testable from a feature branch. This entry point is how the action gets exercised by hand.
+  workflow_dispatch:
+    inputs:
+      pr-number:
+        description: Number of the pull request to review.
+        required: true
+        type: string
+
+# The repository's `default_workflow_permissions` is `read`, so these are mandatory rather than
+# a narrowing of a permissive default.
+permissions:
+  contents: read # checkout of the base branch, for the action's own code
+  pull-requests: write # labels
+  issues: write # a pull request conversation comment is an Issues endpoint
+
+# Keyed on the number rather than `github.head_ref`, which is undefined on some activity types.
+concurrency:
+  group: ai-review-${{ github.event.pull_request.number || inputs.pr-number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # The `labeled` disjunction is what stops the action's own `ai-cr:passed` / `ai-cr:failed`
+    # writes from re-triggering this workflow. `github.event.label` is populated only on
+    # `labeled` / `unlabeled`, so the guard is written against `github.event.action`.
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.pull_request.draft == false &&
+       (github.event.action != 'labeled' || github.event.label.name == 'ai-cr:review'))
+    steps:
+      # No `ref:` — under `pull_request_target` this resolves to the base branch, which is both the
+      # safety requirement and the only way a local `./`-referenced action exists at all.
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/ai-code-review
+        with:
+          pr-number: ${{ github.event.pull_request.number || inputs.pr-number }}
+          api-key: ${{ secrets.OPENROUTER_API_KEY }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      # The job deliberately does not fail on a failing verdict: the gate is advisory and nothing
+      # blocks a merge. A reviewer that could not run surfaces as an `::error::` annotation instead.
