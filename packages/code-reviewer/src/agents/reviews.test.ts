@@ -3,28 +3,45 @@ import { MockLanguageModelV4 } from "ai/test";
 
 import { createReviewAgent, reviewCode } from "./reviews.js";
 import { REVIEW_INSTRUCTIONS } from "../prompts/reviews.js";
-import type { ReviewResult } from "../schemas/reviews.js";
+import { CRITERION_KEYS, type ReviewInputDiff, type ReviewResult } from "../schemas/reviews.js";
+
+function criterion(score: number) {
+  return { score, rationale: "Scored against the criterion definition.", issues: [] };
+}
 
 const REVIEW: ReviewResult = {
   summary: "One unhandled rejection, otherwise sound.",
-  findings: [
-    {
-      severity: "critical",
-      file: "src/a.ts",
-      line: 2,
-      title: "Unhandled rejection",
-      explanation: "The promise can reject and nothing catches it, crashing the process.",
-      suggestion: "Wrap the await in try/catch and surface the error.",
+  criteria: {
+    implementation_correctness: {
+      score: 3,
+      rationale: "The added await can reject and nothing catches it.",
+      issues: [
+        {
+          file: "src/a.ts",
+          quote: "+await risky();",
+          explanation: "The promise can reject and nothing catches it, crashing the process.",
+          suggestion: "Wrap the await in try/catch and surface the error.",
+        },
+      ],
     },
-  ],
+    idiomaticity: criterion(8),
+    complexity: criterion(9),
+    test_risk_coverage: criterion(5),
+    documentation: criterion(7),
+    security_safety: criterion(8),
+  },
 };
 
 /** A model that always answers with {@link REVIEW}, recording every call it gets. */
 function mockModel(modelId = "test/review-model"): MockLanguageModelV4 {
+  return modelReturning(JSON.stringify(REVIEW), modelId);
+}
+
+function modelReturning(text: string, modelId = "test/review-model"): MockLanguageModelV4 {
   return new MockLanguageModelV4({
     modelId,
     doGenerate: {
-      content: [{ type: "text", text: JSON.stringify(REVIEW) }],
+      content: [{ type: "text", text }],
       finishReason: { unified: "stop", raw: undefined },
       usage: {
         inputTokens: { total: 10, noCache: 10, cacheRead: undefined, cacheWrite: undefined },
@@ -46,10 +63,16 @@ function userTextOf(model: MockLanguageModelV4): string {
   return JSON.stringify(model.doGenerateCalls[0]?.prompt.filter((message) => message.role !== "system"));
 }
 
-const FILES = [{ path: "src/a.ts", content: "const a = 1;\nawait risky();" }];
+const DIFF = ["--- a/src/a.ts", "+++ b/src/a.ts", "@@ -1,1 +1,2 @@", " const a = 1;", "+await risky();"].join("\n");
+
+const PR: ReviewInputDiff = {
+  title: "Call risky() on startup",
+  description: "Adds the startup call requested in ZWC-1.",
+  diff: DIFF,
+};
 
 describe("createReviewAgent", () => {
-  it("pins temperature to 0 so repeated reviews of one file do not drift", async () => {
+  it("pins temperature to 0 so repeated reviews of one diff do not drift", async () => {
     const model = mockModel();
 
     await createReviewAgent({ model }).generate({ prompt: "review this" });
@@ -84,7 +107,7 @@ describe("createReviewAgent", () => {
     expect(systemTextOf(model)).not.toBe(REVIEW_INSTRUCTIONS);
   });
 
-  it("carries no tools — the agent reads nothing beyond the source it is handed", () => {
+  it("carries no tools — the agent reads nothing beyond the diff it is handed", () => {
     // The SDK types `tools` as always present but leaves it undefined when the
     // agent was built without any. Spreading covers both shapes.
     expect({ ...createReviewAgent({ model: mockModel() }).tools }).toEqual({});
@@ -93,51 +116,70 @@ describe("createReviewAgent", () => {
   it("tags runs with a stable id so eval telemetry can attribute them", () => {
     expect(createReviewAgent({ model: mockModel() }).id).toBe("code-reviewer");
   });
+
+  // `tool-loop-agent` F1: swapping the schema for `z.looseObject({})` used to leave
+  // every test passing, so the suite proved only that *some* structured output was
+  // configured. These two pin which schema is wired in.
+  it("rejects structured output that is valid JSON of the wrong shape", async () => {
+    const agent = createReviewAgent({ model: modelReturning(JSON.stringify({ foo: 1 })) });
+
+    await expect(agent.generate({ prompt: "review this" })).rejects.toThrow(/schema/i);
+  });
+
+  it("rejects a review that is missing one of the six criteria", async () => {
+    const { security_safety: _dropped, ...partial } = REVIEW.criteria;
+    const agent = createReviewAgent({ model: modelReturning(JSON.stringify({ ...REVIEW, criteria: partial })) });
+
+    await expect(agent.generate({ prompt: "review this" })).rejects.toThrow(/schema/i);
+  });
 });
 
 describe("reviewCode", () => {
   it("returns the parsed review, the usage, and the injected model id", async () => {
     const model = mockModel("test/review-model");
 
-    const result = await reviewCode({ files: FILES, model });
+    const result = await reviewCode({ input: PR, model });
 
-    expect(result.review).toEqual(REVIEW);
+    expect(result.review).toStrictEqual(REVIEW);
+    expect(Object.keys(result.review.criteria)).toStrictEqual([...CRITERION_KEYS]);
     expect(result.usage.inputTokens).toBe(10);
     expect(result.usage.outputTokens).toBe(20);
     expect(result.modelId).toBe("test/review-model");
   });
 
-  it("hands the model the numbered source built by buildReviewPrompt", async () => {
+  it("hands the model the diff verbatim, with no line numbering added", async () => {
     const model = mockModel();
 
-    await reviewCode({ files: FILES, model });
+    await reviewCode({ input: PR, model });
+
+    // `shown` is JSON, so the prompt's real newlines arrive escaped — `\\n` here is
+    // the two characters JSON.stringify writes, not a newline.
+    const shown = userTextOf(model);
+    expect(shown).toContain("@@ -1,1 +1,2 @@");
+    expect(shown).toContain("+await risky();");
+    expect(shown).not.toContain("1\\tconst a = 1;");
+  });
+
+  it("passes the title and description through to the prompt", async () => {
+    const model = mockModel();
+
+    await reviewCode({ input: PR, model });
 
     const shown = userTextOf(model);
-    // `shown` is JSON, so the prompt's real tabs arrive escaped — `\\t` here is the
-    // two characters JSON.stringify writes, not a tab.
-    expect(shown).toContain("--- src/a.ts ---");
-    expect(shown).toContain("1\\tconst a = 1;");
-    expect(shown).toContain("2\\tawait risky();");
+    expect(shown).toContain("Call risky() on startup");
+    expect(shown).toContain("Adds the startup call requested in ZWC-1.");
   });
 
-  it("passes review context through to the prompt", async () => {
-    const model = mockModel();
-
-    await reviewCode({ files: FILES, model, context: "Ticket ZWC-1: tighten validation." });
-
-    expect(userTextOf(model)).toContain("Ticket ZWC-1: tighten validation.");
-  });
-
-  it("rejects an empty file list rather than paying for an empty review", async () => {
-    await expect(reviewCode({ files: [], model: mockModel() })).rejects.toThrow(
-      "reviewCode: at least one file is required",
+  it("rejects a blank diff rather than paying for an empty review", async () => {
+    await expect(reviewCode({ input: { ...PR, diff: "   \n  " }, model: mockModel() })).rejects.toThrow(
+      "reviewCode: a non-empty diff is required",
     );
   });
 
-  it("makes no model call when the file list is empty", async () => {
+  it("makes no model call when the diff is blank", async () => {
     const model = mockModel();
 
-    await expect(reviewCode({ files: [], model })).rejects.toThrow();
+    await expect(reviewCode({ input: { ...PR, diff: "" }, model })).rejects.toThrow();
 
     expect(model.doGenerateCalls).toHaveLength(0);
   });

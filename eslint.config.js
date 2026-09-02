@@ -82,6 +82,10 @@ const nodeConfigFilesConfig = tseslint.config({
 
 export default tseslint.config(
   includeIgnoreFile(gitignorePath),
+  // `packages/*` are standalone npm projects with their own lockfiles and lint configs; the root
+  // `npm ci` never installs them, so type-aware rules here would resolve every import to `error`.
+  // Not a `.gitignore` line — that file is fed to the config above and would untrack the sources.
+  { ignores: ["packages/**"] },
   baseConfig,
   reactConfig,
   eslintPluginAstro.configs["flat/recommended"],

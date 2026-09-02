@@ -5,19 +5,27 @@
  * effects: it reads no environment, touches no filesystem, and writes nothing.
  * The CLI lives in `./cli.ts` and is deliberately not re-exported here.
  *
- *   npm start -- src/foo.ts src/bar.ts
+ *   npm start -- --title "Add rate limiting" --diff pr.diff --json
  */
 export { loadEnv, type Env } from "./env.config.js";
 export { createProviderContext, type ProviderContext } from "./openrouter.provider.js";
 export { buildReviewPrompt, REVIEW_INSTRUCTIONS } from "./prompts/reviews.js";
 export {
-  reviewFindingSchema,
+  criterionIssueSchema,
+  criterionKeySchema,
+  criterionScoreSchema,
+  reviewCriteriaSchema,
   reviewResultSchema,
-  severitySchema,
-  type ReviewFinding,
-  type ReviewInputFile,
+  deriveVerdict,
+  CRITERION_KEYS,
+  FAILING_SCORE_THRESHOLD,
+  type CriterionIssue,
+  type CriterionKey,
+  type CriterionScore,
+  type ReviewCriteria,
+  type ReviewInputDiff,
   type ReviewResult,
-  type Severity,
+  type Verdict,
 } from "./schemas/reviews.js";
 export {
   createReviewAgent,

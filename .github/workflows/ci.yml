@@ -25,6 +25,31 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
 
+  # Standalone npm project: its own lockfile, its own tsconfig, its own eslint config. The root
+  # `npm ci` never installs it and the root `eslint .` now ignores `packages/**`, so this job is
+  # the package's only gate. Parallel to `ci` — the two trees are independent.
+  code-reviewer:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/code-reviewer
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          # Matches .nvmrc and makes the package's `engines: >=22.9.0` floor explicit.
+          node-version: "22.14"
+          cache: npm
+          # setup-node looks for a root lockfile by default; this package carries its own.
+          cache-dependency-path: packages/code-reviewer/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      # Non-blocking by decision: the reviewer's suite reports but does not gate.
+      - run: npm run test
+        continue-on-error: true
+      # Also proves the `tsc` path and that `dist/` is reproducible from a clean tree.
+      - run: npm run build
+
   deploy:
     runs-on: ubuntu-latest
     needs: ci
