@@ -784,22 +784,22 @@ have to be restored from git.
 
 #### Automated
 
-- [x] 2.1 Package tests pass, all rewritten, zero skipped
-- [x] 2.2 Schema rejects malformed rubric payloads
-- [x] 2.3 deriveVerdict truth table passes on all six criteria
-- [x] 2.4 Prompt contains the diff verbatim with no line prefixes
-- [x] 2.5 Injection probe appears only inside the data fence
-- [x] 2.6 runCli --json emits parseable JSON and correct exit codes
-- [x] 2.7 Package typecheck and lint pass
-- [x] 2.8 Package builds cleanly with no test files emitted
-- [x] 2.9 Repo-root gates still pass
+- [x] 2.1 Package tests pass, all rewritten, zero skipped — 2de0f8b
+- [x] 2.2 Schema rejects malformed rubric payloads — 2de0f8b
+- [x] 2.3 deriveVerdict truth table passes on all six criteria — 2de0f8b
+- [x] 2.4 Prompt contains the diff verbatim with no line prefixes — 2de0f8b
+- [x] 2.5 Injection probe appears only inside the data fence — 2de0f8b
+- [x] 2.6 runCli --json emits parseable JSON and correct exit codes — 2de0f8b
+- [x] 2.7 Package typecheck and lint pass — 2de0f8b
+- [x] 2.8 Package builds cleanly with no test files emitted — 2de0f8b
+- [x] 2.9 Repo-root gates still pass — 2de0f8b
 
 #### Manual
 
-- [x] 2.10 Live run returns six plausible non-uniform scores referencing real code
-- [x] 2.11 A weak diff scores low on security_safety and trips the verdict
-- [x] 2.12 An injection probe in the PR body does not produce six 10s
-- [x] 2.13 Human output is readable and worth keeping
+- [x] 2.10 Live run returns six plausible non-uniform scores referencing real code — 2de0f8b
+- [x] 2.11 A weak diff scores low on security_safety and trips the verdict — 2de0f8b
+- [x] 2.12 An injection probe in the PR body does not produce six 10s — 2de0f8b
+- [x] 2.13 Human output is readable and worth keeping — 2de0f8b
 - [ ] 2.14 README instructions work from a clean checkout
 
 ### Phase 3: The composite action and workflow
