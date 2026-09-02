@@ -490,14 +490,14 @@ both are internal and neither is re-exported by path.
 
 #### Automated
 
-- [x] 4.1 Tests pass, including agent tests
-- [x] 4.2 Type checking passes
-- [x] 4.3 Build succeeds
-- [x] 4.4 Retired service module gone and unreferenced
-- [x] 4.5 Library import side-effect-free without credentials
+- [x] 4.1 Tests pass, including agent tests — 72ddd3e
+- [x] 4.2 Type checking passes — 72ddd3e
+- [x] 4.3 Build succeeds — 72ddd3e
+- [x] 4.4 Retired service module gone and unreferenced — 72ddd3e
+- [x] 4.5 Library import side-effect-free without credentials — 72ddd3e
 
 #### Manual
 
-- [x] 4.6 Review quality comparable on the same file
-- [x] 4.7 Repeat runs materially stable under temperature 0
-- [x] 4.8 Buggy fixture still yields a critical finding and exit code 1
+- [x] 4.6 Review quality comparable on the same file — 72ddd3e
+- [x] 4.7 Repeat runs materially stable under temperature 0 — 72ddd3e
+- [x] 4.8 Buggy fixture still yields a critical finding and exit code 1 — 72ddd3e
