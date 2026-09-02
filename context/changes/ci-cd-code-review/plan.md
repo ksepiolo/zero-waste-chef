@@ -771,14 +771,14 @@ have to be restored from git.
 - [x] 1.2 Package lints clean — 67b93c5
 - [x] 1.3 Package typechecks — 67b93c5
 - [x] 1.4 Package builds from a clean tree — 67b93c5
-- [x] 1.5 Root gates still pass — 67b93c5
+- [x] 1.5 Root gates still pass — f8d30c1
 - [x] 1.6 Workflow YAML is valid and both jobs are discovered — 67b93c5
 
 #### Manual
 
-- [ ] 1.7 CI on main is green end to end with the code-reviewer job passing
-- [ ] 1.8 Non-blocking test step is visibly reported even when it fails
-- [ ] 1.9 Clean package install confirms or refutes tool-loop-agent F2
+- [x] 1.7 CI on main is green end to end with the code-reviewer job passing — f8d30c1
+- [x] 1.8 Non-blocking test step is visibly reported even when it fails — f8d30c1
+- [x] 1.9 Clean package install confirms or refutes tool-loop-agent F2 — f8d30c1
 
 ### Phase 2: Replace the review contract with the six-criterion rubric
 
