@@ -39,6 +39,12 @@ live in a file this change created, and no prior review has recorded them.
 
 ## Findings
 
+> **Disposition pass — 2026-09-02, by `ci-cd-code-review` Phase 2.** That change replaces this
+> package's review contract (`findings[]`/`severity` → a six-criterion 1–10 rubric over a diff) and
+> rewrites the CLI, so seven of these nine findings had to be resolved or explicitly carried rather
+> than silently inherited. Their `Decision` lines below say which. F3 and F9 were out of that
+> change's scope and remain PENDING.
+
 ### F1 — Output schema is configured but never pinned by a test
 
 - **Severity**: ⚠️ WARNING
@@ -59,7 +65,10 @@ live in a file this change created, and no prior review has recorded them.
   - Tradeoff: None material.
   - Confidence: HIGH — mutant survival and SDK rejection both verified by execution.
   - Blind spot: None significant.
-- **Decision**: PENDING
+- **Decision**: FIXED by `ci-cd-code-review` Phase 2. `createReviewAgent` is now pinned by two tests
+  in `src/agents/reviews.test.ts` — valid JSON of the wrong shape (`{"foo":1}`) and a payload missing
+  one of the six criteria both reject. Mutant re-verified: substituting `z.looseObject({})` for
+  `reviewResultSchema` now fails exactly those two tests.
 
 ### F2 — Emitted .d.ts depends on a package that is not a declared dependency
 
@@ -87,7 +96,13 @@ live in a file this change created, and no prior review has recorded them.
   - Tradeoff: Adds a dependency on a package the source never imports, which will read as cruft.
   - Confidence: HIGH — resolves the concern with no type gymnastics.
   - Blind spot: Version skew if `ai` bumps its own range.
-- **Decision**: PENDING
+- **Decision**: CARRIED, install-time symptom refuted. Phase 1's clean-tree CI job runs `npm ci` +
+  `npm run build` from a fresh checkout and is green, so the predicted resolution failure does not
+  materialise under npm's flat layout. The latent condition is unchanged and re-confirmed after the
+  rubric replacement: `dist/agents/reviews.d.ts` still emits
+  `import("@ai-sdk/provider-utils").Context`, and `@ai-sdk/provider-utils` is still absent from this
+  package's `dependencies`/`devDependencies`. Fix A remains the recommendation; not attempted in
+  `ci-cd-code-review`, which does not touch `createReviewAgent`'s signature.
 
 ### F3 — Public export surface grew without a plan step authorising it
 
@@ -136,7 +151,9 @@ live in a file this change created, and no prior review has recorded them.
   - Tradeoff: A deny-list is not exhaustive; the file-list echo adds noise to every run.
   - Confidence: HIGH — trivially reproducible.
   - Blind spot: Have not surveyed which other secret-bearing filenames matter in this repo.
-- **Decision**: PENDING
+- **Decision**: OBSOLETED by `ci-cd-code-review` Phase 2. The argv→`readFile` plumbing this describes
+  is deleted: the CLI now takes `--diff`/`--body` paths for one diff and one body, so there is no
+  glob-expanded file list to exfiltrate. No effort should be spent repairing it.
 
 ### F5 — No bound on total input size or model spend
 
@@ -155,7 +172,9 @@ live in a file this change created, and no prior review has recorded them.
   - Tradeoff: Needs a threshold chosen without data on typical use.
   - Confidence: HIGH — figures measured against the real builder.
   - Blind spot: None significant.
-- **Decision**: PENDING
+- **Decision**: OBSOLETED by `ci-cd-code-review` Phase 2, same deletion as F4. The unbounded
+  multi-file upload no longer exists; input is one diff, measured at 10k–21k tokens across PRs
+  #23–#28. No byte budget was added.
 
 ### F6 — CLI failure paths are indistinguishable from findings, and unactionable when they fire
 
@@ -174,7 +193,10 @@ live in a file this change created, and no prior review has recorded them.
   exactly here.
 - **Fix**: Reserve a distinct exit code (3) for internal failure, and print `error.text` / `error.cause`
   under `DEBUG` — or special-case this error with a "does this model support structured output?" hint.
-- **Decision**: PENDING
+- **Decision**: FIXED by `ci-cd-code-review` Phase 2. Exit codes are now `0` pass / `1` failing
+  verdict / `2` usage error / `3` reviewer error, documented in `runCli`'s JSDoc and in the README,
+  and covered by `src/cli.test.ts`. Sub-problem (2) is fixed too: under `DEBUG` the CLI now prints
+  the model's raw `error.text` alongside the stack.
 
 ### F7 — runCli has no tests, though the plan justified exporting it by testability
 
@@ -189,7 +211,9 @@ live in a file this change created, and no prior review has recorded them.
   which is currently a static import rather than an injected dependency.
 - **Fix**: Add `src/cli.test.ts` covering the three exit codes, the severity label map, and the
   empty-findings branch, mocking `reviewCode`.
-- **Decision**: PENDING
+- **Decision**: FIXED by `ci-cd-code-review` Phase 2. `src/cli.test.ts` covers all four exit codes,
+  both output modes, input plumbing, and the reviewer-failure path, with `reviewCode` mocked via
+  `vi.mock`. This became load-bearing rather than optional: CI parses `runCli --json`'s stdout.
 
 ### F8 — Naming convention is now split with no rule for the next file
 
@@ -207,7 +231,9 @@ live in a file this change created, and no prior review has recorded them.
   `src/providers/anthropic.ts` or `src/anthropic.provider.ts`.
 - **Fix**: State the boundary explicitly in the README — "directories for eval seams, dot-suffix for
   everything else" — so the next contributor inherits a rule rather than a precedent.
-- **Decision**: PENDING
+- **Decision**: CARRIED unchanged by `ci-cd-code-review` Phase 2, explicitly. That change adds no new
+  file outside the existing directories, so it neither resolves nor worsens the split; the README
+  still records the departure as a precedent rather than a rule.
 
 ### F9 — Test hygiene: leaky env stub, a lying signature, and a loose matcher
 

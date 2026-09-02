@@ -68,6 +68,10 @@ throw and must not write to stdout; `npm start -- <file>` must behave exactly as
   no git, no network beyond the model call). `ToolLoopAgent` is adopted for config encapsulation
   and as a ready seam; the loop will not iterate today.
 - Not changing the review output schema, the severity scale, or the CLI's output format.
+  **Superseded 2026-09-02 by `ci-cd-code-review` Phase 2**, which does all three: the
+  `findings[]`/`severity` contract is replaced by a six-criterion 1–10 rubric over a diff, and the
+  CLI gains `--diff`/`--title`/`--body`/`--json` with four distinct exit codes. The contracts below
+  that describe the superseded shape are marked in place.
 - Not adding a `bin` field or publishing the package.
 - Not wiring the package into the repo-root vitest run.
 - Not changing `env.config.ts` or `openrouter.provider.ts`.
@@ -185,6 +189,10 @@ for. Pure relocation — no behaviour change, no signature change.
 `ReviewInputFile` interface, and the inferred types `Severity`, `ReviewFinding`, `ReviewResult`.
 Zod `.describe()` strings are prompt surface the model reads — carry them across unchanged.
 
+> **Superseded by `ci-cd-code-review` Phase 2.** None of these names survive. The module now exports
+> the rubric schema (`criterionKeySchema`, `criterionScoreSchema`, `reviewCriteriaSchema`,
+> `reviewResultSchema`), `ReviewInputDiff`, and `deriveVerdict` with `FAILING_SCORE_THRESHOLD`.
+
 #### 2. Prompt module
 
 **File**: `packages/code-reviewer/src/prompts/reviews.ts`
@@ -197,6 +205,11 @@ import to A/B a prompt variant.
 `buildReviewPrompt(files: ReviewInputFile[], context?: string): string`, preserving the current
 1-indexed `${n}\t${line}` numbering and the `--- path ---` section framing exactly. Both are
 exported so they can be swapped independently.
+
+> **Superseded by `ci-cd-code-review` Phase 2.** The signature is now
+> `buildReviewPrompt(input: ReviewInputDiff): string`, and the numbering is **removed** — it counted
+> diff lines, which correspond to no real line in either image and contradict the diff's own `@@`
+> headers. `--- path ---` framing is replaced by named `⟦ai-cr:untrusted⟧` fences.
 
 #### 3. Delete the old schema file and update importers
 
@@ -314,7 +327,8 @@ convenience wrapper the CLI and README already use.
 
 `createReviewAgent(options?: CreateReviewAgentOptions)` returns a configured `ToolLoopAgent`
 carrying `model`, `instructions`, `output: Output.object({ schema: reviewResultSchema })`, and
-`temperature: 0`. Options are all optional: `model` (defaults to `createProviderContext()`, resolved
+`temperature: 0`. (`reviewResultSchema` still names the output schema, but
+`ci-cd-code-review` Phase 2 replaced what it contains. The seam itself is unchanged.) Options are all optional: `model` (defaults to `createProviderContext()`, resolved
 lazily inside the call — never at module scope), `instructions` (defaults to `REVIEW_INSTRUCTIONS`),
 and `temperature`. Give the agent a stable `id` such as `"code-reviewer"` so eval telemetry can
 attribute runs. `tools` is deliberately omitted; `stopWhen` keeps the SDK default rather than being

@@ -6,7 +6,7 @@
  * CLI and never needing `OPENROUTER_API_KEY`. `reviewCode()` is the convenience
  * wrapper the CLI uses.
  *
- * The agent deliberately carries no tools — it reads nothing but the source it
+ * The agent deliberately carries no tools — it reads nothing but the diff it
  * was handed, which is what makes an eval run reproducible. `stopWhen` is left
  * at the SDK default so adding tools later needs no change here.
  */
@@ -14,7 +14,7 @@ import { Output, ToolLoopAgent, type LanguageModel, type LanguageModelUsage } fr
 
 import { createProviderContext } from "../openrouter.provider.js";
 import { buildReviewPrompt, REVIEW_INSTRUCTIONS } from "../prompts/reviews.js";
-import { reviewResultSchema, type ReviewInputFile, type ReviewResult } from "../schemas/reviews.js";
+import { reviewResultSchema, type ReviewInputDiff, type ReviewResult } from "../schemas/reviews.js";
 
 /** Stable id so eval telemetry can attribute runs to this agent. */
 const REVIEW_AGENT_ID = "code-reviewer";
@@ -32,9 +32,8 @@ export interface CreateReviewAgentOptions {
 }
 
 export interface ReviewCodeOptions {
-  files: ReviewInputFile[];
-  /** Extra context: the change's intent, the ticket, house rules to enforce. */
-  context?: string;
+  /** The pull request under review: title, description and unified diff. */
+  input: ReviewInputDiff;
   /** Defaults to the model from `OPENROUTER_MODEL`. */
   model?: LanguageModel;
   abortSignal?: AbortSignal;
@@ -65,23 +64,23 @@ export function createReviewAgent(options: CreateReviewAgentOptions = {}) {
 }
 
 /**
- * Reviews a set of files and returns structured findings.
+ * Reviews a pull request diff and returns the six scored criteria.
  *
  * This is the seam the rest of the tooling builds on: swap the prompt, add
  * tools, or drive the agent directly without callers having to change.
  */
 export async function reviewCode(options: ReviewCodeOptions): Promise<ReviewCodeResponse> {
-  const { files, context, abortSignal } = options;
+  const { input, abortSignal } = options;
 
-  if (files.length === 0) {
-    throw new Error("reviewCode: at least one file is required");
+  if (input.diff.trim() === "") {
+    throw new Error("reviewCode: a non-empty diff is required");
   }
 
   const { model, modelId } = resolveModel(options.model);
   const agent = createReviewAgent({ model });
 
   const { output, usage } = await agent.generate({
-    prompt: buildReviewPrompt(files, context),
+    prompt: buildReviewPrompt(input),
     ...(abortSignal ? { abortSignal } : {}),
   });
 
