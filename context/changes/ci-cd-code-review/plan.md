@@ -767,12 +767,12 @@ have to be restored from git.
 
 #### Automated
 
-- [x] 1.1 Root lint no longer reaches the package
-- [x] 1.2 Package lints clean
-- [x] 1.3 Package typechecks
-- [x] 1.4 Package builds from a clean tree
-- [x] 1.5 Root gates still pass
-- [x] 1.6 Workflow YAML is valid and both jobs are discovered
+- [x] 1.1 Root lint no longer reaches the package — 67b93c5
+- [x] 1.2 Package lints clean — 67b93c5
+- [x] 1.3 Package typechecks — 67b93c5
+- [x] 1.4 Package builds from a clean tree — 67b93c5
+- [x] 1.5 Root gates still pass — 67b93c5
+- [x] 1.6 Workflow YAML is valid and both jobs are discovered — 67b93c5
 
 #### Manual
 
