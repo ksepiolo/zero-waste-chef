@@ -920,16 +920,16 @@ regression. The PR body's own "deliberately flawed fixture" disclaimer did not i
 
 #### Automated
 
-- [x] 4.1 CI on main is green after the merge
-- [x] 4.2 A workflow_dispatch run against a known PR completes end to end
+- [x] 4.1 CI on main is green after the merge — f0258d4
+- [x] 4.2 A workflow_dispatch run against a known PR completes end to end — f0258d4
 
 #### Manual
 
-- [x] 4.3 A fresh PR produces a comment and exactly one verdict label unprompted
-- [x] 4.4 A second commit updates the same comment with no duplicate
-- [x] 4.5 Adding ai-cr:review re-runs the review and the label is removed
-- [x] 4.6 An unrelated label does not trigger a run
-- [x] 4.7 The action's own label write does not re-trigger the workflow
-- [x] 4.8 A draft PR does not run; marking it ready does
+- [x] 4.3 A fresh PR produces a comment and exactly one verdict label unprompted — f0258d4
+- [x] 4.4 A second commit updates the same comment with no duplicate — f0258d4
+- [x] 4.5 Adding ai-cr:review re-runs the review and the label is removed — f0258d4
+- [x] 4.6 An unrelated label does not trigger a run — f0258d4
+- [x] 4.7 The action's own label write does not re-trigger the workflow — f0258d4
+- [x] 4.8 A draft PR does not run; marking it ready does — f0258d4
 - [ ] 4.9 A fork PR is reviewed with no fork code executed and no fork lockfile installed — CARRIED UNVERIFIED: the repository has zero forks and only one account is available, so the fork path cannot be exercised live. The envelope is proven by read-through (3.8) and by the base-branch checkout in every run above; `pull_request_target` is kept as designed.
-- [x] 4.10 Verdicts across the recent-PR sample match human judgement, floor tuned if not
+- [x] 4.10 Verdicts across the recent-PR sample match human judgement, floor tuned if not — f0258d4
