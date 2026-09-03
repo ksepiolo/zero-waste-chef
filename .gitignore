@@ -8,6 +8,7 @@
 .claude/prompts/m3l*
 .claude/prompts/m4l*
 .claude/prompts/m5l*
+.claude/prompts/mvp*
 .claude/config-templates/*
 .claude/.10x-cli-manifest.json
 

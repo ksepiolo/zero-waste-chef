@@ -487,32 +487,32 @@ Rollback is `git revert` — nothing here is stateful, and `evals/` is additive.
 
 #### Automated
 
-- [x] 1.1 `node -v` inside the package reports ≥ 22.22.0 after `nvm use`
-- [x] 1.2 Install succeeds with no `EBADENGINE` warning: `npm ci`
-- [x] 1.3 Typecheck covers both projects and passes: `npm run typecheck`
-- [x] 1.4 Lint covers both directories and passes: `npm run lint`
-- [x] 1.5 Existing suite still passes: `npm test`
-- [x] 1.6 Build still emits only `src/`: `npm run build && test ! -d dist/evals`
-- [x] 1.7 promptfoo resolves: `npx promptfoo --version`
+- [x] 1.1 `node -v` inside the package reports ≥ 22.22.0 after `nvm use` — 4c81cb4
+- [x] 1.2 Install succeeds with no `EBADENGINE` warning: `npm ci` — 4c81cb4
+- [x] 1.3 Typecheck covers both projects and passes: `npm run typecheck` — 4c81cb4
+- [x] 1.4 Lint covers both directories and passes: `npm run lint` — 4c81cb4
+- [x] 1.5 Existing suite still passes: `npm test` — 4c81cb4
+- [x] 1.6 Build still emits only `src/`: `npm run build && test ! -d dist/evals` — 4c81cb4
+- [x] 1.7 promptfoo resolves: `npx promptfoo --version` — 4c81cb4
 
 #### Manual
 
-- [x] 1.8 `git status` shows no promptfoo cache or output files as untracked
-- [x] 1.9 The bumped `.nvmrc` does not break the root Astro app's local `npm run dev`
+- [x] 1.8 `git status` shows no promptfoo cache or output files as untracked — 4c81cb4
+- [x] 1.9 The bumped `.nvmrc` does not break the root Astro app's local `npm run dev` — 4c81cb4
 
 ### Phase 2: The Provider Adapter
 
 #### Automated
 
-- [ ] 2.1 Provider tests pass: `npm test`
-- [ ] 2.2 Typecheck passes: `npm run typecheck`
-- [ ] 2.3 Lint passes: `npm run lint`
-- [ ] 2.4 promptfoo can load the provider file without a module-resolution error
+- [x] 2.1 Provider tests pass: `npm test`
+- [x] 2.2 Typecheck passes: `npm run typecheck`
+- [x] 2.3 Lint passes: `npm run lint`
+- [x] 2.4 promptfoo can load the provider file without a module-resolution error
 
 #### Manual
 
-- [ ] 2.5 Reading `reviewer.provider.ts` makes clear why the `prompt` argument is unused
-- [ ] 2.6 No API key is required for `npm test` to pass
+- [x] 2.5 Reading `reviewer.provider.ts` makes clear why the `prompt` argument is unused
+- [x] 2.6 No API key is required for `npm test` to pass
 
 ### Phase 3: Fixture & Answer Key
 
