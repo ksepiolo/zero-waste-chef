@@ -1,5 +1,27 @@
 name: Playwright Tests
+
+# DISABLED (2026-09-03, `gh workflow disable playwright.yml`). The file and the specs are kept
+# deliberately — the tests are good, the wiring is not.
+#
+# Why: this only ever ran post-merge, post-deploy, against production, so it gated nothing. And it
+# had failed on every run since 2026-08-30, because `tests/generate-approve.spec.ts` starts a stub
+# OpenRouter server on 127.0.0.1:4399 and needs the app under test pointed at it via
+# `OPENROUTER_URL`. A Cloudflare Worker in production can reach neither the runner's loopback nor
+# a variable resolved at server startup, so the assertion on `Stub Recipe <ts>` could never pass.
+#
+# Re-enable with `gh workflow enable playwright.yml` — but not before fixing the wiring. The right
+# shape is two jobs, not one:
+#   1. a `pull_request` job running the stub-driven specs against a locally built app
+#      (`scripts/test-e2e.sh` is the working local recipe), which is what actually gates a merge;
+#   2. an optional post-deploy smoke job running only specs that are safe against production —
+#      `generate-approve.spec.ts` is not one, it spends real OpenRouter credits and writes real rows.
+#
+# Until then E2E is a local command (`npm run test:e2e`); no pull request is gated by it.
+# Covers test-plan.md Risk #8, which is therefore currently unprotected in CI.
+
 on:
+  # Matches the CI workflow's `name:`, not a job id — renaming jobs inside `ci.yml` is safe, but
+  # renaming the workflow itself silently stops this from ever firing.
   workflow_run:
     workflows: [CI]
     types: [completed]
