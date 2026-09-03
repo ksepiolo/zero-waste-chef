@@ -241,7 +241,7 @@ function renderError(reason, runUrl) {
 
 function renderFooter(runUrl) {
   const link = runUrl === undefined || runUrl === "" ? "" : ` · [run log](${runUrl})`;
-  return `\n<sub>Advisory only — this review never blocks a merge.${link}</sub>\n`;
+  return `\n<sub>This review does not block a merge \u2014 the branch has no protection rule.${link}</sub>\n`;
 }
 
 exit(main(argv.slice(2)));

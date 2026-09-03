@@ -54,5 +54,7 @@ jobs:
           pr-number: ${{ github.event.pull_request.number || inputs.pr-number }}
           api-key: ${{ secrets.OPENROUTER_API_KEY }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-      # The job deliberately does not fail on a failing verdict: the gate is advisory and nothing
-      # blocks a merge. A reviewer that could not run surfaces as an `::error::` annotation instead.
+      # The job fails on any non-passing review — a failing verdict or a reviewer that never
+      # produced one. That is a signal, not a gate: `main` has no branch protection, so a red run
+      # does not block a merge. The two cases stay distinguishable on the pull request itself, by
+      # the presence or absence of an `ai-cr:failed` label.

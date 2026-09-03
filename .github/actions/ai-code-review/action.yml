@@ -202,3 +202,28 @@ runs:
         GH_REPO: ${{ github.repository }}
         PR_NUMBER: ${{ inputs.pr-number }}
       run: gh pr edit "$PR_NUMBER" --remove-label "ai-cr:review" || true
+
+    # Last, deliberately: the composite aborts at the first failing step, so raising this any
+    # earlier would skip the comment, the labels and the retry-label consumption above. By the
+    # time it runs, everything a reader needs is already on the pull request.
+    #
+    # `!= passed` covers both a failing verdict and a reviewer that never produced one. The two
+    # stay distinguishable on the pull request itself — a failing verdict carries `ai-cr:failed`
+    # and a scored comment, a reviewer error carries no label and a "could not run" comment.
+    #
+    # Note this does not block a merge: `main` has no branch protection, so a red run is a signal
+    # rather than a gate. Requiring it would mean a commit status plus a protection rule.
+    - name: Fail the job on a non-passing review
+      if: steps.review.outputs.verdict != 'passed'
+      shell: bash
+      env:
+        VERDICT: ${{ steps.review.outputs.verdict }}
+        FAILING: ${{ steps.review.outputs.failing-criteria }}
+      run: |
+        set -euo pipefail
+        if [ "$VERDICT" = error ]; then
+          echo "the reviewer did not complete — see the annotation above"
+        else
+          echo "review verdict: failed (${FAILING:-no criteria reported})"
+        fi
+        exit 1
