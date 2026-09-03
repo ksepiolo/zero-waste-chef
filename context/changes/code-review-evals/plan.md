@@ -504,30 +504,30 @@ Rollback is `git revert` — nothing here is stateful, and `evals/` is additive.
 
 #### Automated
 
-- [x] 2.1 Provider tests pass: `npm test`
-- [x] 2.2 Typecheck passes: `npm run typecheck`
-- [x] 2.3 Lint passes: `npm run lint`
-- [x] 2.4 promptfoo can load the provider file without a module-resolution error
+- [x] 2.1 Provider tests pass: `npm test` — 6a30b9b
+- [x] 2.2 Typecheck passes: `npm run typecheck` — 6a30b9b
+- [x] 2.3 Lint passes: `npm run lint` — 6a30b9b
+- [x] 2.4 promptfoo can load the provider file without a module-resolution error — 6a30b9b
 
 #### Manual
 
-- [x] 2.5 Reading `reviewer.provider.ts` makes clear why the `prompt` argument is unused
-- [x] 2.6 No API key is required for `npm test` to pass
+- [x] 2.5 Reading `reviewer.provider.ts` makes clear why the `prompt` argument is unused — 6a30b9b
+- [x] 2.6 No API key is required for `npm test` to pass — 6a30b9b
 
 ### Phase 3: Fixture & Answer Key
 
 #### Automated
 
-- [ ] 3.1 The diff is well-formed and applies in a scratch tree (`git apply --check`)
-- [ ] 3.2 Each planted flaw's quotable excerpt appears verbatim in the diff
-- [ ] 3.3 The answer key is not referenced by the config's `vars`
+- [x] 3.1 The diff is well-formed and applies in a scratch tree (`git apply --check`)
+- [x] 3.2 Each planted flaw's quotable excerpt appears verbatim in the diff
+- [x] 3.3 The answer key is not referenced by the config's `vars`
 
 #### Manual
 
-- [ ] 3.4 The diff reads as a genuine migration, not as a puzzle
-- [ ] 3.5 Exactly three defects are present — no fourth unintended one
-- [ ] 3.6 Flaw 2 (`defaultProps`) is subtle enough that a weaker model plausibly misses it
-- [ ] 3.7 The PR description makes a confident claim the diff does not deliver on
+- [x] 3.4 The diff reads as a genuine migration, not as a puzzle
+- [x] 3.5 Exactly three defects are present — no fourth unintended one
+- [x] 3.6 Flaw 2 (`defaultProps`) is subtle enough that a weaker model plausibly misses it
+- [x] 3.7 The PR description makes a confident claim the diff does not deliver on
 
 ### Phase 4: Config, Assertions, First Run & Docs
 

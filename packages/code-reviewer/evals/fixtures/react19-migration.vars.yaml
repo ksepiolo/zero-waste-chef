@@ -1,0 +1,46 @@
+# Pull request metadata for the `react19-migration` fixture.
+#
+# These two vars are what the reviewer scores `implementation_correctness`
+# against: `src/prompts/reviews.ts` grades the diff against the claim the author
+# made, and falls back to a different instruction entirely when the description
+# is absent. Supplying one keeps the eval on the primary scoring path.
+#
+# The third var, `diff`, is loaded separately by `promptfooconfig.yaml` from the
+# sibling `react19-migration.diff`, so the PR metadata and the patch stay apart.
+#
+# This body is deliberately confident and deliberately wrong. Every flaw the
+# fixture plants contradicts something claimed here — but nothing here names or
+# hints at a flaw. Keep it that way: the answer key lives in README.md and
+# reaches the judge only. See that file before editing this one.
+
+title: "Migrate ItemList to React 19"
+
+description: |
+  Finishes the React 19 upgrade for the item listing widget. `ItemList` was the
+  last component still on the React 16 class API, so once this lands we can drop
+  the legacy compat aliases from the build.
+
+  ## What changed
+
+  - `ItemList` is a function component now: `this.state` → `useState`, the string
+    ref → `useRef`, and the `componentWillUnmount` teardown → the effect cleanup.
+  - `UNSAFE_componentWillReceiveProps` is gone, replaced by the supported
+    "adjust state during render" pattern from the React 19 upgrade guide.
+  - `propTypes` are dropped — `ItemListProps` already covers the same shape at
+    compile time, so the runtime copy was dead weight.
+  - The mount helper moves from `ReactDOM.render` to `createRoot`, holding one
+    root per container so remounting a placeholder no longer warns.
+  - `react`, `react-dom` and their `@types` are bumped to 19. Lockfile
+    regenerated in the same commit.
+
+  ## Behaviour
+
+  No behaviour change. This is a mechanical API migration — the component loads,
+  filters and renders exactly what it did on React 16, with the same prop
+  defaults.
+
+  ## Testing
+
+  Checked by hand against the staging catalogue: search, selection, "show all",
+  and switching categories in the sidebar all behave as they did on 16. No new
+  tests — there is no new behaviour to cover.
