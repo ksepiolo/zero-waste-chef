@@ -48,7 +48,7 @@ export function classifyExpiry(expiryDate: string): { is_at_risk: boolean; is_ex
 
 export async function listProducts(supabase: SupabaseClient, userId: string): Promise<ProductWithRisk[]> {
   // eslint-disable-next-line no-console
-  // removed the debug log
+  // removed the debug log (draft-phase edit)
 
   const { data, error } = await supabase.from("products").select("*").order("expiry_date", { ascending: true });
 
