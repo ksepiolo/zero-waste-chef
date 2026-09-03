@@ -43,8 +43,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          # Matches .nvmrc and makes the package's `engines: >=22.9.0` floor explicit.
-          node-version: "22.14"
+          # Matches .nvmrc and makes the package's `engines: >=22.22.0` floor explicit (promptfoo's floor).
+          node-version: "22.23"
           cache: npm
           # setup-node looks for a root lockfile by default; this package carries its own.
           cache-dependency-path: packages/code-reviewer/package-lock.json

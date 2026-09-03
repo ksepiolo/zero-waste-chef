@@ -8,7 +8,7 @@ export default defineConfig({
     // Nothing here touches a DOM — the reviewer is prompt building, schema parsing, and a
     // model call stubbed with `ai/test` doubles.
     environment: "node",
-    include: ["src/**/*.test.ts"],
+    include: ["src/**/*.test.ts", "evals/**/*.test.ts"],
     // Globals stay off, matching the root convention: every test imports describe/it/expect
     // explicitly, which keeps ESLint's no-undef working without a globals declaration.
     globals: false,
