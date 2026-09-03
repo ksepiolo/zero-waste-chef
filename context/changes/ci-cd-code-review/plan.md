@@ -71,7 +71,8 @@ contract replacement is contained to the package; the documentation and cross-ch
 Opening or updating a PR against `main` runs an `AI Code Review` workflow that posts (or updates) a
 single PR comment carrying six criterion scores with rationales and concrete issues, and leaves
 exactly one of `ai-cr:passed` / `ai-cr:failed` on the PR. Adding `ai-cr:review` re-runs the review and
-the label is consumed. The workflow never fails the pipeline. `main` CI is green, and the reviewer
+the label is consumed. The job goes red on a non-passing review (see the Phase 4 amendment). `main`
+CI is green, and the reviewer
 package is linted and tested by its own CI job.
 
 Verify by: `main` CI green; opening a PR and observing comment + label within ~2 minutes; pushing a
@@ -103,7 +104,9 @@ second commit and observing the _same_ comment updated rather than a second one 
 
 ## What We're NOT Doing
 
-- **Not configuring branch protection on `main`.** The verdict is advisory; nothing blocks a merge.
+- **Not configuring branch protection on `main`.** Nothing blocks a merge. (Phase 4 amended the job
+  to exit non-zero on a non-passing review, so the run shows red — but with no protection rule that
+  is a signal, not a gate.)
 - **Not emitting a commit status.** Labels only, per `requirements.md`. (Noted as the upgrade path if
   enforcement is ever wanted — labels are human-mutable and cannot be required by protection.)
 - **Not adding inline (line-anchored) PR review comments.** One conversation comment.
@@ -221,7 +224,7 @@ so the two configs behave identically), and a `"lint": "eslint src"` script alon
 **Intent**: Give the package the gate it just lost, in the same job that will later run it in
 production.
 
-**Contract**: A new `code-reviewer` job, parallel to the existing `ci` job (not `needs:`-chained — they
+**Contract**: A new `reviewer-package` job, parallel to the existing `ci` job (not `needs:`-chained — they
 are independent trees). Steps: `actions/checkout@v4`; `actions/setup-node@v4` with
 `node-version: '22.14'` (matching `.nvmrc`, and making the package's `engines: >=22.9.0` floor explicit
 rather than incidental) and `cache: npm` with
@@ -231,7 +234,7 @@ lockfile by default; `npm ci` and `npm run lint` (blocking); `npm run test` with
 path CI depends on and that `dist/` is reproducible from a clean tree. All `run` steps carry
 `working-directory: packages/code-reviewer`.
 
-The `deploy` job's `needs: ci` stays as-is — deployment must not wait on the reviewer package.
+The `deploy` job's `needs: app` stays as-is — deployment must not wait on the reviewer package.
 
 ### Success Criteria
 
@@ -246,8 +249,8 @@ The `deploy` job's `needs: ci` stays as-is — deployment must not wait on the r
 
 #### Manual Verification
 
-- CI on `main` (or on this PR) is green end to end, with the `code-reviewer` job present and passing
-- The `code-reviewer` job's non-blocking test step is visibly reported even when it fails
+- CI on `main` (or on this PR) is green end to end, with the `reviewer-package` job present and passing
+- The `reviewer-package` job's non-blocking test step is visibly reported even when it fails
 - `npm ci` inside the package installs without the `@ai-sdk/provider-utils` resolution failure that `tool-loop-agent` F2 predicts for a fresh install — if it _does_ fail, that finding is confirmed and must be fixed here
 
 **Implementation Note**: After completing this phase and all automated verification passes, pause here
@@ -561,7 +564,8 @@ activity types — and `timeout-minutes: 10`.
 Steps: `actions/checkout@v4` with **no `ref:`** (base branch under `pull_request_target`; a local
 `./`-referenced action only exists after checkout), then the composite with
 `api-key: ${{ secrets.OPENROUTER_API_KEY }}` and `github-token: ${{ secrets.GITHUB_TOKEN }}`. The job
-does not fail on a failed verdict — the design is advisory.
+does not fail on a failed verdict — the design is advisory. **Superseded in Phase 4:** the job now
+fails on any non-passing review. See the Phase 4 amendment below.
 
 #### 3. Note the divergence from the test-plan
 
@@ -759,6 +763,96 @@ have to be restored from git.
 - The exit-code ambiguity: `packages/code-reviewer/src/cli.ts:61,70-76`
 - Why root lint reaches `packages/`: `eslint.config.js:12,84` with `.gitignore:12,18`
 
+## Phase 4 amendment: the job fails on a non-passing review
+
+Decided during rollout, after observing that every run in the Actions tab was green regardless of
+outcome. This **reverses** the advisory stance recorded above (Overview, _What We're NOT Doing_,
+Phase 3 change #2), and those passages are annotated where they occur.
+
+**The problem.** The action mapped the CLI's exit code to a verdict and then swallowed it — the
+reviewer step ran under `set -uo pipefail` (no `-e`) with `|| status=$?`, and nothing downstream
+re-raised it. All three outcomes produced a green run. That was intended for a failing verdict, but
+it also meant a **reviewer error** — expired key, unreachable provider, unparseable output — read as
+a clean pull request: green run, and by design no label either. A silently broken reviewer was
+indistinguishable from a healthy one.
+
+**The change.** A final composite step:
+
+```yaml
+- name: Fail the job on a non-passing review
+  if: steps.review.outputs.verdict != 'passed'
+  shell: bash
+  run: |
+    ...
+    exit 1
+```
+
+Two properties are load-bearing:
+
+- **It must be last.** A composite aborts at its first failing step. Raising the failure inside the
+  reviewer step — the obvious place — would skip _Render the comment_, _Upsert the review comment_,
+  _Apply the verdict label_ and _Consume the retry label_, destroying the "could not run" comment
+  that Phase 3 verified at 3.11. By the time this step runs, the pull request already carries
+  everything a reader needs.
+- **`!= 'passed'` covers both non-passing cases**, and they stay distinguishable _on the pull
+  request_: a failing verdict carries `ai-cr:failed` plus a scored comment, a reviewer error carries
+  no label and a "could not run" comment.
+
+**Still not a gate.** `main` has no branch protection, so a red run is a signal, not an
+enforcement mechanism. Requiring the verdict would need a commit status plus a protection rule —
+still out of scope.
+
+**Verified both directions** by dispatching the modified action from its own branch (`workflow_dispatch`
+honours `--ref`, so this was provable before landing on `main`):
+
+| run         | PR  | verdict  | conclusion | label          | comment |
+| ----------- | --- | -------- | ---------- | -------------- | ------- |
+| 33724799464 | #30 | `failed` | 🔴 failure | `ai-cr:failed` | posted  |
+| 33725002195 | #23 | `passed` | 🟢 success | `ai-cr:passed` | posted  |
+
+On the failing run all nine composite steps executed in order with the failure last, confirming
+nothing was skipped.
+
+## Rollout evidence (Phase 4)
+
+Setup was already in place on entry: the `OPENROUTER_API_KEY` repository secret exists, all three
+`ai-cr:*` labels exist with the intended colours, and `188dc0d` is on `origin/main`, so the
+`pull_request_target` trigger was already live.
+
+Threshold calibration is recorded in `calibration.md`. The floor stays at `4`.
+
+Live trigger verification used PR #30 (`test/ai-code-review-antipatterns`), a deliberately flawed
+fixture branch carrying one planted defect class per criterion. **It is kept, not closed.** The
+answer key, the scoring baseline and the re-run instructions live in a comment on the pull request
+itself — deliberately in a comment rather than the description, because the description is fed to
+the reviewer as `--body` and an answer key there would stop it being a blind test. Every run below
+is on that PR:
+
+| time (UTC) | run         | trigger                     | outcome     | proves                                                             |
+| ---------- | ----------- | --------------------------- | ----------- | ------------------------------------------------------------------ |
+| 06:14:53   | 33722350531 | `opened`                    | success     | 4.3 — comment + exactly one verdict label, unprompted              |
+| 06:24:29   | 33723070260 | `synchronize`               | success     | 4.4 — same comment id updated in place                             |
+| 06:26:10   | 33723195299 | `labeled` (`documentation`) | **skipped** | 4.6 — the `if:` guard rejects an unrelated label                   |
+| 06:27:16   | 33723277362 | `labeled` (`ai-cr:review`)  | success     | 4.5 — retry runs, label consumed                                   |
+| 06:29:32   | 33723453740 | `synchronize` while draft   | **skipped** | 4.8 — the `draft == false` guard holds                             |
+| 06:29:50   | 33723476584 | `ready_for_review`          | success     | 4.8 — the transition that emits neither `opened` nor `synchronize` |
+
+Four reviews each wrote a verdict label, and none of those writes appears above: `GITHUB_TOKEN`-authored
+events do not trigger workflows, so the self-trigger loop is closed twice over — by that platform rule
+and, independently, by the `if:` guard demonstrated at 06:26:10 (4.7).
+
+Comment `5521400714` was created at 06:16:07 and updated three times; it remained the only
+`<!-- ai-cr:marker -->` comment on the PR throughout.
+
+A note on 4.6's wording: GitHub still creates a workflow _run record_ for an unrelated label. What the
+guard prevents is the job — `conclusion=skipped`, no model call, no comment, no cost.
+
+The planted defects were all identified, including the removed `user_id` filters (the
+`lessons.md` rule), a logged `SUPABASE_KEY`, PostgREST filter injection, and a UTC-to-local date
+regression. The PR body's own "deliberately flawed fixture" disclaimer did not inflate the scores.
+
+**Not verified: 4.9.** See the Progress row.
+
 ## Progress
 
 > Convention: `- [ ]` pending, `- [x]` done. Append ` — <commit sha>` when a step lands. Do not rename step titles. See `references/progress-format.md`.
@@ -776,7 +870,7 @@ have to be restored from git.
 
 #### Manual
 
-- [x] 1.7 CI on main is green end to end with the code-reviewer job passing — f8d30c1
+- [x] 1.7 CI on main is green end to end with the reviewer-package job passing — f8d30c1
 - [x] 1.8 Non-blocking test step is visibly reported even when it fails — f8d30c1
 - [x] 1.9 Clean package install confirms or refutes tool-loop-agent F2 — f8d30c1
 
@@ -806,36 +900,36 @@ have to be restored from git.
 
 #### Automated
 
-- [x] 3.1 action.yml and ai-code-review.yml parse as valid YAML
-- [x] 3.2 Every composite run step declares shell
-- [x] 3.3 Both composite outputs have explicit value mappings
-- [x] 3.4 actionlint reports no errors
-- [x] 3.5 No PR-head checkout ref and no allow-unsafe-pr-checkout anywhere
-- [x] 3.6 Comment renderer produces a marker-led body with all six criteria
-- [x] 3.7 Root and package gates still pass
+- [x] 3.1 action.yml and ai-code-review.yml parse as valid YAML — 188dc0d
+- [x] 3.2 Every composite run step declares shell — 188dc0d
+- [x] 3.3 Both composite outputs have explicit value mappings — 188dc0d
+- [x] 3.4 actionlint reports no errors — 188dc0d
+- [x] 3.5 No PR-head checkout ref and no allow-unsafe-pr-checkout anywhere — 188dc0d
+- [x] 3.6 Comment renderer produces a marker-led body with all six criteria — 188dc0d
+- [x] 3.7 Root and package gates still pass — 188dc0d
 
 #### Manual
 
-- [ ] 3.8 Read-through confirms the pull_request_target safety envelope
-- [ ] 3.9 workflow_dispatch produces a comment and labels end to end
-- [ ] 3.10 A second run updates the existing comment rather than appending
-- [ ] 3.11 A forced reviewer error posts the could-not-run comment and no verdict label
-- [ ] 3.12 The rendered comment is readable in GitHub's UI
+- [x] 3.8 Read-through confirms the pull_request_target safety envelope — 188dc0d
+- [x] 3.9 workflow_dispatch produces a comment and labels end to end — 188dc0d
+- [x] 3.10 A second run updates the existing comment rather than appending — 188dc0d
+- [x] 3.11 A forced reviewer error posts the could-not-run comment and no verdict label — 188dc0d
+- [x] 3.12 The rendered comment is readable in GitHub's UI — 188dc0d
 
 ### Phase 4: Rollout and live verification
 
 #### Automated
 
-- [ ] 4.1 CI on main is green after the merge
-- [ ] 4.2 A workflow_dispatch run against a known PR completes end to end
+- [x] 4.1 CI on main is green after the merge
+- [x] 4.2 A workflow_dispatch run against a known PR completes end to end
 
 #### Manual
 
-- [ ] 4.3 A fresh PR produces a comment and exactly one verdict label unprompted
-- [ ] 4.4 A second commit updates the same comment with no duplicate
-- [ ] 4.5 Adding ai-cr:review re-runs the review and the label is removed
-- [ ] 4.6 An unrelated label does not trigger a run
-- [ ] 4.7 The action's own label write does not re-trigger the workflow
-- [ ] 4.8 A draft PR does not run; marking it ready does
-- [ ] 4.9 A fork PR is reviewed with no fork code executed and no fork lockfile installed
-- [ ] 4.10 Verdicts across the recent-PR sample match human judgement, floor tuned if not
+- [x] 4.3 A fresh PR produces a comment and exactly one verdict label unprompted
+- [x] 4.4 A second commit updates the same comment with no duplicate
+- [x] 4.5 Adding ai-cr:review re-runs the review and the label is removed
+- [x] 4.6 An unrelated label does not trigger a run
+- [x] 4.7 The action's own label write does not re-trigger the workflow
+- [x] 4.8 A draft PR does not run; marking it ready does
+- [ ] 4.9 A fork PR is reviewed with no fork code executed and no fork lockfile installed — CARRIED UNVERIFIED: the repository has zero forks and only one account is available, so the fork path cannot be exercised live. The envelope is proven by read-through (3.8) and by the base-branch checkout in every run above; `pull_request_target` is kept as designed.
+- [x] 4.10 Verdicts across the recent-PR sample match human judgement, floor tuned if not
