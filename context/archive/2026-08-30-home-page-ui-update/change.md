@@ -1,10 +1,10 @@
 ---
 change_id: home-page-ui-update
 title: Home page ui update
-status: implemented
+status: archived
 created: 2026-08-30
-updated: 2026-08-30
-archived_at: null
+updated: 2026-09-04
+archived_at: 2026-09-04T07:48:31Z
 ---
 
 ## Notes
