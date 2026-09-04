@@ -1,7 +1,7 @@
 ---
 change_id: edit-expired-product
 title: Explain why the edit dialog refuses to save
-status: implementing
+status: implemented
 created: 2026-09-04
 updated: 2026-09-04
 archived_at: null

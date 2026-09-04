@@ -269,17 +269,17 @@ None. No schema, data, or API changes.
 
 #### Automated
 
-- [x] 2.1 Full test suite passes: `npm run test`
-- [x] 2.2 Type checking passes: `npm run typecheck`
-- [x] 2.3 Linting passes, including `jsx-a11y` rules on the new markup: `npm run lint`
-- [x] 2.4 E2E suite still passes: `npm run test:e2e`
+- [x] 2.1 Full test suite passes: `npm run test` — 4486e3b
+- [x] 2.2 Type checking passes: `npm run typecheck` — 4486e3b
+- [x] 2.3 Linting passes, including `jsx-a11y` rules on the new markup: `npm run lint` — 4486e3b
+- [x] 2.4 E2E suite still passes: `npm run test:e2e` — 4486e3b
 
 #### Manual
 
-- [x] 2.5 Expired product shows the date message immediately, Save disabled
-- [x] 2.6 Correcting the date clears the message, enables Save, and the edit saves
-- [x] 2.7 Clearing the name shows the name message; restoring it clears both
-- [x] 2.8 Reverting all fields disables Save via `!isDirty` with no message shown
-- [x] 2.9 Messages are keyboard- and screen-reader reachable via `aria-describedby`
-- [x] 2.10 Add-product form is visually and behaviorally unchanged
-- [x] 2.11 Discard-confirmation flow on close behaves as before
+- [x] 2.5 Expired product shows the date message immediately, Save disabled — 4486e3b
+- [x] 2.6 Correcting the date clears the message, enables Save, and the edit saves — 4486e3b
+- [x] 2.7 Clearing the name shows the name message; restoring it clears both — 4486e3b
+- [x] 2.8 Reverting all fields disables Save via `!isDirty` with no message shown — 4486e3b
+- [x] 2.9 Messages are keyboard- and screen-reader reachable via `aria-describedby` — 4486e3b
+- [x] 2.10 Add-product form is visually and behaviorally unchanged — 4486e3b
+- [x] 2.11 Discard-confirmation flow on close behaves as before — 4486e3b
