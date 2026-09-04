@@ -276,7 +276,7 @@ export function InventoryPanel({ initialProducts }: Props) {
 
       {products.length > 0 && (
         <div className="bg-brand-surface rounded-[20px] p-6 sm:col-span-2">
-          <h2 className="font-display text-brand-ink mb-4 text-lg">Ustawienia przepisu</h2>
+          <h2 className="font-display text-brand-ink mb-4 text-lg">Recipe settings</h2>
           <div className="space-y-3">
             <div>
               <label htmlFor="recipe-technique" className="text-brand-muted mb-1 block text-xs">
