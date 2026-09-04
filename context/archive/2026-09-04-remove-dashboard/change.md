@@ -1,10 +1,10 @@
 ---
 change_id: remove-dashboard
 title: Remove dashboard
-status: implemented
+status: archived
 created: 2026-09-04
 updated: 2026-09-04
-archived_at: null
+archived_at: 2026-09-04T08:33:35Z
 ---
 
 ## Notes
