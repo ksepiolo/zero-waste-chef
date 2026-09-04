@@ -265,11 +265,11 @@ redirect was chosen over a config-level 301.
 
 #### Automated
 
-- [x] 2.1 The new spec passes on all three browser projects: `npm run test:e2e`
-- [x] 2.2 Linting passes on the new test file: `npm run lint`
-- [x] 2.3 The spec fails if the redirect is reverted — confirm by temporarily restoring the old page body and re-running, then restoring the redirect
+- [x] 2.1 The new spec passes on all three browser projects: `npm run test:e2e` — fbb8834
+- [x] 2.2 Linting passes on the new test file: `npm run lint` — fbb8834
+- [x] 2.3 The spec fails if the redirect is reverted — confirm by temporarily restoring the old page body and re-running, then restoring the redirect — fbb8834
 
 #### Manual
 
-- [x] 2.4 The spec is reviewed against the five anti-patterns from `/10x-e2e`
-- [x] 2.5 No `page.waitForTimeout` and no CSS/XPath selectors appear in the new file
+- [x] 2.4 The spec is reviewed against the five anti-patterns from `/10x-e2e` — fbb8834
+- [x] 2.5 No `page.waitForTimeout` and no CSS/XPath selectors appear in the new file — fbb8834
