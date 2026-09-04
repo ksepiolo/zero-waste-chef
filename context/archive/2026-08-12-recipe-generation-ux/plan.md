@@ -4,18 +4,18 @@
 
 Let the user choose three recipe parameters — cooking **technique**, **method** (dish format), and **available time** — before generating, and have the AI honour them. Along the way, align the generate path with **FR-007**, which it currently violates: today the AI receives only at-risk products and generation is blocked entirely with a `400` when no product is at risk.
 
-This is roadmap slice **S-04**. The framing that matters: the three parameters already exist in the codebase — as hardcoded constants inside `SYSTEM_PROMPT`. This slice does not *add* constraints, it makes existing ones **user-controlled**.
+This is roadmap slice **S-04**. The framing that matters: the three parameters already exist in the codebase — as hardcoded constants inside `SYSTEM_PROMPT`. This slice does not _add_ constraints, it makes existing ones **user-controlled**.
 
 ## Current State Analysis
 
 The generate path is four layers deep and each one is currently parameter-blind:
 
-| Layer | File | Current shape |
-| --- | --- | --- |
-| UI | `src/components/inventory/inventory-panel.tsx:194-209` | Generate button renders only when `products.some(p => p.is_at_risk)`. No parameter UI. |
-| Hook | `src/components/hooks/use-recipe-generation.ts:16` | `generate()` takes no arguments; posts only `excludeTitles`. |
-| Endpoint | `src/pages/api/recipes/generate.ts:12-14, 42-49` | Zod schema validates `excludeTitles` only. Filters to `atRiskProducts`, returns `400 "No at-risk products"` when the list is empty. |
-| Service | `src/lib/services/recipe.service.ts:13-20, 87-96` | `SYSTEM_PROMPT` is a module-level `const` string hardcoding the technique whitelist and a 45-minute cap. `generateRecipe(atRiskProducts, excludeTitles)`. |
+| Layer    | File                                                   | Current shape                                                                                                                                             |
+| -------- | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| UI       | `src/components/inventory/inventory-panel.tsx:194-209` | Generate button renders only when `products.some(p => p.is_at_risk)`. No parameter UI.                                                                    |
+| Hook     | `src/components/hooks/use-recipe-generation.ts:16`     | `generate()` takes no arguments; posts only `excludeTitles`.                                                                                              |
+| Endpoint | `src/pages/api/recipes/generate.ts:12-14, 42-49`       | Zod schema validates `excludeTitles` only. Filters to `atRiskProducts`, returns `400 "No at-risk products"` when the list is empty.                       |
+| Service  | `src/lib/services/recipe.service.ts:13-20, 87-96`      | `SYSTEM_PROMPT` is a module-level `const` string hardcoding the technique whitelist and a 45-minute cap. `generateRecipe(atRiskProducts, excludeTitles)`. |
 
 Three constraints are already baked into `SYSTEM_PROMPT` (`recipe.service.ts:13-20`):
 
@@ -23,15 +23,15 @@ Three constraints are already baked into `SYSTEM_PROMPT` (`recipe.service.ts:13-
 - **Equipment**: stovetop, oven, one pot, one pan, knife, cutting board.
 - **Time**: total prep + cook must not exceed 45 minutes.
 
-The FR-007 deviation is documented nowhere as deliberate. The archived S-02 plan lists it as a success criterion (`context/archive/2026-06-05-recipe-generation-loop/plan.md:277`: *"returns 400 `{ error: "No at-risk products" }` when no at-risk products exist"*), so it shipped as designed — but the design contradicts the PRD:
+The FR-007 deviation is documented nowhere as deliberate. The archived S-02 plan lists it as a success criterion (`context/archive/2026-06-05-recipe-generation-loop/plan.md:277`: _"returns 400 `{ error: "No at-risk products" }` when no at-risk products exist"_), so it shipped as designed — but the design contradicts the PRD:
 
-> FR-007: *"The AI always receives the full inventory. … When no at-risk products exist, the recipe is generated freely from the full inventory."*
-> §Business Logic: *"Recipe generation is never blocked by inventory state — an empty at-risk window is not an error."*
+> FR-007: _"The AI always receives the full inventory. … When no at-risk products exist, the recipe is generated freely from the full inventory."_
+> §Business Logic: _"Recipe generation is never blocked by inventory state — an empty at-risk window is not an error."_
 
 ### Key Discoveries
 
-- **`SYSTEM_PROMPT` must become a template, not gain an appendix** (`recipe.service.ts:13-20`). Appending "use sauté" while line 14 still lists all seven techniques as equally allowed produces a contradictory prompt. The technique and time lines have to be *rewritten* per request.
-- **`MAX_PROMPT_PRODUCTS = 25` becomes a correctness hazard** (`recipe.service.ts:11, 93`). Today it slices an all-at-risk list, so truncation is harmless. Once the full inventory is passed, an unsorted slice can drop at-risk products entirely — silently breaking the PRD's Primary success criterion. Products must be ordered at-risk-first *before* slicing.
+- **`SYSTEM_PROMPT` must become a template, not gain an appendix** (`recipe.service.ts:13-20`). Appending "use sauté" while line 14 still lists all seven techniques as equally allowed produces a contradictory prompt. The technique and time lines have to be _rewritten_ per request.
+- **`MAX_PROMPT_PRODUCTS = 25` becomes a correctness hazard** (`recipe.service.ts:11, 93`). Today it slices an all-at-risk list, so truncation is harmless. Once the full inventory is passed, an unsorted slice can drop at-risk products entirely — silently breaking the PRD's Primary success criterion. Products must be ordered at-risk-first _before_ slicing.
 - **The existing guardrail validates IDs, not constraints** (`recipe.service.ts:154-157`). It throws when the model returns an unknown product ID. There is no equivalent check that the recipe respects the time limit or the chosen technique — and none is being added (see What We're NOT Doing).
 - **The sibling form in the same component uses native inputs, not shadcn** (`inventory-panel.tsx:119-145`). Raw `<input>` with inline Tailwind classes. `src/components/ui/` contains only `button`, `alert-dialog`, `sonner`.
 - **shadcn in this repo imports from the unified `radix-ui` package** (`alert-dialog.tsx:2`), not `@radix-ui/react-*`. Relevant only if a future change adds a shadcn Select; this plan does not.
@@ -46,7 +46,7 @@ Verified by: generating with an inventory containing **zero** at-risk products (
 
 ## What We're NOT Doing
 
-- **No server-side verification that the model honoured the parameters.** There is no reliable way to check "is this recipe really under 15 minutes" without a second model call. Post-generation checks stay limited to the two ID-level guardrails at `recipe.service.ts:154-157`: unknown IDs (existing) and at-risk inclusion (added in Phase 1). The at-risk floor is deliberately *not* treated as one of the parameters — it is the PRD's Primary success criterion, so it is enforced, not suggested.
+- **No server-side verification that the model honoured the parameters.** There is no reliable way to check "is this recipe really under 15 minutes" without a second model call. Post-generation checks stay limited to the two ID-level guardrails at `recipe.service.ts:154-157`: unknown IDs (existing) and at-risk inclusion (added in Phase 1). The at-risk floor is deliberately _not_ treated as one of the parameters — it is the PRD's Primary success criterion, so it is enforced, not suggested.
 - **No storage of parameters on the recipe row.** No migration, no change to the `approve_recipe` RPC, no new columns. Parameters are generation-time only.
 - **No persistence of choices across reloads.** No localStorage, no user-preferences table.
 - **No free-text parameter input.** Closed enums only — the injection reasoning already written at `generate.ts:11` applies.
@@ -59,7 +59,7 @@ Verified by: generating with an inventory containing **zero** at-risk products (
 
 ## Implementation Approach
 
-**Separate the behaviour changes in time so a quality regression is attributable.** Phase 1 changes *what the model sees*, in two ordered steps (below). Phase 2 changes *how the prompt is written* (template instead of constant) with `Any` on all three parameters reproducing the end-of-Phase-1 messages verbatim. Phase 3 exposes the controls.
+**Separate the behaviour changes in time so a quality regression is attributable.** Phase 1 changes _what the model sees_, in two ordered steps (below). Phase 2 changes _how the prompt is written_ (template instead of constant) with `Any` on all three parameters reproducing the end-of-Phase-1 messages verbatim. Phase 3 exposes the controls.
 
 Phase 1 is split because it now makes two independent prompt changes:
 
@@ -76,7 +76,7 @@ Bottom-up within each phase: types → service → endpoint → hook → UI.
 
 **The prompt's technique and time lines are rewritten, not extended.** `SYSTEM_PROMPT` lines 14 and 16 enumerate the allowed techniques and state the 45-minute cap. A parameter selection must replace those lines. Appending a preference below a rule that contradicts it gives the model two conflicting instructions, and the observed failure mode is that it follows the first.
 
-**`Any` must render the end-of-Phase-1 text exactly.** The Phase 2 acceptance test is that `Any/Any/Any` produces a `messages` array byte-identical to the one Phase 1 leaves behind. Build the template so that is structurally guaranteed rather than eyeballed. Note the comparison target is the *post-Phase-1* prompt, not pre-change `main` — step A deliberately edits the few-shot.
+**`Any` must render the end-of-Phase-1 text exactly.** The Phase 2 acceptance test is that `Any/Any/Any` produces a `messages` array byte-identical to the one Phase 1 leaves behind. Build the template so that is structurally guaranteed rather than eyeballed. Note the comparison target is the _post-Phase-1_ prompt, not pre-change `main` — step A deliberately edits the few-shot.
 
 **The few-shot pair is part of the prompt contract.** `FEW_SHOT_USER` / `FEW_SHOT_ASSISTANT` (`recipe.service.ts:25-38`) sit between the system rules and the real user turn. Today the pair demonstrates pan-frying ("fry for 6 minutes", "Skillet" in the title) and frames the ingredients as "at-risk". Both signals become contradictions once parameters exist: `technique: "no-cook"` pairs an abstract don't-cook rule with a worked example that fries, and `method: "soup"` with a worked example that is a skillet dish — the same "two conflicting instructions" failure this section warns about for `SYSTEM_PROMPT`, except a demonstration is typically the stronger signal. Any reasoning about prompt equivalence must cover the whole `messages` array, not the system string alone.
 
@@ -92,14 +92,14 @@ Neutralise the few-shot demonstration, then pass the full inventory to the model
 
 **File**: `src/lib/services/recipe.service.ts`
 
-**Intent**: Make the demonstration pair anchor answer *format* only, so it stops contradicting the parameters Phase 2 introduces and stops asserting an at-risk framing that the real user turn will sometimes omit.
+**Intent**: Make the demonstration pair anchor answer _format_ only, so it stops contradicting the parameters Phase 2 introduces and stops asserting an at-risk framing that the real user turn will sometimes omit.
 
 **Contract**: Two edits, nothing else in this step.
 
 - `FEW_SHOT_USER` (`recipe.service.ts:25-26`): drop "at-risk" from the framing — "Create a recipe using these ingredients: …". Keep the same deliberately-unusual ingredients, the same `(id: …)` rendering, and the same closing instruction about `used_product_ids`.
-- `FEW_SHOT_ASSISTANT` (`recipe.service.ts:28-38`): keep the JSON shape, the ingredient list, the step-per-item structure, and both IDs. Rewrite the title so it does not name a vessel ("Skillet") and the instructions so they do not demonstrate a specific technique — today's *heat oil in a pan → fry for 6 minutes* is the strongest signal to remove.
+- `FEW_SHOT_ASSISTANT` (`recipe.service.ts:28-38`): keep the JSON shape, the ingredient list, the step-per-item structure, and both IDs. Rewrite the title so it does not name a vessel ("Skillet") and the instructions so they do not demonstrate a specific technique — today's _heat oil in a pan → fry for 6 minutes_ is the strongest signal to remove.
 
-Perfect technique-neutrality is not achievable — every recipe does something. The goal is removing the strong signals, not reaching zero. This extends the intent already documented in the comment at lines 22-24, which avoided anchoring *content* but not technique.
+Perfect technique-neutrality is not achievable — every recipe does something. The goal is removing the strong signals, not reaching zero. This extends the intent already documented in the comment at lines 22-24, which avoided anchoring _content_ but not technique.
 
 **Verification gate**: generate several recipes and confirm quality holds (criterion 1.12). The resulting `messages` array is the baseline that step B and Phase 2 compare against — capture it before proceeding.
 
@@ -113,13 +113,13 @@ Perfect technique-neutrality is not achievable — every recipe does something. 
 
 **At-risk inclusion assertion (required).** Add a sibling check beside the ID cross-check at `recipe.service.ts:154-157`: when the sliced prompt list contained at least one at-risk product, `used_product_ids` must intersect the at-risk IDs — otherwise throw, exactly as an unknown ID does. When no at-risk products were sent, the check is skipped.
 
-Rationale: today the endpoint passes an at-risk-only list, so "every returned ID was on the list I sent" *structurally* guarantees FR-007's at-risk floor — the model cannot name a non-at-risk ID because it never sees one. Widening `promptProducts` to the full inventory silently drops that guarantee: the same cross-check passes for a recipe using zero at-risk products, and nothing errors, logs, or notices. This assertion restores the floor as an enforced invariant rather than a prompt request, at the place its sibling invariant already lives.
+Rationale: today the endpoint passes an at-risk-only list, so "every returned ID was on the list I sent" _structurally_ guarantees FR-007's at-risk floor — the model cannot name a non-at-risk ID because it never sees one. Widening `promptProducts` to the full inventory silently drops that guarantee: the same cross-check passes for a recipe using zero at-risk products, and nothing errors, logs, or notices. This assertion restores the floor as an enforced invariant rather than a prompt request, at the place its sibling invariant already lives.
 
 Accepted cost: when the model genuinely cannot comply — a tight `time: "15"` against a slow-cooking at-risk item — the throw surfaces as a 500 toast and the user retries. If that proves to fire more than occasionally in Phase 2 manual testing (2.12), a single silent retry before throwing is the follow-up, weighed against the 27s baseline latency.
 
 **`RESPONSE_FORMAT` field description (required).** Reword `used_product_ids.description` at `recipe.service.ts:62` from "IDs of the **at-risk** products used in this recipe" to "IDs of the products from the provided list that this recipe uses". The new wording is correct whether or not at-risk products are present.
 
-Rationale: the old wording was accurate only while the prompt list *was* the at-risk list. Once the full inventory is passed it causes two failures. (a) A recipe using non-at-risk products is instructed not to report their IDs — but `approve_recipe` deletes exactly the reported IDs, so consumed products stay in the inventory and FR-008's "will remove from inventory" list (`inventory-panel.tsx:257-263`) under-reports. (b) With zero at-risk products — the case this phase exists to enable — the description names an empty set while `GeneratedRecipeSchema` requires `min(1)` UUIDs, so the model invents IDs, the guardrail throws, and criterion 1.4 becomes flaky rather than failing cleanly.
+Rationale: the old wording was accurate only while the prompt list _was_ the at-risk list. Once the full inventory is passed it causes two failures. (a) A recipe using non-at-risk products is instructed not to report their IDs — but `approve_recipe` deletes exactly the reported IDs, so consumed products stay in the inventory and FR-008's "will remove from inventory" list (`inventory-panel.tsx:257-263`) under-reports. (b) With zero at-risk products — the case this phase exists to enable — the description names an empty set while `GeneratedRecipeSchema` requires `min(1)` UUIDs, so the model invents IDs, the guardrail throws, and criterion 1.4 becomes flaky rather than failing cleanly.
 
 #### 3. Generate endpoint — drop the at-risk gate
 
@@ -129,7 +129,7 @@ Rationale: the old wording was accurate only while the prompt list *was* the at-
 
 **Contract**: Remove the `atRiskProducts` filter and the `400 "No at-risk products"` branch (lines 43-47). Pass `products` to `generateRecipe`. A genuinely empty inventory should still be rejected — a recipe from nothing is not a meaningful request — so return `400` with a distinct message when `products.length === 0`.
 
-**This empty-inventory `400` is a deliberate, narrow exception** to §Business Logic's "recipe generation is never blocked by inventory state", recorded here so a later FR-007 audit does not read it as the same defect this phase removes. The rule exists to stop an *empty at-risk window* being treated as an error; it is not a claim that generation must succeed with nothing to cook. The UI hides the Generate button in this state (§4), so the branch is reachable only by direct API call.
+**This empty-inventory `400` is a deliberate, narrow exception** to §Business Logic's "recipe generation is never blocked by inventory state", recorded here so a later FR-007 audit does not read it as the same defect this phase removes. The rule exists to stop an _empty at-risk window_ being treated as an error; it is not a claim that generation must succeed with nothing to cook. The UI hides the Generate button in this state (§4), so the branch is reachable only by direct API call.
 
 #### 4. Inventory panel — unconditional Generate button
 
@@ -179,23 +179,23 @@ Introduce the parameter vocabulary as shared types, validate it at the endpoint,
 
 **Contract**: Three exported `as const` arrays with `"any"` as the first member of each, plus derived union types and a `RecipeParams` interface:
 
-| Dimension | Values |
-| --- | --- |
+| Dimension   | Values                                                                       |
+| ----------- | ---------------------------------------------------------------------------- |
 | `technique` | `any`, `saute`, `roast`, `bake`, `boil-simmer`, `stir-fry`, `fry`, `no-cook` |
-| `method` | `any`, `one-pot`, `sheet-pan`, `salad-assembly`, `soup` |
-| `time` | `any`, `15`, `30`, `45` |
+| `method`    | `any`, `one-pot`, `sheet-pan`, `salad-assembly`, `soup`                      |
+| `time`      | `any`, `15`, `30`, `45`                                                      |
 
 Each value needs both a wire token (above) and a human label for the UI; keep the label mapping alongside the enum so the UI does not re-derive it. `RecipeParams` has all three fields required — the UI always sends all three, defaulting to `"any"`.
 
-**`stovetop-only` is deliberately absent from `method`.** It restates a *technique* restriction rather than naming a dish format, which puts it in direct collision with the technique enum — `stovetop-only` + `bake`/`roast` is a flat contradiction. The two dimensions are meant to be orthogonal; every remaining method value names a dish format that any technique can plausibly produce. Note also that the method values are **not** a straight reuse of the Variety rule's list (`recipe.service.ts:20`: soup / stir-fry / bake / salad / omelette) — `stir-fry` and `bake` live in the technique enum instead, and `one-pot` / `sheet-pan` are new vocabulary. Correct the provenance claim in `plan-brief.md` accordingly. Residual contradictions (e.g. `sheet-pan` + `boil-simmer`) remain selectable per §What We're NOT Doing.
+**`stovetop-only` is deliberately absent from `method`.** It restates a _technique_ restriction rather than naming a dish format, which puts it in direct collision with the technique enum — `stovetop-only` + `bake`/`roast` is a flat contradiction. The two dimensions are meant to be orthogonal; every remaining method value names a dish format that any technique can plausibly produce. Note also that the method values are **not** a straight reuse of the Variety rule's list (`recipe.service.ts:20`: soup / stir-fry / bake / salad / omelette) — `stir-fry` and `bake` live in the technique enum instead, and `one-pot` / `sheet-pan` are new vocabulary. Correct the provenance claim in `plan-brief.md` accordingly. Residual contradictions (e.g. `sheet-pan` + `boil-simmer`) remain selectable per §What We're NOT Doing.
 
-**The time enum stops at 45 deliberately.** `45` is the cap already shipped in `SYSTEM_PROMPT` line 16, so every selectable value is equal to or tighter than today's behaviour — consistent with §Overview's "this slice does not *add* constraints, it makes existing ones user-controlled". A `90` value would be the one option that *relaxes* a shipped product rule, and it inverts the control's meaning: a dropdown labelled "available time" where a larger number grants the model more latitude rather than telling it the user has more time. Loosening the cap is a product decision for a later slice, not a side effect of adding a control — the same reasoning §What We're NOT Doing applies to the equipment rule.
+**The time enum stops at 45 deliberately.** `45` is the cap already shipped in `SYSTEM_PROMPT` line 16, so every selectable value is equal to or tighter than today's behaviour — consistent with §Overview's "this slice does not _add_ constraints, it makes existing ones user-controlled". A `90` value would be the one option that _relaxes_ a shipped product rule, and it inverts the control's meaning: a dropdown labelled "available time" where a larger number grants the model more latitude rather than telling it the user has more time. Loosening the cap is a product decision for a later slice, not a side effect of adding a control — the same reasoning §What We're NOT Doing applies to the equipment rule.
 
 #### 2. Prompt template — extracted to its own module
 
 **File**: `src/lib/services/recipe-prompt.ts` (new), consumed by `src/lib/services/recipe.service.ts`
 
-**Intent**: Replace the `SYSTEM_PROMPT` constant with a function that renders the technique, method, and time rules according to the supplied parameters, so a selection *rewrites* the corresponding rule rather than appending to it — and put it somewhere the acceptance test can actually reach.
+**Intent**: Replace the `SYSTEM_PROMPT` constant with a function that renders the technique, method, and time rules according to the supplied parameters, so a selection _rewrites_ the corresponding rule rather than appending to it — and put it somewhere the acceptance test can actually reach.
 
 **Why a new file.** `recipe.service.ts:3` imports `OPENROUTER_API_KEY` from `astro:env/server`, a virtual module Astro resolves only inside its own build. A plain node script importing that file fails with `ServerOnlyModule` before reaching any prompt code — the sibling S-03 plan documents this exact constraint and error (`context/changes/recipe-history/plan.md:93`) and moved a constant out for the same reason. Without the extraction, criterion 2.4 has no runnable path.
 
@@ -324,7 +324,7 @@ The check runs as a node script importing `src/lib/services/recipe-prompt.ts`. T
 1. Inventory with only non-at-risk products → Generate is available and works.
 2. Inventory with 26+ products, at-risk ones added last → generated recipe still uses an at-risk product.
 3. `Time = ≤15 min` with a slow-cooking at-risk product → recipe still includes it; the time constraint bends, the at-risk guarantee does not.
-4. `No-cook` + `Soup` (a nonsensical pairing) → the app returns *something* and does not crash.
+4. `No-cook` + `Soup` (a nonsensical pairing) → the app returns _something_ and does not crash.
 5. Generate → "Generate Different Recipe" → confirm the second recipe honours the same parameters and is a different dish.
 6. Keyboard-only pass over the three selects and the Generate button.
 
@@ -332,7 +332,7 @@ The check runs as a node script importing `src/lib/services/recipe-prompt.ts`. T
 
 Negligible. The parameters add a handful of tokens to a prompt that already carries the inventory, and no new network calls, queries, or renders of consequence. The one real risk is unchanged from S-02: free-tier OpenRouter latency was measured at 27s end-to-end (`context/archive/2026-06-05-recipe-generation-loop/change.md`, Phase 2 deviations), so the existing 30s `AbortSignal.timeout` stays as-is.
 
-Note that Phase 1 *increases* prompt size — the full inventory rather than the at-risk subset — bounded by `MAX_PROMPT_PRODUCTS = 25`.
+Note that Phase 1 _increases_ prompt size — the full inventory rather than the at-risk subset — bounded by `MAX_PROMPT_PRODUCTS = 25`.
 
 ## Migration Notes
 
@@ -344,11 +344,11 @@ The endpoint's new fields all carry `.default("any")`, so the change is backward
 
 S-03 (`recipe-history`, status `plan_reviewed`) is scheduled to run parallel with this slice and touches two of the same files:
 
-| File | S-03 adds | S-04 (this plan) changes |
-| --- | --- | --- |
+| File                                 | S-03 adds                                   | S-04 (this plan) changes                                                                    |
+| ------------------------------------ | ------------------------------------------- | ------------------------------------------------------------------------------------------- |
 | `src/lib/services/recipe.service.ts` | `listRecipes()` — a new function at the end | `generateRecipe`; `SYSTEM_PROMPT` and the few-shot constants move out to `recipe-prompt.ts` |
-| `src/pages/inventory.astro` | A nav link to `/recipes` | Untouched by this plan |
-| `src/lib/services/recipe-prompt.ts` | — | New file, created by this plan |
+| `src/pages/inventory.astro`          | A nav link to `/recipes`                    | Untouched by this plan                                                                      |
+| `src/lib/services/recipe-prompt.ts`  | —                                           | New file, created by this plan                                                              |
 
 The additions are disjoint — different functions in `recipe.service.ts`, and this plan does not modify `inventory.astro` at all. Textual merge conflicts are possible in the service file's import block; semantic conflict is not expected. Neither plan changes `src/types.ts` in an overlapping way (S-03 adds a paged-recipes type, this adds parameter enums).
 
@@ -419,7 +419,7 @@ The additions are disjoint — different functions in `recipe.service.ts`, and t
 
 **1.8 cannot fail as written, and that is worth recording.** The criterion assumes insertion
 order can push at-risk products past `MAX_PROMPT_PRODUCTS = 25`. It cannot: `listProducts`
-orders by `expiry_date` ascending (`product.service.ts:18`) and at-risk *means* the earliest
+orders by `expiry_date` ascending (`product.service.ts:18`) and at-risk _means_ the earliest
 expiry dates, so every at-risk product is already at the head of the list the endpoint passes.
 Measured directly in this run — inserted last, the two at-risk products came back at positions
 0 and 1. The `sort()` at `recipe.service.ts:74` is therefore a **defensive backstop**, not the
@@ -427,13 +427,11 @@ thing that makes this pass; it earns its place only if a future caller passes a
 differently-ordered list. A test that genuinely exercises it would have to call
 `generateRecipe` directly with an unsorted array, which is Module 3 territory, not curl.
 
-
-
 - 1.4 — a user holding only Rice (2026-12-01) and Onion (2026-10-01), both `is_at_risk: false`,
   returned `200` with "Savory Onion Rice" using both ids. This is the FR-007 case that
   returned a hard `400` before the phase.
 - 1.5 — a user with zero products returned `400 {"error":"Inventory is empty — add a product
-  first"}`, the deliberate narrow exception documented in §Phase 1.3.
+first"}`, the deliberate narrow exception documented in §Phase 1.3.
 - Same rig as the Phase 2 notes below (local Supabase, dev server on `:4322` with `.dev.vars`
   env, `Origin` header on the auth posts).
 
@@ -493,16 +491,16 @@ differently-ordered list. A test that genuinely exercises it would have to call
 
 Four samples at `{"time":"15"}`:
 
-| Sample | Dish | Realistic total |
-| --- | --- | --- |
-| a | Quick Tomato Rice Bowl — raw rice simmered until tender | ~20 min, over |
-| b | Quick Tomato Rice Bowl — raw rice simmered until absorbed | ~20 min, over |
-| c | Quick Tomato and Onion Sauté | ~10 min, under |
-| d | Quick Tomato and Onion Sauté | ~10 min, under |
+| Sample | Dish                                                      | Realistic total |
+| ------ | --------------------------------------------------------- | --------------- |
+| a      | Quick Tomato Rice Bowl — raw rice simmered until tender   | ~20 min, over   |
+| b      | Quick Tomato Rice Bowl — raw rice simmered until absorbed | ~20 min, over   |
+| c      | Quick Tomato and Onion Sauté                              | ~10 min, under  |
+| d      | Quick Tomato and Onion Sauté                              | ~10 min, under  |
 
 **This is model adherence, not a templating defect.** `recipe-prompt.ts:34` renders
 `- Time: total recipe time (prep + cook) must not exceed 15 minutes.` — correct and
-imperative. The failing samples put the constraint in the *title* ("Quick …") and then
+imperative. The failing samples put the constraint in the _title_ ("Quick …") and then
 simmer raw rice anyway. Consistent with 2.10 and 2.11 passing cleanly: technique and method
 are categorical and the model either complies or visibly does not, while time is arithmetic
 over steps the model never actually sums.
@@ -520,8 +518,8 @@ What changed is the UI's promise:
 
 - `≤15 min` → `~15 min` (and the same for 30 / 45). The `≤` asserted a bound nothing enforces.
 - Label `Available time` → `Time preference`.
-- A hint line under the three selects: *"These guide the AI — it aims for them, but does not
-  always hit them."* It sits under all three controls, not just time — technique and method
+- A hint line under the three selects: _"These guide the AI — it aims for them, but does not
+  always hit them."_ It sits under all three controls, not just time — technique and method
   held in every sample here, but the same absence of server-side verification applies to them.
 
 The criterion is marked done on that basis, not because the model now complies. If the model

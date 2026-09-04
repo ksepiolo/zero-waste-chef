@@ -1,4 +1,5 @@
 <!-- IMPL-REVIEW-REPORT -->
+
 # Implementation Review: Recipe Generation UX
 
 - **Plan**: `context/changes/recipe-generation-ux/plan.md`
@@ -10,14 +11,14 @@
 
 ## Verdicts
 
-| Dimension | Verdict |
-|-----------|---------|
-| Plan Adherence | PASS |
-| Scope Discipline | PASS |
-| Safety & Quality | WARNING |
-| Architecture | PASS |
+| Dimension           | Verdict |
+| ------------------- | ------- |
+| Plan Adherence      | PASS    |
+| Scope Discipline    | PASS    |
+| Safety & Quality    | WARNING |
+| Architecture        | PASS    |
 | Pattern Consistency | WARNING |
-| Success Criteria | FAIL |
+| Success Criteria    | FAIL    |
 
 Plan adherence is unusually clean: every one of the 8 planned changes across the three
 phases verified as MATCH, including both new Phase 1 guardrails, the sort-before-slice
@@ -37,11 +38,11 @@ doc files.
 - **Dimension**: Safety & Quality
 - **Location**: `src/lib/services/recipe-prompt.ts:46`
 - **Detail**: The approved Variety deviation strikes pinned dimensions from the "change the
-  cooking method, the dish format…" list. When *both* technique and method are pinned,
+  cooking method, the dish format…" list. When _both_ technique and method are pinned,
   `axes.length === 1` and the fallback pushes `"the main ingredients"`, rendering:
-  *"your answer must be a clearly different dish — change the flavour profile and the main
-  ingredients."* On the same request the user turn says *"At-risk ingredients … the recipe
-  must use at least one of these"* (`recipe.service.ts:88`). With a single at-risk product
+  _"your answer must be a clearly different dish — change the flavour profile and the main
+  ingredients."_ On the same request the user turn says _"At-risk ingredients … the recipe
+  must use at least one of these"_ (`recipe.service.ts:88`). With a single at-risk product
   these are flatly contradictory, and this is exactly the "two conflicting instructions"
   failure the deviation was written to eliminate. The failure mode is not cosmetic: if the
   model follows Variety it drops the at-risk item, the new assertion at
@@ -51,7 +52,7 @@ doc files.
 - **Fix**: Replace the `"the main ingredients"` fallback with an axis that does not compete
   with the at-risk requirement — e.g. `"how the same ingredients are prepared"` — or append
   a clause preserving the floor (`"…while still using an at-risk ingredient"`).
-  - Strength: Keeps the deviation's intent (give the model *some* axis to vary) while
+  - Strength: Keeps the deviation's intent (give the model _some_ axis to vary) while
     removing the only branch that collides with the PRD's Primary success criterion.
     All-`"any"` is untouched, so criterion 2.4 still holds byte-identically.
   - Tradeoff: With both dimensions pinned the model has genuinely little room left; a
@@ -73,8 +74,8 @@ doc files.
 - **Detail**: 12 of 38 criteria are checked (32%). Everything checked is static —
   typecheck/lint/build, the 401 case, and the node-script byte-identity check. Every
   criterion that requires a running server or a live model call is unchecked: 1.4, 1.5,
-  2.5–2.8 (curl) and 20 of 21 manual items. Both phase gates say *"pause here for manual
-  confirmation from the human that the manual testing was successful before proceeding"*,
+  2.5–2.8 (curl) and 20 of 21 manual items. Both phase gates say _"pause here for manual
+  confirmation from the human that the manual testing was successful before proceeding"_,
   yet `df72f4f` and `2c5c344` landed with Phase 1's manual block still at 1/6.
   The unverified set is not incidental — it is precisely the behaviour this change
   introduces: 1.7 and 1.8 exercise the two guardrails added in Phase 1 (at-risk inclusion,
@@ -121,8 +122,8 @@ doc files.
 - **Impact**: 🏃 LOW — quick decision; fix is obvious and narrowly scoped
 - **Dimension**: Pattern Consistency
 - **Location**: `src/lib/services/recipe-prompt.ts`
-- **Detail**: CLAUDE.md: *"File naming must use kebab-case with dot-separated type suffixes.
-  Always name files as feature.handler.ts, feature.service.ts, feature.controller.ts."*
+- **Detail**: CLAUDE.md: _"File naming must use kebab-case with dot-separated type suffixes.
+  Always name files as feature.handler.ts, feature.service.ts, feature.controller.ts."_
   Both siblings in the directory are `product.service.ts` and `recipe.service.ts`; the new
   file joins feature and role with a hyphen and carries no suffix. This originates in the
   plan (`plan.md:196` names the path), so it is a plan flaw carried faithfully into code
@@ -174,7 +175,7 @@ doc files.
 - **Impact**: 🏃 LOW — quick decision; fix is obvious and narrowly scoped
 - **Dimension**: Pattern Consistency
 - **Location**: `src/types.ts:68-92`
-- **Detail**: CLAUDE.md scopes this file to *"Shared types (entities, DTOs)"*, and it was
+- **Detail**: CLAUDE.md scopes this file to _"Shared types (entities, DTOs)"_, and it was
   previously type-only — every importer used `import type`. It now exports runtime values,
   including display copy (`"≤15 min"`, `"Boil / simmer"`), and is pulled into the client
   bundle by the value import at `inventory-panel.tsx:3-11`. The enum consts have a real
@@ -207,28 +208,28 @@ doc files.
 
 ## Success criteria verification (this review)
 
-| Criterion | Result |
-|---|---|
-| 1.1 / 2.1 / 3.1 `npm run typecheck` | PASS — 42 files, 0 errors, 0 warnings |
-| 1.2 / 2.2 / 3.2 `npm run lint` | PASS — no violations |
-| 1.3 / 2.3 / 3.3 `npm run build` | PASS — server built, complete |
-| 2.4 all-`"any"` byte identity | PASS — reproduces `dce174a` `SYSTEM_PROMPT` exactly |
-| 1.4, 1.5, 2.5–2.8 (curl) | NOT RUN — needs a dev server and a session cookie |
-| 1.7–1.11, 2.9–2.13, 3.4–3.13 (manual) | NOT RUN — see F2 |
-| 1.12 (checked) | No diff-level evidence; inherently a human judgement |
+| Criterion                             | Result                                               |
+| ------------------------------------- | ---------------------------------------------------- |
+| 1.1 / 2.1 / 3.1 `npm run typecheck`   | PASS — 42 files, 0 errors, 0 warnings                |
+| 1.2 / 2.2 / 3.2 `npm run lint`        | PASS — no violations                                 |
+| 1.3 / 2.3 / 3.3 `npm run build`       | PASS — server built, complete                        |
+| 2.4 all-`"any"` byte identity         | PASS — reproduces `dce174a` `SYSTEM_PROMPT` exactly  |
+| 1.4, 1.5, 2.5–2.8 (curl)              | NOT RUN — needs a dev server and a session cookie    |
+| 1.7–1.11, 2.9–2.13, 3.4–3.13 (manual) | NOT RUN — see F2                                     |
+| 1.12 (checked)                        | No diff-level evidence; inherently a human judgement |
 
 ## Triage (2026-08-14)
 
-| Finding | Decision |
-|---|---|
-| F1 — Variety vs. at-risk floor | FIXED |
-| F2 — runtime criteria unverified | SKIPPED |
-| F3 — unescaped product names | FIXED |
-| F4 — file naming | SKIPPED |
-| F5 — approve blast radius | SKIPPED |
-| F6 — optional `params` | SKIPPED |
-| F7 — label maps in `types.ts` | FIXED |
-| F8 — raw Zod issues in toast | SKIPPED |
+| Finding                          | Decision |
+| -------------------------------- | -------- |
+| F1 — Variety vs. at-risk floor   | FIXED    |
+| F2 — runtime criteria unverified | SKIPPED  |
+| F3 — unescaped product names     | FIXED    |
+| F4 — file naming                 | SKIPPED  |
+| F5 — approve blast radius        | SKIPPED  |
+| F6 — optional `params`           | SKIPPED  |
+| F7 — label maps in `types.ts`    | FIXED    |
+| F8 — raw Zod issues in toast     | SKIPPED  |
 
 Post-fix verification: `npm run typecheck` (42 files, 0 errors), `npm run lint` (clean), and
 criterion 2.4 re-run — all-`"any"` still reproduces the `dce174a` `SYSTEM_PROMPT` byte for

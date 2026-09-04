@@ -3,7 +3,7 @@ project: "Zero Waste Chef"
 version: 1
 status: draft
 created: 2026-05-27
-updated: 2026-08-15
+updated: 2026-09-04
 prd_version: 1
 main_goal: speed
 top_blocker: time
@@ -27,13 +27,13 @@ Użytkownik otwiera lodówkę i nie wie, co trzeba zużyć — ekspirujące prod
 
 ## At a glance
 
-| ID   | Change ID              | Outcome (user can …)                                           | Prerequisites | PRD refs              | Status   |
-|------|------------------------|----------------------------------------------------------------|---------------|-----------------------|----------|
-| F-01 | data-schema            | (foundation) tabele products + recipes z RLS w Supabase       | —             | FR-004, FR-007, FR-009 | done     |
-| S-01 | inventory-management   | dodać produkt, zobaczyć listę z oznaczeniem "at-risk", usunąć | F-01          | FR-001–FR-006         | done     |
-| S-02 | recipe-generation-loop | wygenerować przepis AI, zatwierdzić, usunąć produkty          | S-01, F-01    | FR-007–FR-009, US-01  | done     |
-| S-03 | recipe-history         | zobaczyć listę wcześniej zatwierdzonych przepisów              | S-02          | FR-010                | done     |
-| S-04 | recipe-generation-ux   | wybrać parametry przepisu (technika, metoda, czas) przed generowaniem | F-01     | FR-007, FR-008        | in-progress |
+| ID   | Change ID              | Outcome (user can …)                                                  | Prerequisites | PRD refs               | Status |
+| ---- | ---------------------- | --------------------------------------------------------------------- | ------------- | ---------------------- | ------ |
+| F-01 | data-schema            | (foundation) tabele products + recipes z RLS w Supabase               | —             | FR-004, FR-007, FR-009 | done   |
+| S-01 | inventory-management   | dodać produkt, zobaczyć listę z oznaczeniem "at-risk", usunąć         | F-01          | FR-001–FR-006          | done   |
+| S-02 | recipe-generation-loop | wygenerować przepis AI, zatwierdzić, usunąć produkty                  | S-01, F-01    | FR-007–FR-009, US-01   | done   |
+| S-03 | recipe-history         | zobaczyć listę wcześniej zatwierdzonych przepisów                     | S-02          | FR-010                 | done   |
+| S-04 | recipe-generation-ux   | wybrać parametry przepisu (technika, metoda, czas) przed generowaniem | F-01          | FR-007, FR-008         | done   |
 
 ## Baseline
 
@@ -113,17 +113,17 @@ Foundations poniżej zakładają, że te warstwy są obecne i ich nie przebudowu
 - **Unknowns:**
   - Jakie dokładnie wartości oferować dla techniki / metody / czasu (lista zamknięta czy wolny tekst)? — Owner: user. Block: no. **Rozstrzygnięte 2026-08-12 w `/10x-plan`:** listy zamknięte (enum) dla wszystkich trzech wymiarów — 8 × 6 × 5 wartości, z „Any" jako domyślną.
 - **Risk:** parametry muszą trafić do promptu bez rozmycia priorytetu produktów "at-risk" — zbyt wąskie ograniczenia (np. bardzo krótki czas) mogą sprawić, że model pominie produkty wygasające, łamiąc główną obietnicę S-02
-- **Status:** in-progress
+- **Status:** done
 
 ## Backlog Handoff
 
-| Roadmap ID | Change ID              | Suggested issue title                                  | Ready for `/10x-plan` | Notes                              |
-|------------|------------------------|--------------------------------------------------------|-----------------------|------------------------------------|
-| F-01       | data-schema            | Supabase: schema products + recipes z RLS              | done                  | Archived 2026-05-31                |
-| S-01       | inventory-management   | Inventory: add / view (at-risk flag) / delete products | done                  | Archived 2026-06-01                |
-| S-02       | recipe-generation-loop | Recipe loop: generate → approve → remove (AI)          | done                  | Archived 2026-08-11                |
-| S-03       | recipe-history         | Recipe history: lista zatwierdzonych przepisów         | done                  | Archived 2026-08-15                |
-| S-04       | recipe-generation-ux   | Generowanie: wybór techniki, metody i czasu przepisu   | no                    | Zgłoszone podczas S-01/S-02 (UX gap) |
+| Roadmap ID | Change ID              | Suggested issue title                                  | Ready for `/10x-plan` | Notes               |
+| ---------- | ---------------------- | ------------------------------------------------------ | --------------------- | ------------------- |
+| F-01       | data-schema            | Supabase: schema products + recipes z RLS              | done                  | Archived 2026-05-31 |
+| S-01       | inventory-management   | Inventory: add / view (at-risk flag) / delete products | done                  | Archived 2026-06-01 |
+| S-02       | recipe-generation-loop | Recipe loop: generate → approve → remove (AI)          | done                  | Archived 2026-08-11 |
+| S-03       | recipe-history         | Recipe history: lista zatwierdzonych przepisów         | done                  | Archived 2026-08-15 |
+| S-04       | recipe-generation-ux   | Generowanie: wybór techniki, metody i czasu przepisu   | done                  | Archived 2026-09-04 |
 
 ## Open Roadmap Questions
 
@@ -146,3 +146,4 @@ Foundations poniżej zakładają, że te warstwy są obecne i ich nie przebudowu
 - **S-01: użytkownik może dodać produkt (nazwa + data ważności) do inwentarza, zobaczyć pełną listę z wizualnym wyróżnieniem produktów "at-risk" — produktów wygasających w ciągu najbliższych 3 dni — i usunąć produkt manualnie.** — Archived 2026-06-01 → `context/archive/2026-05-31-inventory-management/`. Lesson: —.
 - **S-02: użytkownik może zażądać przepisu AI priorytetyzującego produkty "at-risk" z inwentarza, zobaczyć ekran zatwierdzenia z przepisem i dokładną listą produktów do usunięcia, zatwierdzić — przepis zostaje zapisany, a wymienione produkty usunięte z inwentarza jako jedna atomowa operacja.** — Archived 2026-08-11 → `context/archive/2026-06-05-recipe-generation-loop/`. Lesson: —.
 - **S-03: użytkownik może zobaczyć listę wcześniej zatwierdzonych przepisów posortowaną od najnowszej do najstarszej.** — Archived 2026-08-15 → `context/archive/2026-08-11-recipe-history/`. Lesson: —.
+- **S-04: użytkownik może przed wygenerowaniem przepisu wybrać jego parametry — technikę kulinarną, metodę przygotowania i dostępny czas — i otrzymać przepis, który te wybory respektuje.** — Archived 2026-09-04 → `context/archive/2026-08-12-recipe-generation-ux/`. Lesson: —.

@@ -1,4 +1,5 @@
 <!-- PLAN-REVIEW-REPORT -->
+
 # Plan Review: Recipe Generation UX
 
 - **Plan**: `context/changes/recipe-generation-ux/plan.md`
@@ -9,13 +10,13 @@
 
 ## Verdicts
 
-| Dimension | Before triage | After fixes |
-|-----------|---------------|-------------|
-| End-State Alignment | WARNING | PASS |
-| Lean Execution | WARNING | PASS |
-| Architectural Fitness | PASS | PASS |
-| Blind Spots | FAIL | PASS |
-| Plan Completeness | WARNING | PASS |
+| Dimension             | Before triage | After fixes |
+| --------------------- | ------------- | ----------- |
+| End-State Alignment   | WARNING       | PASS        |
+| Lean Execution        | WARNING       | PASS        |
+| Architectural Fitness | PASS          | PASS        |
+| Blind Spots           | FAIL          | PASS        |
+| Plan Completeness     | WARNING       | PASS        |
 
 ## Grounding
 
@@ -29,7 +30,7 @@
 - **Impact**: 🔎 MEDIUM — real tradeoff; pause to reason through it
 - **Dimension**: Blind Spots
 - **Location**: Phase 1 §1–2
-- **Detail**: Today `generate.ts:43` passes only at-risk products, so the guardrail at `recipe.service.ts:154-157` (`used_product_ids ⊆ promptProducts`) *structurally guarantees* FR-007's "the recipe must include at least one at-risk product" — the model cannot name a non-at-risk ID because it never sees one. Phase 1 widens `promptProducts` to the full inventory, so the same check now passes for a recipe using zero at-risk products. The requirement degrades from enforced to prompt-suggested, with nothing detecting the failure. The plan spotted one instance of this hazard (truncation, §Critical Implementation Details, "silently breaks the PRD's Primary criterion with no error anywhere") but not the general case. §What We're NOT Doing excuses "no verification that the model honoured the parameters" — the at-risk floor is not a parameter, it is the PRD's Primary success criterion and the roadmap's stated S-04 risk. Verification is one manual eyeball (1.7) plus one under time pressure (2.12).
+- **Detail**: Today `generate.ts:43` passes only at-risk products, so the guardrail at `recipe.service.ts:154-157` (`used_product_ids ⊆ promptProducts`) _structurally guarantees_ FR-007's "the recipe must include at least one at-risk product" — the model cannot name a non-at-risk ID because it never sees one. Phase 1 widens `promptProducts` to the full inventory, so the same check now passes for a recipe using zero at-risk products. The requirement degrades from enforced to prompt-suggested, with nothing detecting the failure. The plan spotted one instance of this hazard (truncation, §Critical Implementation Details, "silently breaks the PRD's Primary criterion with no error anywhere") but not the general case. §What We're NOT Doing excuses "no verification that the model honoured the parameters" — the at-risk floor is not a parameter, it is the PRD's Primary success criterion and the roadmap's stated S-04 risk. Verification is one manual eyeball (1.7) plus one under time pressure (2.12).
 - **Fix A ⭐ Recommended**: Add an at-risk-inclusion assertion beside the ID guardrail — when at-risk products were passed, require `used_product_ids ∩ atRiskIds ≠ ∅`, otherwise throw the way the ID check does.
   - Strength: Restores enforcement at the same place the sibling invariant already lives (`recipe.service.ts:154-157`); ~5 lines; makes 1.7 / 1.12 / 2.12 automatic.
   - Tradeoff: A throw surfaces as a 500 toast; the user retries. On a tight `time: "15"` + slow at-risk item, that path may fire more than occasionally.
@@ -58,7 +59,7 @@
 - **Impact**: 🔎 MEDIUM — real tradeoff; pause to reason through it
 - **Dimension**: Blind Spots
 - **Location**: Phase 2 §2
-- **Detail**: Phase 2 templates `SYSTEM_PROMPT` but leaves `FEW_SHOT_USER` and `FEW_SHOT_ASSISTANT` (`recipe.service.ts:25-38`) untouched — and the plan never mentions them. They sit *between* the system prompt and the real user turn, and they demonstrate frying ("fry for 6 minutes") in a skillet, framed as "prioritizes using these **at-risk** ingredients". With `technique: "no-cook"` the model gets an abstract rule saying don't cook and a concrete worked example that fries; with `method: "soup"`, a worked example that is a skillet dish. This is the exact failure mode §Critical Implementation Details warns about ("two conflicting instructions… it follows the first"), and the plan's defence against it only covers `SYSTEM_PROMPT`. A demonstration is typically a stronger signal than a rule. Separately, in Phase 1 with no at-risk products, the few-shot user turn still says "at-risk ingredients" while the real turn does not.
+- **Detail**: Phase 2 templates `SYSTEM_PROMPT` but leaves `FEW_SHOT_USER` and `FEW_SHOT_ASSISTANT` (`recipe.service.ts:25-38`) untouched — and the plan never mentions them. They sit _between_ the system prompt and the real user turn, and they demonstrate frying ("fry for 6 minutes") in a skillet, framed as "prioritizes using these **at-risk** ingredients". With `technique: "no-cook"` the model gets an abstract rule saying don't cook and a concrete worked example that fries; with `method: "soup"`, a worked example that is a skillet dish. This is the exact failure mode §Critical Implementation Details warns about ("two conflicting instructions… it follows the first"), and the plan's defence against it only covers `SYSTEM_PROMPT`. A demonstration is typically a stronger signal than a rule. Separately, in Phase 1 with no at-risk products, the few-shot user turn still says "at-risk ingredients" while the real turn does not.
 - **Fix A ⭐ Recommended**: Neutralise the few-shot and widen the byte-identity test — reword `FEW_SHOT_USER` to drop "at-risk", keep the assistant example purely format-anchoring, and make criterion 2.4 cover the whole `messages` array rather than just the system string.
   - Strength: The `messages` array is what actually determines whether Any/Any/Any reproduces Phase 1; the format-anchoring comment at lines 22-24 shows the example was already built to be content-neutral.
   - Tradeoff: Changing the few-shot in Phase 1 means Phase 1's own output is no longer byte-comparable to today's, blurring the attribution the phase order was designed to protect. Do it in Phase 1 and re-baseline there.
@@ -96,7 +97,7 @@
 - **Impact**: 🔎 MEDIUM — real tradeoff; pause to reason through it
 - **Dimension**: End-State Alignment
 - **Location**: Phase 2 §1, time enum
-- **Detail**: The framing throughout is that this slice "does not *add* constraints, it makes existing ones user-controlled" (§Overview) and that the 45-minute cap stays intact (brief, `Any` semantics row). But `90` is not an existing constraint made selectable — it *relaxes* a shipped product rule, and it inverts the control: a dropdown labelled "available time" where picking a larger number grants the model more latitude than the default. A user selecting "≤90 min" gets a recipe the product previously refused to produce. §What We're NOT Doing explicitly protects the equipment rule from loosening but says nothing about the time rule.
+- **Detail**: The framing throughout is that this slice "does not _add_ constraints, it makes existing ones user-controlled" (§Overview) and that the 45-minute cap stays intact (brief, `Any` semantics row). But `90` is not an existing constraint made selectable — it _relaxes_ a shipped product rule, and it inverts the control: a dropdown labelled "available time" where picking a larger number grants the model more latitude than the default. A user selecting "≤90 min" gets a recipe the product previously refused to produce. §What We're NOT Doing explicitly protects the equipment rule from loosening but says nothing about the time rule.
 - **Fix A ⭐ Recommended**: Cap the enum at 45 (`any` / `15` / `30` / `45`).
   - Strength: Keeps the slice's stated framing exactly true; every value narrows, none widens; 5→4 values costs nothing.
   - Tradeoff: Loses the one value that serves a user with real time available.
@@ -125,7 +126,7 @@
 - **Impact**: 🏃 LOW — quick decision; fix is obvious and narrowly scoped
 - **Dimension**: Lean Execution
 - **Location**: Phase 2 §1
-- **Detail**: The brief justifies the method values as reusing "the dish formats the existing Variety rule names". That rule names soup / stir-fry / bake / salad / omelette (`recipe.service.ts:20`); the enum ships one-pot, sheet-pan, stovetop-only, salad-assembly, soup — three of five are new vocabulary, while stir-fry and bake landed in *technique* instead. The result is that the two dimensions collide: `stovetop-only` + `bake`/`roast` is a flat contradiction, `sheet-pan` + `boil-simmer` likewise. §What We're NOT Doing accepts nonsensical pairings, but these are adjacent everyday choices, not exotic ones — roughly a third of the 8×6 grid is self-contradicting.
+- **Detail**: The brief justifies the method values as reusing "the dish formats the existing Variety rule names". That rule names soup / stir-fry / bake / salad / omelette (`recipe.service.ts:20`); the enum ships one-pot, sheet-pan, stovetop-only, salad-assembly, soup — three of five are new vocabulary, while stir-fry and bake landed in _technique_ instead. The result is that the two dimensions collide: `stovetop-only` + `bake`/`roast` is a flat contradiction, `sheet-pan` + `boil-simmer` likewise. §What We're NOT Doing accepts nonsensical pairings, but these are adjacent everyday choices, not exotic ones — roughly a third of the 8×6 grid is self-contradicting.
 - **Fix**: Drop `stovetop-only` (it restates a technique, not a dish format) and correct the brief's provenance claim.
 - **Decision**: FIXED — `stovetop-only` removed from the method enum (now 8 × 5 × 4), reasoning recorded in Phase 2 §1, and the brief's "no new vocabulary invented" claim corrected.
 
