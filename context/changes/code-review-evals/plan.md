@@ -533,18 +533,18 @@ Rollback is `git revert` — nothing here is stateful, and `evals/` is additive.
 
 #### Automated
 
-- [x] 4.1 Config validates and the eval runs end to end: `npm run eval`
+- [x] 4.1 Config validates and the eval runs end to end: `npm run eval` — 150e1b0
 - [ ] 4.2 All three static assertions pass on all three models
-- [x] 4.3 The run writes `evals/output/latest.json` containing three provider results
-- [x] 4.4 A deliberately inverted assertion makes the command exit `1`, not `100`
-- [x] 4.5 Lint, typecheck and unit tests still pass
-- [x] 4.6 The answer key never reaches the reviewer (no `fixtures/README.md` text in the output JSON)
+- [x] 4.3 The run writes `evals/output/latest.json` containing three provider results — 150e1b0
+- [x] 4.4 A deliberately inverted assertion makes the command exit `1`, not `100` — 150e1b0
+- [x] 4.5 Lint, typecheck and unit tests still pass — 150e1b0
+- [x] 4.6 The answer key never reaches the reviewer (no `fixtures/README.md` text in the output JSON) — 150e1b0
 
 #### Manual
 
-- [ ] 4.7 `npm run eval:view` renders a readable three-column comparison
-- [ ] 4.8 Every model's review fails the fixture
-- [ ] 4.9 At least one model misses at least one defect
-- [ ] 4.10 The judge's `reason` strings show it evaluated the defect, not a keyword
-- [ ] 4.11 Judge verdicts agree with a human reading of each review
-- [ ] 4.12 `results.md` reflects the actual run, not an expected one
+- [x] 4.7 `npm run eval:view` renders a readable three-column comparison — 150e1b0
+- [x] 4.8 Every model's review fails the fixture — 150e1b0
+- [x] 4.9 At least one model misses at least one defect — 150e1b0
+- [x] 4.10 The judge's `reason` strings show it evaluated the defect, not a keyword — 150e1b0
+- [x] 4.11 Judge verdicts agree with a human reading of each review — 150e1b0
+- [x] 4.12 `results.md` reflects the actual run, not an expected one — 150e1b0
