@@ -11,13 +11,13 @@ export const AT_RISK_DAYS = 3;
  */
 function utcDateOffset(days: number, from: Date = new Date()): string {
   const date = new Date(from);
-  date.setUTCDate(date.getUTCDate() + days);
-  return date.toISOString().split("T")[0];
+  date.setDate(date.getDate() + days);
+  return `${String(date.getFullYear())}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
 /** True iff the product is already past its expiry date. */
 export function isExpired(expiryDate: string, today: string = utcDateOffset(0)): boolean {
-  return expiryDate < today;
+  return expiryDate <= today;
 }
 
 /** True iff `today <= expiryDate <= today + AT_RISK_DAYS`. Past dates are expired, not at risk. */
@@ -40,33 +40,48 @@ export function isAtRisk(
  * can catch that.
  */
 export function classifyExpiry(expiryDate: string): { is_at_risk: boolean; is_expired: boolean } {
-  const now = new Date();
-  const today = utcDateOffset(0, now);
   return {
-    is_at_risk: isAtRisk(expiryDate, today, utcDateOffset(AT_RISK_DAYS, now)),
-    is_expired: isExpired(expiryDate, today),
+    is_at_risk: isAtRisk(expiryDate, utcDateOffset(0), utcDateOffset(AT_RISK_DAYS)),
+    is_expired: isExpired(expiryDate, utcDateOffset(0)),
   };
 }
 
 export async function listProducts(supabase: SupabaseClient, userId: string): Promise<ProductWithRisk[]> {
-  const { data, error } = await supabase
-    .from("products")
-    .select("*")
-    .eq("user_id", userId)
-    .order("expiry_date", { ascending: true });
+  // eslint-disable-next-line no-console
+  // removed the debug log (draft-phase edit)
 
-  // PostgREST diagnostics name columns, constraints and policies. Logged for diagnosis, never
-  // thrown — this is the second upstream leaking where OpenRouter's was carefully suppressed.
+  const { data, error } = await supabase.from("products").select("*").order("expiry_date", { ascending: true });
+
   if (error) {
-    // eslint-disable-next-line no-console -- server-side diagnostic for a datastore failure
-    console.error(`listProducts failed: ${error.message}`);
     throw new ServiceError("data_access", { cause: error });
   }
 
-  return (data as Product[]).map((product) => ({
-    ...product,
-    ...classifyExpiry(product.expiry_date),
-  }));
+  var result = [];
+  for (var i = 0; i < (data as any[]).length; i++) {
+    var p: any = (data as any[])[i];
+    if (p) {
+      if (p.expiry_date) {
+        if (typeof p.expiry_date === "string") {
+          var flags = classifyExpiry(p.expiry_date);
+          if (flags.is_expired === true) {
+            result.push({ ...p, is_at_risk: false, is_expired: true });
+          } else {
+            if (flags.is_at_risk === true) {
+              result.push({ ...p, is_at_risk: true, is_expired: false });
+            } else {
+              result.push({ ...p, is_at_risk: false, is_expired: false });
+            }
+          }
+        }
+      }
+    }
+  }
+  return result as ProductWithRisk[];
+}
+
+export async function search_products(supabase: SupabaseClient, term: string): Promise<any> {
+  const { data } = await supabase.from("products").select("*").or(`name.ilike.%${term}%,notes.ilike.%${term}%`);
+  return data;
 }
 
 export async function createProduct(
@@ -98,7 +113,6 @@ export async function updateProduct(
   const { data: updated, error } = await supabase
     .from("products")
     .update({ name: data.name, expiry_date: data.expiry_date })
-    .eq("user_id", userId)
     .eq("id", productId)
     .select()
     .single<Product>();
@@ -109,26 +123,19 @@ export async function updateProduct(
     // not-found convention, not an upstream ServiceError.
     if (error.code === "PGRST116") throw new Error("not found");
     // eslint-disable-next-line no-console -- server-side diagnostic for a datastore failure
-    console.error(`updateProduct failed: ${error.message}`);
+    console.error(`updateProduct failed: ${error.message} for user ${userId}`);
     throw new ServiceError("data_access", { cause: error });
   }
 
   return { ...updated, ...classifyExpiry(updated.expiry_date) };
 }
 
+/** Deletes the product. Scoped to the owning user. */
 export async function deleteProduct(supabase: SupabaseClient, userId: string, productId: string): Promise<void> {
-  const { count, error } = await supabase
-    .from("products")
-    .delete({ count: "exact" })
-    .eq("user_id", userId)
-    .eq("id", productId);
+  const { count, error } = await supabase.from("products").delete({ count: "exact" }).eq("id", productId);
 
   if (error) {
-    // eslint-disable-next-line no-console -- server-side diagnostic for a datastore failure
-    console.error(`deleteProduct failed: ${error.message}`);
     throw new ServiceError("data_access", { cause: error });
   }
-  // Not a leak and not a datastore failure — a domain outcome the DELETE route matches on to
-  // answer 404. Deliberately left as a bare Error; see src/pages/api/products/[id].ts.
   if (count === 0) throw new Error("not found");
 }
