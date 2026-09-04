@@ -16,6 +16,7 @@ import { ChevronDown, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { Dialog } from "radix-ui";
 import { toast } from "sonner";
 import { useRecipeGeneration } from "@/components/hooks/use-recipe-generation";
+import { isProductDraftValid, validateProductDraft } from "@/lib/services/product.validation";
 
 interface Props {
   initialProducts: ProductWithRisk[];
@@ -515,7 +516,12 @@ function EditProductDialog({ product, today, onOpenChange, onSaved, onRemoved }:
   }
 
   const isDirty = product !== null && (name !== product.name || expiryDate !== product.expiry_date);
-  const isValid = name.length > 0 && name.length <= 255 && expiryDate >= today;
+
+  // Computed during render from the current field state — deliberately not held in state and
+  // not derived in an effect, so the messages track every keystroke instead of trailing it by
+  // a render. That is the same reason the reset above adjusts state during render.
+  const fieldMessages = validateProductDraft({ name, expiry_date: expiryDate }, today);
+  const isValid = isProductDraftValid(fieldMessages);
 
   // Close precedence, checked in this order on every close attempt (Escape, overlay click,
   // or Cancel): block while submitting, confirm if dirty, otherwise close immediately.
@@ -587,8 +593,18 @@ function EditProductDialog({ product, today, onOpenChange, onSaved, onRemoved }:
                   setName(e.target.value);
                 }}
                 required
+                aria-invalid={fieldMessages.name !== undefined}
+                aria-describedby={fieldMessages.name === undefined ? undefined : "edit-name-error"}
                 className="border-brand-input-border text-brand-ink focus:border-brand-green w-full rounded-lg border px-3 py-2 text-sm focus:outline-none"
               />
+              {/* Linked with aria-describedby rather than merely placed underneath: a greyed-out
+                  Save button conveys nothing to a screen reader, so the reason has to be
+                  programmatically attached to the field it is about. */}
+              {fieldMessages.name && (
+                <p id="edit-name-error" className="text-brand-danger mt-1 text-sm">
+                  {fieldMessages.name}
+                </p>
+              )}
             </div>
             <div>
               <label htmlFor="edit-expiry-date" className="text-brand-muted mb-1 block text-xs">
@@ -603,8 +619,15 @@ function EditProductDialog({ product, today, onOpenChange, onSaved, onRemoved }:
                   setExpiryDate(e.target.value);
                 }}
                 required
+                aria-invalid={fieldMessages.expiry_date !== undefined}
+                aria-describedby={fieldMessages.expiry_date === undefined ? undefined : "edit-expiry-date-error"}
                 className="border-brand-input-border text-brand-ink focus:border-brand-green w-full rounded-lg border px-3 py-2 text-sm focus:outline-none"
               />
+              {fieldMessages.expiry_date && (
+                <p id="edit-expiry-date-error" className="text-brand-danger mt-1 text-sm">
+                  {fieldMessages.expiry_date}
+                </p>
+              )}
             </div>
 
             {error && <p className="text-brand-danger text-sm">{error}</p>}
