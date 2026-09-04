@@ -247,29 +247,29 @@ redirect was chosen over a config-level 301.
 
 #### Automated
 
-- [x] 1.1 Type checking passes: `npm run typecheck`
-- [x] 1.2 Linting passes: `npm run lint`
-- [x] 1.3 Production build succeeds: `npm run build`
-- [x] 1.4 Unit and integration tests pass: `npm test`
-- [x] 1.5 `src/pages/dashboard.astro` contains no `<Layout` and no `Astro.locals` reference
-- [x] 1.6 `grep -n '"/dashboard"' src/middleware.ts` still matches — the guard entry is deliberately kept
+- [x] 1.1 Type checking passes: `npm run typecheck` — 50c643a
+- [x] 1.2 Linting passes: `npm run lint` — 50c643a
+- [x] 1.3 Production build succeeds: `npm run build` — 50c643a
+- [x] 1.4 Unit and integration tests pass: `npm test` — 50c643a
+- [x] 1.5 `src/pages/dashboard.astro` contains no `<Layout` and no `Astro.locals` reference — 50c643a
+- [x] 1.6 `grep -n '"/dashboard"' src/middleware.ts` still matches — the guard entry is deliberately kept — 50c643a
 
 #### Manual
 
-- [x] 1.7 Signed in, visiting `/dashboard` lands on `/inventory` with the inventory UI rendered
-- [x] 1.8 Signed out, visiting `/dashboard` still lands on `/auth/signin`
-- [x] 1.9 The browser back button after the redirect does not trap the user in a redirect loop
-- [x] 1.10 `/inventory` and `/recipes` remain reachable from `AppNav` — no navigation regressed
+- [x] 1.7 Signed in, visiting `/dashboard` lands on `/inventory` with the inventory UI rendered — 50c643a
+- [x] 1.8 Signed out, visiting `/dashboard` still lands on `/auth/signin` — 50c643a
+- [x] 1.9 The browser back button after the redirect does not trap the user in a redirect loop — 50c643a
+- [x] 1.10 `/inventory` and `/recipes` remain reachable from `AppNav` — no navigation regressed — 50c643a
 
 ### Phase 2: E2E regression coverage
 
 #### Automated
 
-- [ ] 2.1 The new spec passes on all three browser projects: `npm run test:e2e`
-- [ ] 2.2 Linting passes on the new test file: `npm run lint`
-- [ ] 2.3 The spec fails if the redirect is reverted — confirm by temporarily restoring the old page body and re-running, then restoring the redirect
+- [x] 2.1 The new spec passes on all three browser projects: `npm run test:e2e`
+- [x] 2.2 Linting passes on the new test file: `npm run lint`
+- [x] 2.3 The spec fails if the redirect is reverted — confirm by temporarily restoring the old page body and re-running, then restoring the redirect
 
 #### Manual
 
-- [ ] 2.4 The spec is reviewed against the five anti-patterns from `/10x-e2e`
-- [ ] 2.5 No `page.waitForTimeout` and no CSS/XPath selectors appear in the new file
+- [x] 2.4 The spec is reviewed against the five anti-patterns from `/10x-e2e`
+- [x] 2.5 No `page.waitForTimeout` and no CSS/XPath selectors appear in the new file
