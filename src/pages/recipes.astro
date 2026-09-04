@@ -28,10 +28,8 @@ if (supabase && Astro.locals.user) {
     <div class="mx-auto max-w-[1000px]">
       <AppNav email={Astro.locals.user?.email ?? ""} current="recipes" />
       <div class="mt-6 mb-8">
-        <h1 class="font-display text-brand-ink text-2xl">Historia przepisów</h1>
-        <p class="font-body text-brand-muted mt-1 text-sm">
-          Wszystkie przepisy, które udało się ugotować z Twojej spiżarni.
-        </p>
+        <h1 class="font-display text-brand-ink text-2xl">Recipe history</h1>
+        <p class="font-body text-brand-muted mt-1 text-sm">Every recipe you have cooked from your inventory.</p>
       </div>
       <RecipeHistoryPanel initialPage={initialPage} loadError={loadError} client:load />
     </div>

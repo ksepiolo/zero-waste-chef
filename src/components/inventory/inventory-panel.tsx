@@ -166,10 +166,10 @@ export function InventoryPanel({ initialProducts }: Props) {
   return (
     <div className="grid gap-6 sm:grid-cols-5">
       <div className="border-brand-border rounded-[20px] border bg-white p-6 sm:col-span-3">
-        <h2 className="font-display text-brand-ink mb-4 text-lg">Produkty</h2>
+        <h2 className="font-display text-brand-ink mb-4 text-lg">Products</h2>
 
         <div className="mb-4">
-          <p className="font-body text-brand-muted mb-2 text-xs font-medium">Nowy produkt</p>
+          <p className="font-body text-brand-muted mb-2 text-xs font-medium">New product</p>
           <form onSubmit={(e) => void handleAdd(e)} className="flex items-center gap-2">
             <label htmlFor="name" className="sr-only">
               Product name
@@ -178,7 +178,7 @@ export function InventoryPanel({ initialProducts }: Props) {
               id="name"
               name="name"
               type="text"
-              placeholder="Nazwa produktu"
+              placeholder="Product name"
               required
               className="border-brand-input-border placeholder-brand-muted-2 text-brand-ink focus:border-brand-green flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none"
               onChange={() => {

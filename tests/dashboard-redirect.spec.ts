@@ -17,5 +17,5 @@ test("authenticated visit to legacy /dashboard lands on the inventory page", asy
   // ...and on the real inventory page, not merely a URL that happens to match —
   // AppNav only renders for an authenticated inventory route, so this fails if the
   // redirect ever lands somewhere broken or bounces back through /auth/signin.
-  await expect(page.getByRole("link", { name: "Moja spiżarnia" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "My Inventory" })).toBeVisible();
 });

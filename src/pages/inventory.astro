@@ -23,9 +23,9 @@ if (supabase && Astro.locals.user) {
     <div class="mx-auto max-w-[1000px]">
       <AppNav email={Astro.locals.user?.email ?? ""} current="inventory" />
       <div class="mt-6 mb-8">
-        <h1 class="font-display text-brand-ink text-2xl">Moja spiżarnia</h1>
+        <h1 class="font-display text-brand-ink text-2xl">My Inventory</h1>
         <p class="font-body text-brand-muted mt-1 text-sm">
-          Wpisz to, co masz pod ręką — nawet jeśli to tylko kilka przypadkowych składników.
+          Add whatever you have on hand — even if it's just a few random ingredients.
         </p>
       </div>
       <InventoryPanel initialProducts={initialProducts} client:load />
