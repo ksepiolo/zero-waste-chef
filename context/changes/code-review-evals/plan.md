@@ -518,27 +518,27 @@ Rollback is `git revert` — nothing here is stateful, and `evals/` is additive.
 
 #### Automated
 
-- [x] 3.1 The diff is well-formed and applies in a scratch tree (`git apply --check`)
-- [x] 3.2 Each planted flaw's quotable excerpt appears verbatim in the diff
-- [x] 3.3 The answer key is not referenced by the config's `vars`
+- [x] 3.1 The diff is well-formed and applies in a scratch tree (`git apply --check`) — d37be26
+- [x] 3.2 Each planted flaw's quotable excerpt appears verbatim in the diff — d37be26
+- [x] 3.3 The answer key is not referenced by the config's `vars` — d37be26
 
 #### Manual
 
-- [x] 3.4 The diff reads as a genuine migration, not as a puzzle
-- [x] 3.5 Exactly three defects are present — no fourth unintended one
-- [x] 3.6 Flaw 2 (`defaultProps`) is subtle enough that a weaker model plausibly misses it
-- [x] 3.7 The PR description makes a confident claim the diff does not deliver on
+- [x] 3.4 The diff reads as a genuine migration, not as a puzzle — d37be26
+- [x] 3.5 Exactly three defects are present — no fourth unintended one — d37be26
+- [x] 3.6 Flaw 2 (`defaultProps`) is subtle enough that a weaker model plausibly misses it — d37be26
+- [x] 3.7 The PR description makes a confident claim the diff does not deliver on — d37be26
 
 ### Phase 4: Config, Assertions, First Run & Docs
 
 #### Automated
 
-- [ ] 4.1 Config validates and the eval runs end to end: `npm run eval`
+- [x] 4.1 Config validates and the eval runs end to end: `npm run eval`
 - [ ] 4.2 All three static assertions pass on all three models
-- [ ] 4.3 The run writes `evals/output/latest.json` containing three provider results
-- [ ] 4.4 A deliberately inverted assertion makes the command exit `1`, not `100`
-- [ ] 4.5 Lint, typecheck and unit tests still pass
-- [ ] 4.6 The answer key never reaches the reviewer (no `fixtures/README.md` text in the output JSON)
+- [x] 4.3 The run writes `evals/output/latest.json` containing three provider results
+- [x] 4.4 A deliberately inverted assertion makes the command exit `1`, not `100`
+- [x] 4.5 Lint, typecheck and unit tests still pass
+- [x] 4.6 The answer key never reaches the reviewer (no `fixtures/README.md` text in the output JSON)
 
 #### Manual
 

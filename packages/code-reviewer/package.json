@@ -25,7 +25,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p evals/tsconfig.json",
     "lint": "eslint src evals",
     "test": "vitest run",
-    "eval": "promptfoo eval -c evals/promptfooconfig.yaml",
+    "eval": "PROMPTFOO_DISABLE_TEMPLATING=true PROMPTFOO_FAILED_TEST_EXIT_CODE=1 promptfoo eval -c evals/promptfooconfig.yaml --output evals/output/latest.json",
     "eval:view": "promptfoo view -y",
     "clean": "rm -rf dist"
   },

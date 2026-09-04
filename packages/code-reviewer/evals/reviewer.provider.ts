@@ -14,16 +14,8 @@
 import type { LanguageModel, LanguageModelUsage } from "ai";
 import type { ApiProvider, CallApiContextParams, ProviderOptions, ProviderResponse, TokenUsage } from "promptfoo";
 
-import {
-  buildReviewPrompt,
-  createProviderContext,
-  createReviewAgent,
-  deriveVerdict,
-  loadEnv,
-  type ReviewResult,
-  type Verdict,
-} from "../src/index.js";
-import { toReviewInput, toReviewVars } from "./types.js";
+import { buildReviewPrompt, createProviderContext, createReviewAgent, deriveVerdict, loadEnv } from "../src/index.js";
+import { toReviewInput, toReviewVars, type ReviewerProviderOutput } from "./types.js";
 
 /** promptfoo hands a `file://`-loaded provider its own path as `options.id`. */
 const FILE_PROVIDER_PREFIX = "file://";
@@ -48,8 +40,10 @@ export interface ReviewerProviderConfig {
   languageModel?: LanguageModel | undefined;
 }
 
-/** What an assertion receives as `output`: the review plus its derived verdict. */
-export type ReviewerProviderOutput = ReviewResult & { verdict: Verdict };
+// Re-exported so the provider and its test keep naming the adapter's output
+// shape from the same place; it is declared in `types.ts` because the
+// assertions need it too and must not import the provider to get it.
+export type { ReviewerProviderOutput };
 
 export default class ReviewerProvider implements ApiProvider {
   private readonly modelId: string;
