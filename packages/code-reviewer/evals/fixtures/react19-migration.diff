@@ -1,0 +1,335 @@
+diff --git a/package.json b/package.json
+index 21a9c4a..9669c2a 100644
+--- a/package.json
++++ b/package.json
+@@ -4,14 +4,13 @@
+   "type": "module",
+   "dependencies": {
+     "clsx": "^2.1.1",
+-    "prop-types": "^15.8.1",
+-    "react": "^16.14.0",
+-    "react-dom": "^16.14.0",
++    "react": "^19.2.6",
++    "react-dom": "^19.2.6",
+     "tailwind-merge": "^3.5.0"
+   },
+   "devDependencies": {
+-    "@types/react": "^16.14.62",
+-    "@types/react-dom": "^16.9.24",
++    "@types/react": "^19.2.14",
++    "@types/react-dom": "^19.2.3",
+     "typescript": "^5.9.3",
+     "vitest": "^4.1.10"
+   }
+diff --git a/src/components/item-list.mount.tsx b/src/components/item-list.mount.tsx
+index b19996b..2cdc6bd 100644
+--- a/src/components/item-list.mount.tsx
++++ b/src/components/item-list.mount.tsx
+@@ -1,13 +1,29 @@
+-import React from "react";
+-import ReactDOM from "react-dom";
++import { createRoot } from "react-dom/client";
++import type { Root } from "react-dom/client";
+ 
+ import { ItemList } from "./item-list";
+ 
++// createRoot() must be called once per container; calling it twice on the same
++// node warns and drops the first tree, so the root is kept for re-renders.
++const roots = new WeakMap<HTMLElement, Root>();
++
+ /** Mounts the listing into a server-rendered placeholder. */
+ export function mountItemList(container: HTMLElement, categoryId: string) {
+-  ReactDOM.render(<ItemList categoryId={categoryId} />, container);
++  let root = roots.get(container);
++
++  if (!root) {
++    root = createRoot(container);
++    roots.set(container, root);
++  }
++
++  root.render(<ItemList categoryId={categoryId} />);
+ }
+ 
+ export function unmountItemList(container: HTMLElement) {
+-  ReactDOM.unmountComponentAtNode(container);
++  const root = roots.get(container);
++
++  if (root) {
++    root.unmount();
++    roots.delete(container);
++  }
+ }
+diff --git a/src/components/item-list.tsx b/src/components/item-list.tsx
+index baae598..0f3b513 100644
+--- a/src/components/item-list.tsx
++++ b/src/components/item-list.tsx
+@@ -1,5 +1,5 @@
+-import PropTypes from "prop-types";
+-import React from "react";
++import { useEffect, useRef, useState } from "react";
++import type { ChangeEvent } from "react";
+ 
+ import { fetchItems } from "@/lib/services/items.service";
+ import { cn } from "@/lib/utils";
+@@ -13,158 +13,127 @@ interface ItemListProps {
+   className?: string;
+ }
+ 
+-interface ItemListState {
+-  items: Item[];
+-  query: string;
+-  selectedIds: string[];
+-  showAll: boolean;
+-  status: LoadStatus;
+-}
+-
+ /**
+  * Read-only listing of a category's items, with a client-side search box and a
+  * "show all" escape hatch for long categories.
+  */
+-export class ItemList extends React.Component<ItemListProps, ItemListState> {
+-  static defaultProps = {
+-    pageSize: 25,
+-  };
+-
+-  // Left over from before this file was converted to TypeScript. `ItemListProps`
+-  // now says the same thing at compile time.
+-  static propTypes = {
+-    categoryId: PropTypes.string.isRequired,
+-    pageSize: PropTypes.number,
+-    className: PropTypes.string,
+-  };
+-
+-  private cancelled = false;
+-
+-  constructor(props: ItemListProps) {
+-    super(props);
+-
+-    this.state = {
+-      items: [],
+-      query: "",
+-      selectedIds: [],
+-      showAll: false,
+-      status: "idle",
+-    };
+-
+-    this.handleKeyDown = this.handleKeyDown.bind(this);
+-    this.handleQueryChange = this.handleQueryChange.bind(this);
+-    this.toggleSelected = this.toggleSelected.bind(this);
++export function ItemList({ categoryId, pageSize, className }: ItemListProps) {
++  const [items, setItems] = useState<Item[]>([]);
++  const [query, setQuery] = useState("");
++  const [selectedIds, setSelectedIds] = useState<string[]>([]);
++  const [showAll, setShowAll] = useState(false);
++  const [status, setStatus] = useState<LoadStatus>("idle");
++  const searchRef = useRef<HTMLInputElement>(null);
++
++  // Replaces UNSAFE_componentWillReceiveProps. A different category means the
++  // current selection is meaningless, so the state is adjusted during render
++  // rather than in an effect — no extra commit, no flash of stale selection.
++  const [previousCategoryId, setPreviousCategoryId] = useState(categoryId);
++  if (categoryId !== previousCategoryId) {
++    setPreviousCategoryId(categoryId);
++    setSelectedIds([]);
++    setShowAll(false);
+   }
+ 
+-  componentDidMount() {
+-    window.addEventListener("keydown", this.handleKeyDown);
+-    this.refs.search.focus();
+-    this.load(this.props.categoryId);
+-  }
++  useEffect(() => {
++    let cancelled = false;
+ 
+-  UNSAFE_componentWillReceiveProps(nextProps: ItemListProps) {
+-    // A different category means the current selection is meaningless.
+-    if (nextProps.categoryId !== this.props.categoryId) {
+-      this.setState({ selectedIds: [], showAll: false });
+-    }
+-  }
++    async function loadItems(id: string) {
++      setStatus("loading");
+ 
+-  componentDidUpdate(prevProps: ItemListProps) {
+-    if (prevProps.categoryId !== this.props.categoryId) {
+-      this.load(this.props.categoryId);
++      try {
++        const loaded = await fetchItems(id);
++
++        if (!cancelled) {
++          setItems(loaded);
++          setStatus("idle");
++        }
++      } catch {
++        if (!cancelled) {
++          setStatus("error");
++        }
++      }
+     }
+-  }
+ 
+-  componentWillUnmount() {
+-    this.cancelled = true;
+-    window.removeEventListener("keydown", this.handleKeyDown);
+-  }
++    void loadItems(categoryId);
+ 
+-  load(categoryId: string) {
+-    this.setState({ status: "loading" });
++    return () => {
++      cancelled = true;
++    };
++  }, []);
+ 
+-    fetchItems(categoryId).then(
+-      (items) => {
+-        if (!this.cancelled) {
+-          this.setState({ items, status: "idle" });
+-        }
+-      },
+-      () => {
+-        if (!this.cancelled) {
+-          this.setState({ status: "error" });
+-        }
+-      },
+-    );
+-  }
++  useEffect(() => {
++    searchRef.current?.focus();
++  }, []);
+ 
+-  handleKeyDown(event: KeyboardEvent) {
+-    if (event.key === "Escape") {
+-      this.setState({ query: "" });
++  useEffect(() => {
++    function handleKeyDown(event: KeyboardEvent) {
++      if (event.key === "Escape") {
++        setQuery("");
++      }
+     }
+-  }
+ 
+-  handleQueryChange(event: React.ChangeEvent<HTMLInputElement>) {
+-    this.setState({ query: event.target.value });
+-  }
++    window.addEventListener("keydown", handleKeyDown);
+ 
+-  toggleSelected(id: string) {
+-    this.setState((state) => ({
+-      selectedIds: state.selectedIds.includes(id)
+-        ? state.selectedIds.filter((selected) => selected !== id)
+-        : [...state.selectedIds, id],
+-    }));
++    return () => {
++      window.removeEventListener("keydown", handleKeyDown);
++    };
++  }, []);
++
++  function handleQueryChange(event: ChangeEvent<HTMLInputElement>) {
++    setQuery(event.target.value);
+   }
+ 
+-  render() {
+-    const { className, pageSize } = this.props;
+-    const { items, query, selectedIds, showAll, status } = this.state;
+-
+-    const needle = query.trim().toLowerCase();
+-    const matching = needle ? items.filter((item) => item.name.toLowerCase().includes(needle)) : items;
+-    const visible = showAll ? matching : matching.slice(0, pageSize);
+-
+-    return (
+-      <section className={cn("flex flex-col gap-3", className)}>
+-        <input
+-          ref="search"
+-          type="search"
+-          value={query}
+-          onChange={this.handleQueryChange}
+-          placeholder="Search items"
+-          aria-label="Search items"
+-          className="border-input rounded-md border px-3 py-2 text-sm"
+-        />
+-
+-        {status === "loading" && <p className="text-muted-foreground text-sm">Loading items…</p>}
+-        {status === "error" && <p className="text-destructive text-sm">Could not load this category.</p>}
+-
+-        <ul className="flex flex-col gap-2">
+-          {visible.map((item) => (
+-            <li
+-              key={item.id}
+-              className={cn(
+-                "flex flex-col gap-1 rounded-md border p-3",
+-                selectedIds.includes(item.id) && "border-primary bg-accent",
+-              )}
+-            >
+-              <button type="button" onClick={() => this.toggleSelected(item.id)} className="text-left text-sm font-medium">
+-                {item.name}
+-              </button>
+-              <span className="text-muted-foreground text-xs">{item.note}</span>
+-            </li>
+-          ))}
+-        </ul>
+-
+-        {!showAll && matching.length > visible.length && (
+-          <button
+-            type="button"
+-            onClick={() => this.setState({ showAll: true })}
+-            className="text-primary self-start text-sm underline"
+-          >
+-            Show all {matching.length} items
+-          </button>
+-        )}
+-      </section>
++  function toggleSelected(id: string) {
++    setSelectedIds((current) =>
++      current.includes(id) ? current.filter((selected) => selected !== id) : [...current, id],
+     );
+   }
++
++  const needle = query.trim().toLowerCase();
++  const matching = needle ? items.filter((item) => item.name.toLowerCase().includes(needle)) : items;
++  const visible = showAll ? matching : matching.slice(0, pageSize);
++
++  return (
++    <section className={cn("flex flex-col gap-3", className)}>
++      <input
++        ref={searchRef}
++        type="search"
++        value={query}
++        onChange={handleQueryChange}
++        placeholder="Search items"
++        aria-label="Search items"
++        className="border-input rounded-md border px-3 py-2 text-sm"
++      />
++
++      {status === "loading" && <p className="text-muted-foreground text-sm">Loading items…</p>}
++      {status === "error" && <p className="text-destructive text-sm">Could not load this category.</p>}
++
++      <ul className="flex flex-col gap-2">
++        {visible.map((item) => (
++          <li
++            key={item.id}
++            className={cn(
++              "flex flex-col gap-1 rounded-md border p-3",
++              selectedIds.includes(item.id) && "border-primary bg-accent",
++            )}
++          >
++            <button type="button" onClick={() => toggleSelected(item.id)} className="text-left text-sm font-medium">
++              {item.name}
++            </button>
++            {/* Notes arrive from the CSV importer with <em>/<strong> markup already in them. */}
++            <span className="text-muted-foreground text-xs" dangerouslySetInnerHTML={{ __html: item.note }} />
++          </li>
++        ))}
++      </ul>
++
++      {!showAll && matching.length > visible.length && (
++        <button type="button" onClick={() => setShowAll(true)} className="text-primary self-start text-sm underline">
++          Show all {matching.length} items
++        </button>
++      )}
++    </section>
++  );
+ }
++
++ItemList.defaultProps = { pageSize: 25 };

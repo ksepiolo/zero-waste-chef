@@ -1,10 +1,15 @@
 .claude/skills/10x*
+.claude/skills/pack-init
+.claude/skills/setup-cicd
+.claude/skills/tf-registry
 .claude/prompts/skill-explainer.md
 .claude/prompts/m1l*
 .claude/prompts/m1l*
 .claude/prompts/m3l*
 .claude/prompts/m4l*
 .claude/prompts/m5l*
+.claude/prompts/mvp*
+.claude/config-templates/*
 .claude/.10x-cli-manifest.json
 
 # from 10x-astro-starter

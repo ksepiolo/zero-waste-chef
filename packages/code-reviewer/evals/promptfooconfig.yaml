@@ -1,0 +1,171 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+#
+# The code reviewer, run across three OpenRouter models against one dense
+# React 16 → React 19 migration diff carrying three planted defects.
+#
+#   npm run eval        # run it
+#   npm run eval:view   # read the comparison in the browser
+#
+# Nothing in `src/` is under test as configuration here: the model is the only
+# variable. `REVIEW_INSTRUCTIONS` is fixed across all three arms, so a difference
+# in the grid is a difference between models, not between prompts.
+
+description: "code-review-evals: three OpenRouter models reviewing one React 19 migration with three planted defects"
+
+# ---------------------------------------------------------------------------
+# IGNORED. Editing this changes nothing.
+#
+# (`npm run eval` also sets PROMPTFOO_DISABLE_TEMPLATING=true, so this is not
+# even rendered. A diff fixture is arbitrary source code: this one contains JSX
+# `dangerouslySetInnerHTML={{ __html: item.note }}`, which nunjucks parses as an
+# unterminated variable and refuses to render, aborting the run before a single
+# model call. Nothing in this eval needs templating — the provider reads `vars`
+# itself and the rubrics are static text — so it stays off.)
+#
+# promptfoo's schema requires a `prompts:` entry and renders it before every
+# provider call, but `reviewer.provider.ts` throws the rendered string away and
+# rebuilds the real prompt from `vars` with `buildReviewPrompt()` — the exact
+# prompt the CLI ships. Evaluating anything else would measure a prompt the
+# product does not use. To change the reviewer's prompt, edit
+# `src/prompts/reviews.ts`.
+# ---------------------------------------------------------------------------
+prompts:
+  - "{{diff}}"
+
+# Three arms of one matrix. They share a file — the provider is parameterised by
+# `config.model` — and each reports a distinct `id()` of `reviewer:<model>`, so
+# the results grid reads as a model comparison.
+providers:
+  - id: file://reviewer.provider.ts
+    label: "sonnet-5 (incumbent)"
+    config:
+      # The package default (`src/openrouter.provider.ts`), and therefore what
+      # CI reviews pull requests with today. The baseline the other two are
+      # worth switching to, or not.
+      model: anthropic/claude-sonnet-5
+
+  - id: file://reviewer.provider.ts
+    label: "glm-5.1 (challenger)"
+    config:
+      model: z-ai/glm-5.1
+
+  - id: file://reviewer.provider.ts
+    label: "deepseek-v4-flash (challenger)"
+    config:
+      model: deepseek/deepseek-v4-flash
+
+# The one test case: PR title, PR body, and the patch.
+#
+# ⚠ Everything that file puts in `vars` is handed to the model under test verbatim.
+# `evals/fixtures/README.md` is the answer key and must NEVER be loaded from there,
+# nor from anything it loads: a leak turns this recall test into a reading-
+# comprehension test that passes while measuring nothing.
+#
+# It is a separate file so the ~40-line PR body does not sit in the middle of this
+# config. The assertions stay *here* rather than moving with it, because three of
+# them carry the answer key and belong as far from `vars` as the layout allows.
+tests: file://fixtures/react19-migration.vars.yaml
+
+# Applied to that single case. `defaultTest` is also where the judge is named, so
+# both halves of "how a review is graded" sit together.
+defaultTest:
+  options:
+    # The judge for every `llm-rubric` below. THIS LINE IS LOAD-BEARING: without
+    # it promptfoo defaults the rubric grader to `gpt-5`, and every judge call
+    # fails on an OpenAI key this repo does not have and does not want.
+    #
+    # Grok 4.6 is deliberately none of the three subjects — a judge ranking its
+    # own family is the textbook self-preference bias — it is a stable non-preview
+    # id, and it supports both `temperature` and `seed`, which the incumbent does
+    # not. `google/gemini-3.8-flash` is the cheaper swap if judge cost ever
+    # matters. Note that plain `google/gemini-3-pro` does not exist on OpenRouter.
+    provider: openrouter:x-ai/grok-4.6
+
+  assert:
+    # -- Static. Free, deterministic, and run on every model's output. --------
+    - type: javascript
+      value: file://assertions/verdict-fails.assert.ts
+      metric: verdict
+    - type: javascript
+      value: file://assertions/schema-valid.assert.ts
+      metric: schema
+    - type: javascript
+      value: file://assertions/quotes-anchored.assert.ts
+      metric: quotes
+
+    # -- Recall. One rubric per planted defect, so the grid reads as "which ---
+    # model missed which flaw" rather than as a single blended score.
+    #
+    # Each rubric describes its defect behaviourally and never quotes the
+    # fixture's code: a rubric that names the exact line rewards string
+    # matching over comprehension. Each one demands the *consequence*, not the
+    # symptom, and explicitly ignores everything else the review found —
+    # otherwise a thorough review scores well on a defect it never mentioned.
+    #
+    # `threshold: 1` makes them binary: found, or not.
+    - type: llm-rubric
+      metric: recall:correctness
+      threshold: 1
+      value: |
+        You are grading a code review of a React 16 → React 19 migration, not the migration itself.
+
+        The migration replaced a class component's `componentDidUpdate` refetch with a `useEffect`
+        whose dependency array is empty. The old code refetched whenever the `categoryId` prop
+        changed; the new effect runs once on mount and never again, so switching category leaves
+        the previous category's items on screen with no error.
+
+        Pass ONLY if the review identifies this specific problem AND states the consequence: that
+        the data is not refetched / becomes stale / the wrong category's items are shown when the
+        prop changes. Naming the missing dependency alone, with no account of what goes wrong, is
+        not enough.
+
+        Two other effects in the same diff legitimately have empty dependency arrays (a focus
+        effect and a keydown-listener effect). A review that flags those instead of, or without,
+        the fetch effect has not found this defect.
+
+        Ignore whether the review found any other issue, and ignore the scores it assigned.
+        Answer only about this one defect.
+
+    - type: llm-rubric
+      metric: recall:idiomaticity
+      threshold: 1
+      value: |
+        You are grading a code review of a React 16 → React 19 migration, not the migration itself.
+
+        The component was converted from a class to a function, but a `defaultProps` assignment
+        supplying a default page size was carried over onto the new function component. React 19
+        removed `defaultProps` support for function components: the assignment is silently
+        ignored at runtime, so the prop is `undefined` and pagination stops working. TypeScript
+        does not catch it, because the prop is optional.
+
+        Pass ONLY if the review identifies that `defaultProps` no longer applies to function
+        components under React 19 AND states a consequence: the default is not applied, the prop
+        is undefined, or the paging/slicing behaviour breaks. A review that merely calls
+        `defaultProps` outdated, legacy, or a style issue — without saying it stops working —
+        has not found this defect. A review that recommends default parameter values purely as a
+        cosmetic preference has not found it either.
+
+        Ignore whether the review found any other issue, and ignore the scores it assigned.
+        Answer only about this one defect.
+
+    - type: llm-rubric
+      metric: recall:security
+      threshold: 1
+      value: |
+        You are grading a code review of a React 16 → React 19 migration, not the migration itself.
+
+        The migration changed a user-supplied note that JSX previously escaped into raw HTML
+        rendered through React's raw-HTML escape hatch. Nothing sanitises the value, so a note
+        saved by one user executes as markup for every user who opens the listing.
+
+        Pass ONLY if the review identifies this as a security problem with untrusted input AND
+        names the consequence: cross-site scripting, script injection, or arbitrary HTML/markup
+        from one user rendering for others. Flagging the raw-HTML API as merely risky, unusual,
+        or discouraged — without connecting it to the untrusted note value — is not enough.
+
+        The diff contains an in-code comment claiming the notes already carry safe markup from an
+        importer. That is the author's rationalisation, not a mitigation; a review that accepts it
+        has not found this defect.
+
+        Ignore whether the review found any other issue, and ignore the scores it assigned.
+        Answer only about this one defect.

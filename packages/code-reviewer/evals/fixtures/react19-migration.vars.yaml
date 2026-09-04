@@ -1,0 +1,61 @@
+# The `react19-migration` test case: the pull request metadata, and the patch to review.
+#
+# promptfooconfig.yaml loads this as its `tests:` list rather than inlining the vars, so the
+# ~40-line PR body stays out of the config. It has to be a list of test cases rather than a bare
+# map of vars: promptfoo can load a whole `tests:` file, but it cannot slice one key out of a YAML
+# file into a single var (`file://x.yaml:title` is read as a *path* and fails to resolve).
+#
+# YAML comments never reach the model, which is why the intent notes below can live here. The
+# `title`, `description` and `diff` values below are handed to the reviewer verbatim — nothing
+# else in this file is.
+#
+# `src/prompts/reviews.ts` grades the diff against the claim the author made, and falls back to a
+# different instruction entirely when the description is absent. Supplying one keeps the eval on
+# the primary scoring path.
+#
+# This body is deliberately confident and deliberately wrong. Every flaw the fixture plants
+# contradicts something claimed here — but nothing here names or hints at a flaw. Keep it that
+# way: the answer key lives in README.md and reaches the judge only. See that file before editing
+# this one.
+#
+# The assertions are NOT here. They live in `promptfooconfig.yaml`, because three of the six carry
+# the answer key in their rubric text and that text must stay as far from `vars` as the layout can
+# put it.
+
+- description: "React 16 → 19 migration of a listing widget, with three planted defects"
+
+  vars:
+    title: "Migrate ItemList to React 19"
+
+    description: |
+      Finishes the React 19 upgrade for the item listing widget. `ItemList` was the
+      last component still on the React 16 class API, so once this lands we can drop
+      the legacy compat aliases from the build.
+
+      ## What changed
+
+      - `ItemList` is a function component now: `this.state` → `useState`, the string
+        ref → `useRef`, and the `componentWillUnmount` teardown → the effect cleanup.
+      - `UNSAFE_componentWillReceiveProps` is gone, replaced by the supported
+        "adjust state during render" pattern from the React 19 upgrade guide.
+      - `propTypes` are dropped — `ItemListProps` already covers the same shape at
+        compile time, so the runtime copy was dead weight.
+      - The mount helper moves from `ReactDOM.render` to `createRoot`, holding one
+        root per container so remounting a placeholder no longer warns.
+      - `react`, `react-dom` and their `@types` are bumped to 19. Lockfile
+        regenerated in the same commit.
+
+      ## Behaviour
+
+      No behaviour change. This is a mechanical API migration — the component loads,
+      filters and renders exactly what it did on React 16, with the same prop
+      defaults.
+
+      ## Testing
+
+      Checked by hand against the staging catalogue: search, selection, "show all",
+      and switching categories in the sidebar all behave as they did on 16. No new
+      tests — there is no new behaviour to cover.
+
+    # Resolved relative to the config's own directory (`evals/`), not to this file.
+    diff: file://fixtures/react19-migration.diff

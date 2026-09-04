@@ -1,0 +1,20 @@
+{
+  // Typecheck-only project for `evals/**`. A second project is needed rather than widening the
+  // root `tsconfig.json`'s `include`, because that project sets `rootDir: "src"` — adding
+  // `evals/**/*.ts` there fails with TS6059 ("not under rootDir"). `rootDir` is widened to the
+  // package root here — eval files import the reviewer from `../src/index.js`, so both trees
+  // must sit under it — and `noEmit` is on, so nothing here can ever reach `dist/`.
+  //
+  // It lives *inside* `evals/` and is named `tsconfig.json` rather than sitting at the package
+  // root as `tsconfig.evals.json`, because typescript-eslint's `projectService` discovers a
+  // project by walking up from the linted file looking for that exact filename. A root-level
+  // `tsconfig.evals.json` typechecks fine but leaves every eval file "not found by the project
+  // service", so the lint gate would need an `allowDefaultProject` escape hatch instead.
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "..",
+    "noEmit": true
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules"]
+}

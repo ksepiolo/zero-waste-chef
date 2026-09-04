@@ -16,15 +16,17 @@
     "dist"
   ],
   "engines": {
-    "node": ">=22.9.0"
+    "node": ">=22.22.0"
   },
   "scripts": {
     "dev": "tsx watch --env-file-if-exists=.env src/cli.ts",
     "start": "tsx --env-file-if-exists=.env src/cli.ts",
     "build": "tsc -p tsconfig.build.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "eslint src",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p evals/tsconfig.json",
+    "lint": "eslint src evals",
     "test": "vitest run",
+    "eval": "PROMPTFOO_DISABLE_TEMPLATING=true PROMPTFOO_FAILED_TEST_EXIT_CODE=1 promptfoo eval -c evals/promptfooconfig.yaml --output evals/output/latest.json",
+    "eval:view": "promptfoo view -y",
     "clean": "rm -rf dist"
   },
   "dependencies": {
@@ -35,6 +37,7 @@
   "devDependencies": {
     "@types/node": "^26.4.0",
     "eslint": "^9.29.0",
+    "promptfoo": "^0.122.2",
     "tsx": "^4.23.13",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.59.2",

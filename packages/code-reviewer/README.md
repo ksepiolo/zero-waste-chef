@@ -26,14 +26,16 @@ dependency and the same code works when the variables come from the real environ
 
 ## Scripts
 
-| Command                 | What it does                                       |
-| ----------------------- | -------------------------------------------------- |
-| `npm start -- <args>`   | Review a pull request diff (via `tsx`)             |
-| `npm run dev -- <args>` | Same, restarting on source changes                 |
-| `npm test`              | Run the package's vitest suite                     |
-| `npm run lint`          | `eslint src` against the package-local flat config |
-| `npm run typecheck`     | `tsc --noEmit`                                     |
-| `npm run build`         | Emit ESM + declarations to `dist/`                 |
+| Command                 | What it does                                             |
+| ----------------------- | -------------------------------------------------------- |
+| `npm start -- <args>`   | Review a pull request diff (via `tsx`)                   |
+| `npm run dev -- <args>` | Same, restarting on source changes                       |
+| `npm test`              | Run the package's vitest suite                           |
+| `npm run lint`          | `eslint src evals` against the package-local flat config |
+| `npm run typecheck`     | `tsc --noEmit`                                           |
+| `npm run build`         | Emit ESM + declarations to `dist/`                       |
+| `npm run eval`          | Run the promptfoo model comparison (needs a key)         |
+| `npm run eval:view`     | Open the last eval run in the browser UI                 |
 
 ## Reviewing a pull request
 
@@ -143,6 +145,55 @@ named `⟦ai-cr:untrusted⟧` fence, and `REVIEW_INSTRUCTIONS` tells the model t
 fenced content is data to review, never instructions to follow — an instruction
 found in there is itself a `security_safety` finding.
 
+## Evaluating the reviewer
+
+`npm run eval` runs the reviewer — the real prompt, the real schema, the real agent — across three
+OpenRouter models against one fixture, and reports which model found which defect.
+
+```bash
+cd packages/code-reviewer
+npm run eval          # ~2 min, ~$0.06 of tokens
+npm run eval:view     # the three-column comparison in a browser
+```
+
+**What it measures.** One dense React 16 → React 19 migration diff carrying exactly three planted
+defects — one each under `implementation_correctness` (a refetch effect with empty dependencies),
+`idiomaticity` (`defaultProps` on a function component, which React 19 removed), and
+`security_safety` (a user-supplied note rendered as raw HTML). The rest of the diff is a correct
+migration, so a model has to discriminate rather than flag everything. Each model's review is
+graded six ways: three deterministic checks (the verdict must fail, the output must satisfy
+`reviewResultSchema`, and every issue's `quote` must actually occur in the diff) and three
+`llm-rubric` assertions, one per planted defect, so the results grid reads as _which model missed
+which flaw_.
+
+**The three models** are the package default `anthropic/claude-sonnet-5` — the incumbent, and what
+CI reviews pull requests with today — plus `z-ai/glm-5.1` and `deepseek/deepseek-v4-flash` as
+challengers. The prompt is identical across all three; the model is the only variable. Swapping the
+matrix is a `config.model` edit in `evals/promptfooconfig.yaml`, because
+`createProviderContext(env)` already takes an `Env` override — no source change is involved.
+
+**The judge** is `openrouter:x-ai/grok-4.6`, deliberately none of the three subjects: a judge
+ranking its own family is textbook self-preference bias. It must be set explicitly —
+promptfoo defaults `llm-rubric` to an OpenAI model this repo has no key for.
+
+> ⚠ **`evals/fixtures/README.md` is the answer key.** It must never be added to a test case's
+> `vars`, or to anything `vars` loads — `vars` is what the reviewer is shown. A leak turns the
+> recall test into a reading-comprehension test that keeps passing while measuring nothing. The
+> answer key legitimately reaches one place only: the `llm-rubric` values in
+> `evals/promptfooconfig.yaml`, which the judge reads and the reviewer never does.
+
+Two things about running it:
+
+- **Node ≥ 22.22 is required** (promptfoo's own floor, and this package's `engines.node`). `nvm use`
+  picks it up from `.nvmrc`.
+- **A failed eval exits `1`, not promptfoo's default `100`.** The `eval` script sets
+  `PROMPTFOO_FAILED_TEST_EXIT_CODE=1` so it matches every other script here. It also sets
+  `PROMPTFOO_DISABLE_TEMPLATING=true`: a diff fixture is arbitrary source code, and this one
+  contains JSX braces that nunjucks would try to evaluate as a template expression.
+
+`evals/results.md` records the first real run — per-model scores, which defects each model found,
+and what the comparison says. It is the point of the exercise; the config is just what produces it.
+
 ## Layout
 
 | File                         | Role                                                                 |
@@ -154,6 +205,11 @@ found in there is itself a `security_safety` finding.
 | `src/schemas/reviews.ts`     | the rubric schema, `ReviewInputDiff`, and `deriveVerdict()`          |
 | `src/env.config.ts`          | zod-validated environment, with readable failure messages            |
 | `src/openrouter.provider.ts` | Single place where the provider and default model are built          |
+| `evals/promptfooconfig.yaml` | The eval: three models, six assertions, and the judge                |
+| `evals/reviewer.provider.ts` | Bridges promptfoo's `ApiProvider` to `createReviewAgent()`           |
+| `evals/assertions/`          | The three deterministic checks, each with its own test               |
+| `evals/fixtures/`            | The migration diff, its PR metadata, and the answer key              |
+| `evals/results.md`           | What the first real run found                                        |
 
 The repo's `CLAUDE.md` asks for dot-separated type suffixes (`feature.service.ts`).
 `agents/`, `prompts/` and `schemas/` put the type in the directory instead — a
