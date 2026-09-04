@@ -14,7 +14,7 @@ Pre-commit hooks: husky + lint-staged runs `eslint --fix` on `*.{ts,tsx,astro}` 
 
 ## Architecture
 
-README.md — canonical architecture and conventions reference.
+README.md — what the project is, how to run it, data model, routes, CI/CD. This file owns the conventions.
 
 ### Rendering mode
 
